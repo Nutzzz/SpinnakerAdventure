@@ -88,7 +88,7 @@ const string ozMenu3     = "WOZ.T: Functions";
 const string ozMenu4     = "WOZ.V: Vocabulary";
 var ozTitle = ozName.ToUpperInvariant();
 
-const string rscPath     = @"Resources\";
+const string rscPath     = @"Resources";
 
 const byte DELIM = 0x00;
 
@@ -385,7 +385,6 @@ Dictionary<byte, string> GetTokens(string abbrev, int start = 0) // Only necessa
         { 0x80, "you" } // This is unfortunate because 0x80 is also 'z'.
     };
     */
-    var begin = false;
     byte b = 0x80;
     var tokenPath = Path.Combine(rscPath, abbrev, abbrev + ".TOK");
     try
