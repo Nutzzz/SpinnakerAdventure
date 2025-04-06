@@ -251,7 +251,7 @@ void ShowStrings(string abbrev, byte start, bool expand = false)
         var locName = loc.Value.Item2;
         Console.WriteLine(divider);
         Console.WriteLine(locName.ToUpperInvariant());
-        var filePath = Path.Combine(rscPath, abbrev, locName).ToUpperInvariant();
+        var filePath = Path.Combine(rscPath, abbrev, locName);
         try
         {
             if (!File.Exists(filePath))
@@ -272,7 +272,7 @@ void ShowStrings(string abbrev, byte start, bool expand = false)
                     if (entry.Equals(file, StringComparison.OrdinalIgnoreCase))
                     {
                         found = true;
-                        Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} (gfx)");
+                        Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} [gfx]");
                         break;
                     }
                 }
@@ -283,13 +283,13 @@ void ShowStrings(string abbrev, byte start, bool expand = false)
                         if (entry.Equals(Path.GetFileNameWithoutExtension(file), StringComparison.OrdinalIgnoreCase))
                         {
                             found = true;
-                            Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} (sfx)");
+                            Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} [sfx]");
                             break;
                         }
                     }
                 }
                 if (!found)
-                    Console.WriteLine($"{i:x3}: [{entry}]");
+                    Console.WriteLine($"{i:x3}: \"{entry}\"");
                 i++;
             }
             Console.WriteLine(divider);
@@ -379,12 +379,6 @@ Dictionary<byte, string> GetTokens(string abbrev, int start = 0) // Only necessa
 {
     const int OFFSET = 0x102;
     Dictionary<byte, string> tokens = [];
-    /*
-    Dictionary<byte, string> tokens = new()
-    {
-        { 0x80, "you" } // This is unfortunate because 0x80 is also 'z'.
-    };
-    */
     byte b = 0x80;
     var tokenPath = Path.Combine(rscPath, abbrev, abbrev + ".TOK");
     try
@@ -414,14 +408,14 @@ List<string> GetPicFiles(string abbrev)
     List<string> locNames = [];
     foreach (var loc in GetLocs(abbrev))
     {
-        locNames.Add(loc.Value.Item2.ToLowerInvariant());
+        locNames.Add(loc.Value.Item2);
     }
     foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev), "*.").ToList())
     {
         var filename = Path.GetFileName(file);
-        if (!locNames.Contains(filename.ToLowerInvariant()) &&
-            !addlStrFiles.Contains(filename.ToUpperInvariant()) &&
-            !abbrev.Equals(filename.ToUpperInvariant()))
+        if (!locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+            !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+            !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
             picFiles.Add(filename);
     }
     return picFiles;
@@ -488,7 +482,7 @@ string SegmentToHex(ArraySegment<byte> segment)
 IEnumerable<string> ProcessStrings(byte[] array, Dictionary<byte, string> tokens)
 {
     const byte FIRST = 0x0B;
-    const byte MIN = 0x79;
+    const byte MIN = 0x7F;
     MemoryStream stream = new();
     BinaryWriter result = new(stream);
     ushort i = 0;
