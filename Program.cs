@@ -4,6 +4,7 @@ using NAudio.Midi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 const string divider     = "---------------------------------------";
@@ -557,22 +558,41 @@ List<string> GetSoundFiles(string abbrev)
         }
         if (pcType == "AST")
         {
-            foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev + pcType), "*.MST").ToList())
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev + pcType, abbrev), "*.MST").ToList())
             {
                 var filename = Path.GetFileName(file);
                 sndFiles.Add(filename);
             }
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev + pcType, abbrev), "*.").ToList())
+            {
+                if (abbrev == "F451")
+                    abbrev = "F4";
+                var filename = Path.GetFileName(file);
+                if (!filename.StartsWith(abbrev))
+                    continue;
+                if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
+                    (abbrev == "F4" && (filename.Equals("F451", StringComparison.OrdinalIgnoreCase) ||
+                        filename.Length < 3 || !char.IsAsciiDigit(filename[2]))))
+                    continue;
+                sndFiles.Add(filename);
+            }
         }
-        if (abbrev == "F451")
-            abbrev = "F4";
-        foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev + pcType), abbrev + "*.").ToList())
+        else
         {
-            var filename = Path.GetFileName(file);
-            if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
-                (abbrev == "F4" && (filename.Equals("F451", StringComparison.OrdinalIgnoreCase) ||
-                    filename.Length < 3 || !char.IsAsciiDigit(filename[2]))))
-                continue;
-            sndFiles.Add(filename);
+            foreach (var file in Directory.EnumerateFiles(Path.Combine(rscPath, abbrev + pcType), abbrev + "*.").ToList())
+            {
+                if (abbrev == "F451")
+                    abbrev = "F4";
+                var filename = Path.GetFileName(file);
+                //if (!filename.StartsWith("MUSICPDS") && !filename.StartsWith(abbrev))
+                if (!filename.StartsWith(abbrev))
+                    continue;
+                if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
+                    (abbrev == "F4" && (filename.Equals("F451", StringComparison.OrdinalIgnoreCase) ||
+                        filename.Length < 3 || !char.IsAsciiDigit(filename[2]))))
+                    continue;
+                sndFiles.Add(filename);
+            }
         }
     }
     catch (Exception) { }
@@ -604,7 +624,10 @@ void ExportSndFiles()
         var sndFiles = GetSoundFiles(abbrev);
         foreach (var file in sndFiles)
         {
-            PlaySound(abbrev, Path.Combine(rscPath, abbrev + pcType, file), toFile: true);
+            var sub = "";
+            if (pcType == "AST")
+                sub = abbrev;
+            PlaySound(abbrev, Path.Combine(rscPath, abbrev + pcType, sub, file), toFile: true);
         }
     }
 }
@@ -937,9 +960,9 @@ void MidiOut(int beatLen, List<(int Ch, int Pos, byte B, int Midi, double Freq, 
 
 void WriteMidi(int beatLen, List<(int Ch, int Pos, byte B, int Midi, double Freq, int Length)> notes, string filePath = "")
 {
-    var multiTrack = 0;
-    if (Path.GetExtension(filePath).Equals(".jr", StringComparison.OrdinalIgnoreCase))
-        multiTrack = 1;
+    var multiTrack = 1;
+    //if (pcType == "IBM" && Path.GetExtension(filePath).Equals(".ib", StringComparison.OrdinalIgnoreCase))
+    //    multiTrack = 0;
     IList<MidiEvent> track = [];
 
     const int TICKS_PER_QTR = 120;  // ticks per quarter note
@@ -972,7 +995,7 @@ void WriteMidi(int beatLen, List<(int Ch, int Pos, byte B, int Midi, double Freq
             if (ch == 1)
             {
                 var tempo = beatLen * TICKS_PER_QTR * 18;
-                Console.WriteLine($"Beat Length: {beatLen} / Tempo: {tempo * 4} ms \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
+                //Console.WriteLine($"Beat Length: {beatLen} / Tempo: {tempo * 4} ms \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
                 track.Add(new TempoEvent(tempo, 0)); // in ms per quarter note
             }
         }
@@ -1088,6 +1111,7 @@ string GetNoteLengthName(int len, string last = "")
 }
 
 // The PC Speaker was monophonic, and the PCjr was quadraphonic (though these games only uses the 3 waveform channels; the fourth noise channel isn't used)
+// TODO: Figure out how to extract from MUSICPDS*.* for AMBAII, AMZAST, AMBAST
 void PlaySound(string abbrev, string filePath = "", bool toFile = false)
 {
     bool control = true;
@@ -1125,15 +1149,16 @@ void PlaySound(string abbrev, string filePath = "", bool toFile = false)
     {
         pitch = false;
         rest = false;
-        if ((pcType == "IBM" && i == 0x02) ||
-            (pcType == "C64" && i == 0x04))             // beat time length (gives tempo)
-            beatLen = b * 16;
-        else if ((pcType == "IBM" && i > 0x0A && i < 0x1A) ||
-            pcType == "C64" && i > 0x0C && i < 0x1C)    // note lengths
-            lengths.Add(b);
-        else if ((pcType == "IBM" && i > 0x19) ||
-            (pcType == "C64" && i > 0x1B))              // note data
+        if (((pcType == "AST" || pcType == "IBM") && i == 0x02) ||
+            (pcType == "C64" && i == 0x04))
+            beatLen = b * 16;                           // beat time length (gives tempo)
+        else if (((pcType == "AST" || pcType == "IBM") && i > 0x0A && i < 0x1A) ||
+            pcType == "C64" && i > 0x0C && i < 0x1C)
+            lengths.Add(b);                             // note lengths
+        else if (((pcType == "AST" || pcType == "IBM") && i > 0x19) ||
+            (pcType == "C64" && i > 0x1B))
         {
+            // note data
             var len = 0;
             var nibble1 = (byte)((b & 0xF0) >> 4);
             var nibble2 = (byte)(b & 0x0F);
@@ -1142,50 +1167,58 @@ void PlaySound(string abbrev, string filePath = "", bool toFile = false)
             {
                 if (!control)
                     numCtrl = 0;
-                numCtrl++;
                 control = true;
+                numCtrl++;
+                //Console.WriteLine("\nA.control on " + numCtrl);
             }
-            else if (control == true && numCtrl > 1 &&
-                (b == 0x08 || b == 0x05 || b == 0x0F)) // these could be control codes or note data
+            else if (control == true && (b == 0x08 || b == 0x05 || b == 0x0F))
             {
-                // ignore these
+                //Console.WriteLine("\nB.control [on] " + numCtrl + " [ignore]");
+                // these could be control codes or note data
+                // ignore them if control is true
+                // TODO: On C64 (and maybe AST), these probably change the waveform type (and we would make a MIDI patch change)
             }
-            else if (control == true && numCtrl > 5)
+            else if (control == true && numCtrl > 3)
             {
-                if (b == 0x80 || b == 0xC5) // new channel
+                if (b == 0x80 || b == 0xC5)   // New channel
                 {
+                    numCtrl++;
                     channel++;
+                    //Console.WriteLine("\nC.new channel " + channel);
                     // we shouldn't have more than 3 channels, but just in case don't use the percussion channel
                     if (channel == 10)
                         channel++;
                     if (channel > 16)
                         channel = 16;
                 }
-                else if (control == true && numCtrl > 5)
+                else if (b >= FIRST_PITCH_BYTE) // Absolute pitch, first byte after a new channel
                 {
-                    if (b >= FIRST_PITCH_BYTE)
-                    {
-                        control = false;
-                        pitch = true;
-                        midiNote = GetMidiNote(b);
-                    }
-                    // Sometimes a rest occurs before first pitch is set
-                    else if (nibble1 == 0x8 && nibble2 > 0 && nibble2 <= lengths.Count)
-                    {
-                        rest = true;
-                        len = lengths[nibble2 - 1];
-                    }
-                    // I don't think we should get here with properly formatted files
-                    else
-                        control = false;
+                    control = false;
+                    //Console.WriteLine("\nD.control off " + numCtrl);
+                    pitch = true;
+                    midiNote = GetMidiNote(b);
+                }
+                // Sometimes one or more rests occur before first pitch is set, we'll consider it a control
+                else if (nibble1 == 0x8 && nibble2 > 0 && nibble2 <= lengths.Count)
+                {
+                    //Console.WriteLine("\nE.control [on] " + numCtrl);
+                    rest = true;
+                    len = lengths[nibble2 - 1];
+                }
+                else  // I don't think we should get here with properly formatted files
+                {
+                    control = false;
+                    //Console.WriteLine("\nF.control off " + numCtrl);
                 }
             }
             // TODO: What about the weird 0x10s and 0x20s?
-            else if (numCtrl == 1)
+
+            else if (numCtrl == 1) // Key change, first byte after a single control [should be 0x00] (key change)
             {
                 control = false;
-                pitch = true;
                 numCtrl = 0;
+                //Console.WriteLine("\nG.control off " + numCtrl);
+                pitch = true;
                 if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
                 {
                     // 0:+0 octaves, 1:+1 octaves, etc.?
@@ -1201,6 +1234,7 @@ void PlaySound(string abbrev, string filePath = "", bool toFile = false)
             {
                 control = false;
                 numCtrl = 0;
+                //Console.WriteLine("\nH.control off " + numCtrl);
                 if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
                     midiNote += nibble1;
                 else if (nibble1 > 0x8)     // negative nibble (> 0x8)
@@ -1277,7 +1311,10 @@ void PlaySound(string abbrev, string filePath = "", bool toFile = false)
     return;
 }
 
+// IBM only for now
 // The CGA medium-resolution graphics mode used here for PC is 320x200 x 4-color, with 2 possible palettes in mode 4
+// TODO: Figure out format for other ports
+// TODO: Figure out how to extract from GRAPHPDS*.* for AMBAII, AMZAST, AMBAST
 void DrawPic(string abbrev, string filePath = "", bool toFile = false)
 {
     byte OFFSET = 0x06; // The first 6 bytes have palette colors and height/width
