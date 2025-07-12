@@ -6,7 +6,7 @@
 
 ## Introduction
 
-I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" or its \"Spinnaker Adventure Language\" (SAL), used in creating adventure games published by Spinnaker's imprints Windham Classics and Trillium/Telarium [the name changed to the latter because of a trademark dispute]. Besides the article linked above, there is some interesting historical background that can be found at filfre.net: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/), and a piece focusing on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/).
+I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" (SAS) or its \"Spinnaker Adventure Language\" (SAL), used in creating adventure games published by Spinnaker's imprints Windham Classics and Trillium/Telarium [the name changed to the latter because of a trademark dispute]. Besides the article linked above, there is some interesting historical background that can be found at filfre.net: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/), and a piece focusing on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/).
 
 ![screenshot](images/f451-ibm-screenshot.png "Fahrenheit 451 for IBM PC screenshot") ![screenshot](images/tri-ibm-screenshot.png "Treasure Island for IBM PC screenshot")
 
@@ -37,43 +37,43 @@ These are the games created with the Spinnaker Advanture System:
 Some observations about the files used by these games: Thankfully, game strings are ASCII-encoded (though AMB is partially tokenized).
 
 
-| filename                | games           | platforms               | description                                                                                                                                             |
-| ------------------------- | ----------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \<abbrev\>              | all             | all                     | Strings and data used globally.                                                                                                                         |
-| **DEFAULTS.CST**        | AMB only        | AST only                | I'm guessing these are strings and data used globally.                                                                                                  |
-| **0** \| **1**          | DGW & RDV       | IBM only                | I'm guessing these are strings and data used globally across a specific disk.                                                                           |
-| **A** \| **B**          | AMB, F451, PMN  | IBM only                | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                  |
-| **A** \| **B** \| **C** | all             | MSX only                | I'm guessing these identify the current disk.                                                                                                           |
-| **AMBGLOB**             | AMB only        | AII,C64,IBM,MSX         | Additional strings and data used globally for AMB.                                                                                                      |
-| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC         | Additional help particular to this game.                                                                                                                |
-| **VOLT**                | all             | AII,C64,IBM,MAC         | Identifies the current disk.                                                                                                                            |
-| **SAVED**               | all             | all                     | Saved game file.                                                                                                                                        |
-| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                             |
-| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                                          |
-| **\*.DIB**              | F451 & RDV only | MSX only                | Graphics files for F451 and RDV on MSX.                                                                                                                 |
-| **DIR**                 | all but AMB,PMN | all                     | Directory of locations with disk numbers ("a" or "b").                                                                                                  |
-| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only                | Directory of locations with disk numbers ("a" or "b").                                                                                                  |
-| **OUTSIDE**             | AMB only        | AST only                | Additional directory of locations with disk nmbers ("a" or "b") for AMB on AST.                                                                         |
-| \<abbrev\>**.EXE**      | all             | IBM only                | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.              |
-| \<abbrev\>**.PRG**      | all             | AST only                | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.         |
-| **AVENTURA.COM**        | all             | MSX only                | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                               |
-| **TRILL**               | all             | AII & C64 only          | The game executable?                                                                                                                                    |
-| **TRILLIUM**            | all             | AII & C64 only          | ???                                                                                                                                                     |
-| **\*.STR**              | PMN             | AST, C64, & IBM         | Strings for some location files have been separated into a separate file.                                                                               |
-| **\*.STR**              | AMB, AMZ, & PMN | MSX only                | Some game strings that have been separated into separate files on MSX.                                                                                  |
-| \<abbrev\>**.T**        | AMB, PMN, & WOZ | List of game functions? |                                                                                                                                                         |
-| \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM         | [Token file](#tokenization-in-nine-princes).                                                                                                            |
-| \<abbrev\>**.V**        | all but DGW,RDV | all but AST             | [Vocabulary file](#vocabularies).                                                                                                                       |
-| **\*.IB** \| **\*.JR**  | all             | IBM only                | Sound files in IBM PC and PCjr formats.                                                                                                                 |
-| **\*.MST**              | PMN & TRI only  | AST only                | Sound files for PMN and TRI on Atari ST.                                                                                                                |
-| **\*.FEN**              | AMB only        | all                     | Data specific to the fencing (swordfighting) events for AMB.                                                                                            |
-| **\*.STR**              | PMN only        | all                     | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                  |
-| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only                | Location files.                                                                                                                                         |
-| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | Packed graphics files.                                                                                                                                  |
-| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | Packed sound files.                                                                                                                                     |
-| **\*.PDS**              | all             | MAC only                | Packed graphics and sound files.                                                                                                                        |
-| **\*.** (no extension)  | all             | IBM only                | Mostly location or [graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
-| **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                       |
+| filename                | games           | platforms               | description                                                                                                                                            |
+| ------------------------- | ----------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \<abbrev\>              | all             | all                     | Strings and data used globally.                                                                                                                        |
+| **DEFAULTS.CST**        | AMB only        | AST only                | I'm guessing these are strings and data used globally.                                                                                                 |
+| **0** \| **1**          | DGW & RDV       | IBM only                | I'm guessing these are strings and data used globally across a specific disk.                                                                          |
+| **A** \| **B**          | AMB, F451, PMN  | IBM only                | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                 |
+| **A** \| **B** \| **C** | all             | MSX only                | I'm guessing these identify the current disk.                                                                                                          |
+| **AMBGLOB**             | AMB only        | AII,C64,IBM,MSX         | Additional strings and data used globally for AMB.                                                                                                     |
+| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC         | Additional help particular to this game.                                                                                                               |
+| **VOLT**                | all             | AII,C64,IBM,MAC         | Identifies the current disk.                                                                                                                           |
+| **SAVED**               | all             | all                     | Saved game file.                                                                                                                                       |
+| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                            |
+| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                                         |
+| **\*.DIB**              | F451 & RDV only | MSX only                | Graphics files for F451 and RDV on MSX.                                                                                                                |
+| **DIR**                 | all but AMB,PMN | all                     | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
+| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only                | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
+| **OUTSIDE**             | AMB only        | AST only                | Additional directory of locations with disk nmbers ("a" or "b") for AMB on AST.                                                                        |
+| \<abbrev\>**.EXE**      | all             | IBM only                | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.             |
+| \<abbrev\>**.PRG**      | all             | AST only                | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.        |
+| **AVENTURA.COM**        | all             | MSX only                | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                              |
+| **TRILL**               | all             | AII & C64 only          | The game executable?                                                                                                                                   |
+| **TRILLIUM**            | all             | AII & C64 only          | ???                                                                                                                                                    |
+| **\*.STR**              | PMN             | AST, C64, & IBM         | Strings for some location files have been separated into a separate file.                                                                              |
+| **\*.STR**              | AMB, AMZ, & PMN | MSX only                | Some game strings that have been separated into separate files on MSX.                                                                                 |
+| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM         | List of game functions? |                                                                                                                                                        |
+| \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM         | [Token file](#tokenization-in-nine-princes).                                                                                                           |
+| \<abbrev\>**.V**        | all but DGW,RDV | all but AST             | [Vocabulary file](#vocabularies).                                                                                                                      |
+| **\*.IB** \| **\*.JR**  | all             | IBM only                | Sound files in IBM PC and PCjr formats.                                                                                                                |
+| **\*.MST**              | PMN & TRI only  | AST only                | Sound files for PMN and TRI on Atari ST.                                                                                                               |
+| **\*.FEN**              | AMB only        | all                     | Data specific to the fencing (swordfighting) events for AMB.                                                                                           |
+| **\*.STR**              | PMN only        | all                     | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                 |
+| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only                | Location files.                                                                                                                                        |
+| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | Packed graphics files.                                                                                                                                 |
+| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | Packed sound files.                                                                                                                                    |
+| **\*.PDS**              | all             | MAC only                | Packed graphics and sound files.                                                                                                                       |
+| **\*.** (no extension)  | all             | IBM only                | Mostly location or[graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
+| **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                      |
 
 Game strings and other data is found in the appropriate location files.
 
@@ -89,11 +89,11 @@ To save disk space, AMB (only) uses a tokenizer of its 256 most common words to 
 
 The Tester Tool permits you to export all pictures to .PNG from the IBM versions of all 8 games. You can also get a preview of an individual file with ANSI block characters. Note that the Tester's list of pictures shows files with no extension that weren't found in the location dir file (other than \<abbrev\>,1,2,A,B,DIR,NEWDATA,SAVED,VOLT), but there may be false positives.
 
-For the IBM versions, SAL uses 320x200 medium-resolution CGA, which supports three 4-color palettes and 2 intensity levels; these games only use low intensity and the first 2 palettes. Note that the Atari ST and Commodore 64 versions use the same resolution, but with 16 color support. The Apple II versions use the 280x192 resolution, with 6 "fringed" colors.
+For the IBM versions, SAS uses 320x200 medium-resolution CGA, which supports three 4-color palettes and 2 intensity levels; these games only use low intensity and the first 2 palettes. Note that the Atari ST and Commodore 64 versions use the same resolution, but with 16 color support. The Apple II versions use the 280x192 resolution, with 6 "fringed" colors.
 
-Pictures are either placed at the top in landscape orientation, fullscreen width with (typically) 40% of the screen height, or on one side in portrait orientation, with 45% of the screen width. Note that AMZ was ported to SAL from Apple II, and it uses most of the screen for its pictures (`0xA0` for both height and width, or 320x160) [plus the text is in all-caps, ungh]. My initial analysis was done on the IBM PC port, and the Tester Tool is designed for that version, but I've begun the process of recognizing other ports.
+Pictures are either placed at the top in landscape orientation, fullscreen width with (typically) 40% of the screen height, or on one side in portrait orientation, with 45% of the screen width. Note that AMZ was ported to SAS from Apple II, and it uses most of the screen for its pictures (`0xA0` for both height and width, or 320x160) [plus the text is in all-caps, ungh]. My initial analysis was done on the IBM PC port, and the Tester Tool is designed for that version, but I've begun the process of recognizing other ports.
 
-### IBM PC ports
+### IBM PC/PCjr picture format
 
 #### Header
 
@@ -200,6 +200,8 @@ Looking at the header, we see:
 
 Looking at the pixel data, we see that it's pretty boring at first: 61 pixels down of all white. Then 1 of all black, and seven more all white. Finally, a set of 1 pixel-high mixed black and white, and then some black and cyan until the bottom of the picture height, and back to the top of the screen (shifted by 4 pixels to the right) for the next block of white.
 
+Note that this file doesn't include the feet shown; these are drawn with a small separate picture file (called FEET), then HOSPITL is redrawn when the player stands up.
+
 ![example](images/gfx-example2.png "pixel layout")
 
 
@@ -225,7 +227,7 @@ I have no experience with the Commodore 64/128 or Atari ST, but I figured it'd b
 
 It would be nice not to have to figure out a container format as well, and it looks like the C64 versions do not have that issue. And even though the Atari had a more flexible color system than the Commodore, based on the screenshots online it doesn't look like Telarium really leveraged it very well. I've since discovered that the other games' Atari ports don't have that issue, so perhaps I can investigate those first, but because of the above and since not every game even got an ST port, for the moment I switched my focus to the C64. (I did do a quick comparison, and the graphics appear to be very different formats.)
 
-### Commodore 64 Picture Format
+### Commodore 64 picture format
 
 OK, I've just started this analysis, but here's what I've got so far.
 
@@ -257,7 +259,7 @@ In any case, the three-byte pattern looks like it changes again around address 0
 
 ### Amiga port of "Perry Mason"
 
-An Amiga magazine reviewed PMN (and is referenced by [the Wikipedia article](https://en.wikipedia.org/w/index.php?title=Perry_Mason:_The_Case_of_the_Mandarin_Murder)), but I can find no other indication that Amiga ports were created.
+An Amiga magazine reviewed PMN (and is referenced by [the Wikipedia article](https://en.wikipedia.org/w/index.php?title=Perry_Mason:_The_Case_of_the_Mandarin_Murder)), but I can find no other indication that Amiga ports were created. Perhaps the magazine was reviewing the C64 version.
 
 ### Macintosh ports
 
@@ -265,15 +267,17 @@ There are Mac ports for at least 3 of the games: AMZ, DGW, and F451. The picture
 
 ### MSX ports
 
-Then there's the Spanish-only remakes for MSX with totally redrawn art. However, it's difficult to test these; the SAL parser is hard enough to deal with when you're fluent in the language. Trying to use Google Translate as an intermediary is quite painful!
+Then there's the Spanish-only remakes for MSX with totally redrawn art. However, it's difficult to test these; the SAS parser is hard enough to deal with when you're fluent in the language. Trying to use Google Translate as an intermediary is quite painful!
 
-## Sound format
+## Sound Format
 
-These games feature some music and sound effects that are... serviceable. The IBM ports come with two sound file formats, \*.IB for the IBM PC internal speaker (monophonic) and \*.JR for the IBM PCjr [TI SN76489 chip](https://en.wikipedia.org/wiki/Texas_Instruments_SN76489) (polyphonic, featuring a 3-channel square wave generator, and a 1-channel noise generator, though it seems that SAS does not use the noise channel).
+These games feature some music and sound effects that are... serviceable. The IBM ports come with two sound file formats, \*.IB for the IBM PC internal speaker (monophonic) and \*.JR for the IBM PCjr [TI SN76489 chip](https://en.wikipedia.org/wiki/Texas_Instruments_SN76489) (polyphonic, featuring a 3-channel square wave generator, and a 1-channel white noise generator, though I'm not sure if the noise channel is used on the IBM ports).
 
-The Tester Tool permits you to export all audio files to .MID from the IBM versions of all 8 games. I'm close to having the format figured out, so it works pretty well for the most part, but there are still a couple bugs to work out. Here's what I have so far:
+The Tester Tool permits you to export all audio files to .MID for the IBM, Atari ST, and Commodore 64 versions of all 8 games. I'm close to having the format figured out, so it works pretty well for the most part, but there are still a couple bugs to work out. Here's what I've deciphered so far:
 
-### Header
+### IBM PC/PCjr sound format
+
+#### Header
 
 The first byte (at 0x00) is highly variable; it seems to be a buffer size, as I got it to play part of a prior sound file after increasing the size. The second byte (0x01) has a very small range (`00`-`02` I think). The first often varies between IB and JR formats, and the second sometimes does as well.
 
@@ -285,28 +289,28 @@ For monophonic files (which includes many of the \*.JR files which are duplicate
 
 0x09 and 0x10 are always `00`.
 
-### Note Lengths
+#### Note Lengths
 
 The 15 bytes between positions 0x0B and 0x19 comprise a new section that specifies an array of note lengths that are used in the section below.
 
-### Note Data
+#### Note Data
 
-For the rest of the file, starting at 0x1A, we have note data. The control code at the beginning is always `50 00 08 40 00 80`. I'm unclear what this means, except that `80` either starts or ends playback. For polyphonic files, if `80` is followed by the sequence above (starting with `50`), then a new channel begins at the next `80`, which will start at the beginning and play at the same time as the other channels.
+For the rest of the file, starting at 0x1A, we have note data. The control code at the beginning is always `50 00 08 40 00 80`.  means, except that `80` either starts or ends playback. For polyphonic files, if `80` is followed by the sequence above (starting with `50`), then a new channel begins at the next `80`, which will start at the beginning and play at the same time as the other channels.
 
 The first byte that follows the new channel sequence could indicate one or more rests (see next section below), but before the first audible note there should be a `00` followed by a byte between `C2` and `FF`. This indicates an absolute pitch value. This may seem a fairly narrow range of values to represent a ~2500 Hz range, except that since only musical notes will be specified, this actually covers more than 4 octaves of a chromatic scale (and the frequency curve is exponential anyway). See the chart below for some examples. It looks like you can set it to a lower pitch (below A3) with values below `C2`, though it will go no lower than octave zero. If you set it this way, however, it seems that notes don't cross over the `C2` line, i.e., pitch changes (see next section below) end up going down instead of up. The same is not true for pitch changes that go above `FF`; those seem to be allowed.
 
 
 | hex  | note | midi # | freq (Hz) |
 | ------ | ------ | -------- | ----------- |
-| `C2` | A3   | 57     | 220.00    |
+| `C2` | A2   | 45     | 110.00    |
 | ...  |      |        |           |
-| `D0` | C4   | 60     | 261.63    |
+| `D1` | C4   | 60     | 261.63    |
 | ...  |      |        |           |
-| `E0` | E5   | 76     | 659.46    |
+| `E0` | Eb5  | 75     | 622.25    |
 | ...  |      |        |           |
-| `F0` | G#6  | 92     | 1661.2    |
+| `F0` | G6   | 91     | 1568.0    |
 | ...  |      |        |           |
-| `FF` | G#7  | 104    | 3322.4    |
+| `FF` | Bb7  | 106    | 3729.3    |
 
 For the following note values, each byte represents one note or rest. The first nibble is the relative note pitch compared to the prior pitch, with 0 indicating the same note, 1-7 indicating the number of notes above, and 9-F indicating the number of notes below, with `F`=-1, `E`=-2, `D`=-3, etc. to `9`=-7.
 
@@ -316,9 +320,9 @@ A `00` within the note values seems to indicate a key change, though the value i
 
 I'm not sure what 2 `00`s indicates; is the following byte a new absolute pitch?
 
-### Example
+#### Example
 
-#### AMB\\AMBHORN.IB
+##### AMB\\AMBHORN.IB
 
 This is a short example from "Nine Princes" that emulates the sound of a hunting horn.
 
@@ -335,26 +339,34 @@ The second section at 0x0B (in blue) is the 15-element array of note lengths. In
 
 The next section at 0x1A (in green) is a control sequence of some kind. I'm also unclear on the specifics here, but it will be repeated at the start of a new channel.
 
-`C6` (at 0x21) is the absolute pitch at the beginning of a channel. It corresponds with C# in the fourth octave. The following section (in red) represents notes. `01` indicates no pitch change from the prior value, for the note length in the first index of the array (in this case, one beat). `72` indicates a rise of 7 semitones (i.e., C#->D->D#->E->F->F#->G->G#) up to G#, still in the fourth octave, for the length provided in the second index of the array (six beats). The next byte, `81`, since the first nibble is 0x8 and it's not `80` (the start/stop control code), then it's a rest for the length in the first index of the array (one beat). `91` indicates a fall by 7 half-steps, returning us to C#4, for one beat. In the end, the entirety of the audio is:
+`C6` (at 0x21) is the absolute pitch at the beginning of a channel. It corresponds with C# in the fourth octave. The following section (in red) represents notes. `01` indicates no pitch change from the prior value, for the note length in the first index of the array (in this case, one beat). `72` indicates a rise of 7 semitones (i.e., C#->D->D#->E->F->F#->G->G#) up to G#, still in the fourth octave, for the length provided in the second index of the array (six beats). The next byte, `81`, since the first nibble is 0x8 and it's not `80` (the stop control code), then it's a rest for the length in the first index of the array (one beat). `91` indicates a fall by 7 half-steps, returning us to C#4, for one beat. In the end, the entirety of the audio is:
 
 C#4 x1, G#4 x6, rest x1, C#4 x1, G#4 x1, rest x2, C#4 x1, G#4 x16
 
 It sounds like: "Da-doooo, da-do da-dooooooo!"
 
-And finally, we get the `80` start/stop control code.
+And finally, we get the `80` stop control code.
 
-### Commodore 64 Sound Format
+### Commodore 64 sound format
 
 The C64 files I've analyzed are very similar to the PCjr ones. The C64's [MOS 6581 SID](https://en.wikipedia.org/wiki/MOS_Technology_6581) is 3-channel, though it is much more flexible with the sounds that it can output (i.e., each channel can use noise generation or 4 different waveforms *simultaneously*, filtration and ADSR envelope modification).
 
-There are an additional two bytes at the beginning that are always `20 41` in the ones that I've looked at so far.
+Note I have also heard at least one instance of the noise channel being used by the C64.
 
-The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but rather than always being followed with `08 40 00 80`, it could be e.g., `08 20 05 C5` or `0F 40 00 80`. Does this mean that `C5` is an alternate start code?--though it seems `80` is still used for stops.
+There are an additional two bytes at the beginning of a file that are always `20 41` in the ones that I've looked at so far.
 
-There is also a final code after the last `80` that varies: I've seen e.g., `00`, `01`, `02`, `81`, and `FF`.
+The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform and ADSR envelope. Initially I thought the `80` in the sixth byte on PC and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`, and the latter only affects square waves (per the next byte), and adds another waveform (sawtooth maybe?) with the same pitch on top. The fourth byte is the waveform type: it seems that `10` is triangle, `20` is sawtooth, and `40` is square. It may be that `80` is white noise.
 
-### Atari ST Sound Format
+C64 also has a final code after the last `80` that varies: I've seen e.g., `00`, `01`, `02`, `81`, and `FF`.
 
-The 4 models prior to the STE had a [Yahama YM2149](https://en.wikipedia.org/wiki/General_Instrument_AY-3-8910), which apparently produces "similar results" to the chip in the PCjr.
+### Atari ST sound format
 
-Given that, perhaps it should not be surprising that the sound files are very similar to the PCjr versions; some are actually identical.
+All four models prior to the STe had a [Yahama YM2149](https://en.wikipedia.org/wiki/General_Instrument_AY-3-8910), which apparently produces "similar results" to the chip in the PCjr.
+
+Given that, perhaps it should not be surprising that the sound files are also very similar to the PCjr versions; some are actually identical. However, it looks like sometimes the new channel control codes are 8 bytes instead of 6.
+
+### Apple II sound format
+
+The three models prior to the IIGS had a very basic speaker. Add-in music cards were available, but SAS only supports the speaker.
+
+Because of this, the sound files are very similar to the .IB versions. There are three extra bytes at the start of the file, so the note data doesn't start until address 0x23.
