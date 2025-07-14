@@ -127,7 +127,7 @@ partial class SASTester
                         abbrev = "WM";
 
                     var filename = Path.GetFileName(file);
-                    //if (!filename.StartsWith("MUSICPDS") && !filename.StartsWith(abbrev))
+                    //if (!filename.StartsWith("MUSICPDS") &&
                     if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
                         !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
                         !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
@@ -175,10 +175,8 @@ partial class SASTester
     // This implementation is monophonic only, plays each channel one at a time
     // It sounds more authentic to PC speaker (Apple II and IBM *.IB), but the timing doesn't work very well yet
     // TODO: Fix timing
-    private static void WaveOut(int beatLen, List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes)
+    private static void WaveOut(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes)
     {
-        Console.WriteLine(KeyStop);
-
         var ch = 0;
         var patch = PatchSquare;
         var square = new SignalGenerator()
@@ -203,14 +201,11 @@ partial class SASTester
         };
         using var wave = new WaveOutEvent();
 
-        foreach (var (Pos, B, Ch, Midi, Freq, Length, Patch) in notes)
+        foreach (var (Pos, B, Ch, Note, Freq, Length, Patch) in notes)
         {
-            if (B == 0x80)
-                continue;
-
             var rest = false;
             var freq = Freq;
-            var midi = Midi;
+            var note = Note;
             var len = Length;
             var nibble1 = (byte)((B & 0xF0) >> 4);
             var nibble2 = (byte)(B & 0x0F);
@@ -219,10 +214,12 @@ partial class SASTester
             {
                 rest = true;
                 freq = 0; // set frequency to 0 if this is a rest
-                midi = 0; // set MIDI note to 0 if this is a rest
+                note = 0; // set MIDI note to 0 if this is a rest
             }
             var lenStr = GetNoteLengthName(len);
-            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : midi > 0 ? GetNoteName(midi) : "") : midi > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tFreq:{Math.Round(freq, 2),7}\tMIDI:{midi,3}");
+            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : note > 0 ? GetNoteName(note) : "") : note > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tFreq:{Math.Round(freq, 2),7}\tMIDI:{note,3}");
+            if (B == 0x00 || B == 0x80)
+                continue;
 
             // Not polyphonic, play next track separately
             if (Ch != ch)
@@ -282,22 +279,17 @@ partial class SASTester
     }
 
     // This implementation is monophonic only, plays each channel one at a time
-    private void MidiOut(int beatLen, List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes)
+    private void MidiOut(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes)
     {
-        Console.WriteLine(KeyStop);
-
         var ch = 0;
         var patch = PatchSquare;
         using var midiOut = new MidiOut(0);
 
-        foreach (var (Pos, B, Ch, Midi, Freq, Length, Patch) in notes)
+        foreach (var (Pos, B, Ch, Note, Freq, Length, Patch) in notes)
         {
-            if (B == 0x80)
-                continue;
-
             var rest = false;
             var freq = Freq;
-            var midi = Midi;
+            var note = Note;
             var len = Length;
             var nibble1 = (byte)((B & 0xF0) >> 4);
             var nibble2 = (byte)(B & 0x0F);
@@ -306,10 +298,12 @@ partial class SASTester
             {
                 rest = true;
                 freq = 0; // set frequency to 0 if this is a rest
-                midi = 0; // set MIDI note to 0 if this is a rest
+                note = 0; // set MIDI note to 0 if this is a rest
             }
             var lenStr = GetNoteLengthName(len);
-            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : midi > 0 ? GetNoteName(midi) : "") : midi > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tMIDI:{midi,3}\tFreq:{Math.Round(freq, 2),7}");
+            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : note > 0 ? GetNoteName(note) : "") : note > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tMIDI:{note,3}\tFreq:{Math.Round(freq, 2),7}");
+            if (B == 0x00 || B == 0x80)
+                continue;
 
             // Not polyphonic, play next track separately
             if (Ch != ch)
@@ -330,18 +324,19 @@ partial class SASTester
                     if (!key.Equals(ConsoleKey.None))
                         break;
                 }
-                midiOut.Send(MidiMessage.StartNote(midi, 127, ch).RawData);
+                midiOut.Send(MidiMessage.StartNote(note, 127, ch).RawData);
                 Thread.Sleep(Length * beatLen);
-                midiOut.Send(MidiMessage.StopNote(midi, 0, ch).RawData);
+                midiOut.Send(MidiMessage.StopNote(note, 0, ch).RawData);
             }
         }
     }
 
-    private static void WriteMidi(int beatLen, List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes, string filePath = "")
+    private static void WriteMidi(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes, string filePath = "")
     {
         var multiTrack = 1;
-        //if (pcType == IbmAbb && Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase))
-        //    multiTrack = 0;
+        if (pcType == Apple2Abb ||
+            (pcType == IbmAbb && Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
+            multiTrack = 0;
         IList<MidiEvent> track = [];
 
         const int TicksPerQtrNote = 480;  // ticks per quarter note
@@ -351,48 +346,71 @@ partial class SASTester
 
         MidiEventCollection events = new(multiTrack, TicksPerQtrNote);
 
-        foreach (var (Pos, B, Ch, Midi, Freq, Length, Patch) in notes)
+        foreach (var (Pos, B, Ch, Note, Freq, Length, Patch) in notes)
         {
-            var nibble1 = (byte)((B & 0xF0) >> 4);
-            var nibble2 = (byte)(B & 0x0F);
-
-            var midi = Midi;
+            var note = Note;
             if (Ch != ch)
             {
-                time = 0;
                 if (multiTrack == 1 && Ch < 17)
                 {
                     if (ch > 0)
+                    {
                         track.Add(new MetaEvent(MetaEventType.EndTrack, 0, time)); // end prior track
+#if _DEBUG
+                        Console.WriteLine($"; Channel {ch} End: {time}");
+#endif
+                        time = 0;
+                    }
                     ch = Ch;
                 }
                 else
                     ch = 1;
-
-                if (Patch != 0)
-                    track = events.AddTrack([new PatchChangeEvent(0, ch, Patch)]);
+#if _DEBUG
+                Console.Write($"Channel {ch} Begin: {time}");
+#endif
 
                 if (ch == 1 && beatLen > 0)
                 {
-                    int tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20); //beatLen * TicksPerQtrNote * 18;
-                    //Console.WriteLine($"Beat Length: {beatLen} / Tempo: {tempo * 4} ms \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
+                    int tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20);
                     track.Add(new TempoEvent(tempo, 0)); // in ms per quarter note
+#if _DEBUG
+                    Console.Write($"; Beat Length: {beatLen} / Tempo: {tempo * 4} ms / \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
+#endif
                 }
             }
-            if (ch > 0 && beatLen > 0)
+            if (ch > 0)
             {
-                if (midi == 0)
-                    time += Length * beatLen;
-                else
+                if (Patch != 0)
                 {
-                    var duration = Length * beatLen;
-                    track.Add(new NoteOnEvent(time, ch, midi, DefVelocity, duration));
-                    time += duration;
-                    track.Add(new NoteEvent(time, ch, MidiCommandCode.NoteOff, midi, 0));
+                    track = events.AddTrack([new PatchChangeEvent(0, ch, Patch)]);
+#if _DEBUG
+                    Console.Write($"; Patch Change: {Patch}");
+#endif
+                }
+                if (Length > 0)
+                {
+                    if (note == 0)
+                        time += Length * beatLen;
+                    else
+                    {
+                        var duration = Length * beatLen;
+                        track.Add(new NoteOnEvent(time, ch, note, DefVelocity, duration));
+#if _DEBUG
+                        //Console.Write($"; + {time}");
+#endif
+                        time += duration;
+                        track.Add(new NoteEvent(time, ch, MidiCommandCode.NoteOff, note, 0));
+#if _DEBUG
+                        //Console.Write($"; - {time}");
+#endif
+                    }
                 }
             }
         }
         track.Add(new MetaEvent(MetaEventType.EndTrack, 0, time));
+#if _DEBUG
+        Console.WriteLine($"; Channel {ch} End: {time}; Done");
+#endif
         if (ch == 1)
             events.MidiFileType = 0;
         events.PrepareForExport();
@@ -429,16 +447,16 @@ partial class SASTester
         return FirstMidi;
     }
 
-    private static double GetFreq(int midi)
+    private static double GetFreq(int midiNote)
     {
-        var offset = midi - FirstMidi - 3;  // Need to go to the previous A note
+        var offset = midiNote - FirstMidi - 3;  // Need to go to the previous A note
         var oct = offset / 12 + FirstOctave;
         return GetFreqOffset(offset) * Math.Pow(2, oct);
     }
 
-    private static string GetNoteName(int midi) // where 45 -> A2 (0xC2)
+    private static string GetNoteName(int midiNote) // where 45 -> A2 (0xC2)
     {
-        var offset = midi - FirstMidi - 3;  // Need to go to the previous A note
+        var offset = midiNote - FirstMidi - 3;  // Need to go to the previous A note
         var oct = offset / 12 + FirstOctave;
         if (oct == FirstOctave && offset < 0)
             oct--;
@@ -508,7 +526,7 @@ partial class SASTester
         var numCtrl = 0;
         double freq = 0f;
         List<int> lengths = [];
-        List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes = [];
+        List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes = [];
         if (pcType == Apple2Abb)
         {
             timeOffset += 0x3;
@@ -569,8 +587,11 @@ partial class SASTester
                     if (channel > 16)
                         channel = 16;
 #if _DEBUG
-                    Console.Write(    $"\n{b:x2} A.new channel {channel} / {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"\n{b:x2} A.new channel {channel} / {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 else if (!control && b == 0x80)
@@ -579,8 +600,11 @@ partial class SASTester
                     control = false;
                     numCtrl = 0;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} B.end channel {channel} / {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} B.end channel {channel} / {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 else if (!newCh && b == 0x00) // Key change
@@ -591,8 +615,11 @@ partial class SASTester
                     control = true;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} C.keyChg on {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} C.keyChg on {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 else if (newCh && numCtrl == 2) // Doubled waveform? (ST only)
@@ -608,8 +635,11 @@ partial class SASTester
                         dbl = false;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} D.control [on] patch {patch} /  {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} D.control [on] patch {patch} /  {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 else if (newCh && numCtrl == 3) // Change waveform
@@ -629,8 +659,11 @@ partial class SASTester
 
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} E.control [on] patch {patch} / {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} E.control [on] patch {patch} / {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 else if (newCh && numCtrl > 5)
@@ -643,8 +676,11 @@ partial class SASTester
                         control = false;
                         midiNote = GetMidiNote(b);
 #if _DEBUG
-                        Console.Write(    $"{b:x2} F.control off [pitch] {numCtrl}: ");
-                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        if (!toFile)
+                        {
+                            Console.Write($"{b:x2} F.control off [pitch] {numCtrl}: ");
+                            Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        }
 #endif
                     }
                     // Sometimes one or more rests occur before absolute pitch is set, we'll consider it a control
@@ -653,16 +689,22 @@ partial class SASTester
                         rest = true;
                         len = lengths[nibble2 - 1];
 #if _DEBUG
-                        Console.Write(    $"{b:x2} G.tacit {numCtrl}: ");
-                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        if (!toFile)
+                        {
+                            Console.Write($"{b:x2} G.tacit {numCtrl}: ");
+                            Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        }
 #endif
                     }
                     else if (b == 0x00)
                     {
                         // ignore this
 #if _DEBUG
-                        Console.Write(    $"{b:x2} H.control [on] 0x00 {numCtrl}: ");
-                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        if (!toFile)
+                        {
+                            Console.Write($"{b:x2} H.control [on] 0x00 {numCtrl}: ");
+                            Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        }
 #endif
                     }
                     else  // I don't think we should get here with a properly formatted file
@@ -670,8 +712,11 @@ partial class SASTester
                         newCh = false;
                         control = false;
 #if _DEBUG
-                        Console.Write(    $"{b:x2} I.control off ??? {numCtrl}: ");
-                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        if (!toFile)
+                        {
+                            Console.Write($"{b:x2} I.control off ??? {numCtrl}: ");
+                            Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        }
 #endif
                         numCtrl = 0;
                     }
@@ -681,8 +726,11 @@ partial class SASTester
                     // not sure what these do, do nothing for now
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} J.control [on] ??? {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} J.control [on] ??? {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
                 // TODO: Does a double 0x00 mean something else?
@@ -692,8 +740,11 @@ partial class SASTester
                     pitch = true;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} K.keyChg [on] [pitch] {numCtrl}: ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} K.keyChg [on] [pitch] {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                     if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
                     {
@@ -744,8 +795,11 @@ partial class SASTester
                     else
                         len = 0;
 #if _DEBUG
-                    Console.Write(    $"{b:x2} L.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
-                    Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} L.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
 #endif
                 }
 
@@ -788,7 +842,7 @@ partial class SASTester
                 if (i == timeOffset)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"      [beatLen: {b} × 16 = {beatLen}]");
+                    Console.WriteLine($"      [beatLen: {b} \u00d7 16 = {beatLen}]");
                     Console.Write("000 | ");
                     for (var j = 0; j <= timeOffset; j++)
                     {
@@ -835,13 +889,15 @@ partial class SASTester
 
         Console.WriteLine();
         Console.WriteLine(Divider);
+        Console.WriteLine(KeyStop);
+        Console.WriteLine(Divider);
         /*
         if (pcType == Apple2Abb || (pcType == IbmAbb &&
             Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
             WaveOut(beatLen, notes);
         else
         */
-            MidiOut(beatLen, notes);
+        MidiOut(beatLen, notes);
         Console.WriteLine(Divider);
         return;
     }
