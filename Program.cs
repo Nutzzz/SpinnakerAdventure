@@ -11,18 +11,18 @@ partial class SASTester
     public const string FilePromptWarn = "[Warning: There may be false positives.]";
     public const string Divider = "---------------------------------------";
 
-    public const string Apple2Abb = "AII";
-    const string Apple2Type = "Apple II";
-    public const string AtariStAbb = "AST";
-    const string AtariStType = "Atari ST";
+    public const string Apple2Abb   = "AII";
+    const string Apple2Type         = "Apple II";
+    public const string AtariStAbb  = "AST";
+    const string AtariStType        = "Atari ST";
     public const string CommodoreAbb = "C64";
-    const string CommodoreType = "Commodore 64";
-    public const string IbmAbb = "IBM";
-    const string IbmType = "IBM PC (default)";
-    public const string MacAbb = "MAC";
-    const string MacType = "Macintosh";
-    public const string MsxAbb = "MSX";
-    const string MsxType = "MSX";
+    const string CommodoreType      = "Commodore 64";
+    public const string IbmAbb      = "IBM";
+    const string IbmType            = "IBM PC (default)";
+    public const string MacAbb      = "MAC";
+    const string MacType            = "Macintosh";
+    public const string MsxAbb      = "MSX";
+    const string MsxType            = "MSX";
 
     const string MainTitle   = "SPINNAKER ADVENTURE LANGUAGE TESTER";
     const string TitleDecor  = "**";
@@ -45,70 +45,70 @@ partial class SASTester
     const string StrExpMenu  = "Strings (expanded)";
 
     // Amazon
-    const string AmazonName  = "Amazon";
-    public const string AmazonAbb = "AMZ";
-    const string AmazonMenu1 = "AMZ Executable";
-    const string AmazonMenu2 = "AMZ.V: Vocabulary";
-    const string AmazonMenu3 = "DIR: Location directory";
-    readonly string amazonTitle = AmazonName.ToUpperInvariant();
+    const string AmazonName         = "Amazon";
+    public const string AmazonAbb   = "AMZ";
+    const string AmazonMenu1        = "AMZ Executable";
+    const string AmazonMenu2        = "AMZ.V: Vocabulary";
+    const string AmazonMenu3        = "DIR: Location directory";
+    readonly string amazonTitle     = AmazonName.ToUpperInvariant();
 
     // Dragonworld
-    const string DragonName  = "Dragonworld";
-    public const string DragonAbb = "DGW";
-    const string DragonMenu1 = "DGW Executable";
-    const string DragonMenu2 = "DIR: Location directory";
-    readonly string dragonTitle = DragonName.ToUpperInvariant();
+    const string DragonName         = "Dragonworld";
+    public const string DragonAbb   = "DGW";
+    const string DragonMenu1        = "DGW Executable";
+    const string DragonMenu2        = "DIR: Location directory";
+    readonly string dragonTitle     = DragonName.ToUpperInvariant();
 
     // Fahrenheit 451
-    const string F451Name    = "Fahrenheit 451";
-    public const string F451Abb = "F451";
-    const string F451Menu1   = "DIR: Location directory";
-    const string F451Menu2   = "F451 Executable";
-    const string F451Menu3   = "F451.V: Vocabulary";
-    readonly string f451Title = F451Name.ToUpperInvariant();
+    const string F451Name           = "Fahrenheit 451";
+    public const string F451Abb     = "F451";
+    const string F451Menu1          = "DIR: Location directory";
+    const string F451Menu2          = "F451 Executable";
+    const string F451Menu3          = "F451.V: Vocabulary";
+    readonly string f451Title       = F451Name.ToUpperInvariant();
 
     // Nine Princes in Amber
-    const string AmberName   = "Nine Princes in Amber";
-    public const string AmberAbb = "AMB";
-    const string AmberMenu1  = "AMB.DIB: Location directory";
-    const string AmberMenu2  = "AMB Executable";
-    const string AmberMenu3  = "AMB.T: Functions";
-    const string AmberMenu4  = "AMB.TOK: String tokens";
-    const string AmberMenu5  = "AMB.V: Vocabulary";
-    readonly string amberTitle = AmberName.ToUpperInvariant();
+    const string AmberName          = "Nine Princes in Amber";
+    public const string AmberAbb    = "AMB";
+    const string AmberMenu1         = "AMB.DIB: Location directory";
+    const string AmberMenu2         = "AMB Executable";
+    const string AmberMenu3         = "AMB.T: Functions";
+    const string AmberMenu4         = "AMB.TOK: String tokens";
+    const string AmberMenu5         = "AMB.V: Vocabulary";
+    readonly string amberTitle      = AmberName.ToUpperInvariant();
 
     // Perry Mason: The Case of the Mandarin Murder
-    const string PerryName   = "Perry Mason";
-    public const string PerryAbb = "PMN";
-    const string PerryMenu1  = "PMN.DIB: Location directory";
-    const string PerryMenu2  = "PMN Executable";
-    const string PerryMenu3  = "PMN.T: Functions";
-    const string PerryMenu4  = "PMN.V: Vocabulary";
-    readonly string perryTitle = PerryName.ToUpperInvariant();
+    const string PerryName          = "Perry Mason";
+    public const string PerryAbb    = "PMN";
+    const string PerryMenu1         = "PMN.DIB: Location directory";
+    const string PerryMenu2         = "PMN Executable";
+    const string PerryMenu3         = "PMN.T: Functions";
+    const string PerryMenu4         = "PMN.V: Vocabulary";
+    readonly string perryTitle      = PerryName.ToUpperInvariant();
 
     // Rendezvous with Rama
-    const string RamaName    = "Rendezvous with Rama";
-    public const string RamaAbb = "RDV";
-    const string RamaMenu1   = "DIR: Location directory";
-    const string RamaMenu2   = "RDV Executable";
-    readonly string ramaTitle = RamaName.ToUpperInvariant();
+    const string RamaName           = "Rendezvous with Rama";
+    public const string RamaAbb     = "RDV";
+    const string RamaMenu1          = "DIR: Location directory";
+    const string RamaMenu2          = "RDV Executable";
+    readonly string ramaTitle       = RamaName.ToUpperInvariant();
 
     // Treasure Island
-    const string IslandName  = "Treasure Island";
-    public const string IslandAbb = "TRI";
-    const string IslandMenu1 = "DIR: Location directory";
-    const string IslandMenu2 = "TRI Executable";
-    const string IslandMenu3 = "TRI.V: Vocabulary";
-    readonly string islandTitle = IslandName.ToUpperInvariant();
+    const string IslandName         = "Treasure Island";
+    public const string IslandAbb   = "TRI";
+    const string IslandMenu1        = "DIR: Location directory";
+    const string IslandMenu2        = "TRI Executable";
+    const string IslandMenu3        = "TRI.V: Vocabulary";
+    readonly string islandTitle     = IslandName.ToUpperInvariant();
 
     // The Wizard of Oz
-    const string OzName      = "The Wizard of Oz";
-    public const string OzAbb = "WOZ";
-    const string OzMenu1     = "DIR: Location directory";
-    const string OzMenu2     = "WOZ Executable";
-    const string OzMenu3     = "WOZ.T: Functions";
-    const string OzMenu4     = "WOZ.V: Vocabulary";
-    readonly string ozTitle = OzName.ToUpperInvariant();
+    const string OzName             = "The Wizard of Oz";
+    public const string OzAbb       = "WOZ";
+    const string OzMenu1            = "DIR: Location directory";
+    const string OzMenu2            = "WOZ Executable";
+    const string OzMenu3            = "WOZ.T: Functions";
+    const string OzMenu4            = "WOZ.V: Vocabulary";
+    readonly string ozTitle         = OzName.ToUpperInvariant();
 
     const byte Delim = 0x00;
 

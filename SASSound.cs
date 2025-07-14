@@ -10,18 +10,18 @@ namespace SASTester;
 
 partial class SASTester
 {
-    private const byte FirstPitchByte = 0x9E; //0xC2;
-    private const int FirstMidi = 9; //45;  // 0xC2 = #45 = A2; Weird behaviors seen when going below A2 then back up again
-                                            // But lowest actual note seems to be 0xA1 = #12 = C0
-    private const int LastMidi = 127;       // Though the highest absolute pitch is 0xFF = #105 = Bb7, relative pitches might go higher
-    private const int FirstOctave = 0; //3; // to nearest C
-    private const int PatchSquare = 80;     // "Lead 1 (square)"    // or maybe 13=Xylophone
-    private const int PatchSaw = 81;        // "Lead 2 (sawtooth)"  // or maybe 7=Harpsichord
-    private const int PatchTriangle = 122;  // "Ocarina"            // triangle approx.
-    private const int PatchNoise = 126;     // "Applause"           // white noise approx. or maybe 122=Seashore
-    private const int PatchDouble = 87;     // "Lead 8 (bass+lead)" // at this point a stand-in, for (I think) waveform doubling
+    private const byte FirstPitchByte   = 0x9E;     //0xC2;
+    private const int FirstMidi         = 9; //45;  // 0xC2 = #45 = A2; Weird behaviors seen when going below A2 then back up again
+                                                    // But lowest actual note seems to be 0xA1 = #12 = C0
+    private const int LastMidi          = 127;      // Though the highest absolute pitch is 0xFF = #105 = Bb7, relative pitches might go higher
+    private const int FirstOctave       = 0; //3;   // to nearest C
+    private const int PatchSquare       = 80;       // "Lead 1 (square)"    // or maybe 13=Xylophone
+    private const int PatchSaw          = 81;       // "Lead 2 (sawtooth)"  // or maybe 7=Harpsichord
+    private const int PatchTriangle     = 122;      // "Ocarina"            // triangle approx.
+    private const int PatchNoise        = 126;      // "Applause"           // white noise approx. or maybe 122=Seashore
+    private const int PatchDouble       = 87;       // "Lead 8 (bass+lead)" // at this point a stand-in, for (I think) waveform doubling
 
-    private const string KeyStop = "Press any key to stop playback.";
+    private const string KeyStop        = "Press any key to stop playback.";
 
     public void ShowSoundFiles(string abbrev)
     {
@@ -418,9 +418,6 @@ partial class SASTester
             9 => 55.0000,   // A1
             10 => 58.2705,  // Bb1
             11 => 61.7354,  // B1
-                            //9 => 65.4064,   // C2
-                            //10 => 69.2957,  // C#2
-                            //11 => 73.4162,  // D2
             _ => 0,
         };
     }
@@ -512,6 +509,18 @@ partial class SASTester
         double freq = 0f;
         List<int> lengths = [];
         List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes = [];
+        if (pcType == Apple2Abb)
+        {
+            timeOffset += 0x3;
+            lensOffset += 0x3;
+            noteOffset += 0x3;
+        }
+        else if (pcType == CommodoreAbb)
+        {
+            timeOffset += 0x2;
+            lensOffset += 0x2;
+            noteOffset += 0x2;
+        }
         try
         {
             if (!File.Exists(filePath))
@@ -536,20 +545,8 @@ partial class SASTester
             patch = 0;
             pitch = false;
             rest = false;
-            if (pcType == Apple2Abb)
-            {
-                timeOffset += 3;
-                lensOffset += 3;
-                noteOffset += 3;
-            }
-            if (pcType == CommodoreAbb)
-            {
-                timeOffset += 2;
-                lensOffset += 2;
-                noteOffset += 2;
-            }
             if (i == timeOffset)
-                beatLen = b * 16;           // Beat time length (gives tempo)
+                beatLen = b * 0x10;         // Beat time length (gives tempo)
             else if (i >= lensOffset && i < noteOffset)
                 lengths.Add(b);             // Note lengths
             else if (i >= noteOffset)
@@ -572,7 +569,7 @@ partial class SASTester
                     if (channel > 16)
                         channel = 16;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} A.new channel " + channel + " / " + numCtrl + ": ");
+                    Console.Write(    $"\n{b:x2} A.new channel {channel} / {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -582,7 +579,7 @@ partial class SASTester
                     control = false;
                     numCtrl = 0;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} B.end channel " + channel + " / " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} B.end channel {channel} / {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -594,7 +591,7 @@ partial class SASTester
                     control = true;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} C.keyChg on " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} C.keyChg on {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -611,7 +608,7 @@ partial class SASTester
                         dbl = false;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} D.control [on] patch " + patch + " / " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} D.control [on] patch {patch} /  {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -632,7 +629,7 @@ partial class SASTester
 
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} E.control [on] patch " + patch + " / " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} E.control [on] patch {patch} / {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -646,7 +643,7 @@ partial class SASTester
                         control = false;
                         midiNote = GetMidiNote(b);
 #if _DEBUG
-                        Console.Write(    "\n\t" + $"{b:x2} F.control off [pitch] " + numCtrl + ": ");
+                        Console.Write(    $"{b:x2} F.control off [pitch] {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                     }
@@ -656,7 +653,7 @@ partial class SASTester
                         rest = true;
                         len = lengths[nibble2 - 1];
 #if _DEBUG
-                        Console.Write(    "\n\t" + $"{b:x2} G.tacit " + numCtrl + ": ");
+                        Console.Write(    $"{b:x2} G.tacit {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                     }
@@ -664,7 +661,7 @@ partial class SASTester
                     {
                         // ignore this
 #if _DEBUG
-                        Console.Write(    "\n\t" + $"{b:x2} H.control [on] 0x00 " + numCtrl + ": ");
+                        Console.Write(    $"{b:x2} H.control [on] 0x00 {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                     }
@@ -673,7 +670,7 @@ partial class SASTester
                         newCh = false;
                         control = false;
 #if _DEBUG
-                        Console.Write(    "\n\t" + $"{b:x2} I.control off ??? " + numCtrl + ": ");
+                        Console.Write(    $"{b:x2} I.control off ??? {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                         numCtrl = 0;
@@ -684,7 +681,7 @@ partial class SASTester
                     // not sure what these do, do nothing for now
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} J.control [on] ??? " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} J.control [on] ??? {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -695,7 +692,7 @@ partial class SASTester
                     pitch = true;
                     numCtrl++;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} K.keyChg [on] [pitch] " + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} K.keyChg [on] [pitch] {numCtrl}: ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                     if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
@@ -747,7 +744,7 @@ partial class SASTester
                     else
                         len = 0;
 #if _DEBUG
-                    Console.Write(    "\n\t" + $"{b:x2} L.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
+                    Console.Write(    $"{b:x2} L.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
                     Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
 #endif
                 }
@@ -778,16 +775,36 @@ partial class SASTester
                 {
                     Console.WriteLine();
                     Console.Write($"{i:x3} | ");
-                }
-                Console.Write($"{b:x2} ");
 #if _DEBUG
-                if (i == 0x02)
+                    if (i > noteOffset)
+                        Console.WriteLine();
+#endif
+                }
+#if _DEBUG
+                if (i < noteOffset)
+#endif
+                    Console.Write($"{b:x2} ");
+#if _DEBUG
+                if (i == timeOffset)
                 {
                     Console.WriteLine();
-                    Console.WriteLine($"      [beatLen: {beatLen}]");
-                    Console.Write("000 | -- -- -- ");
+                    Console.WriteLine($"      [beatLen: {b} × 16 = {beatLen}]");
+                    Console.Write("000 | ");
+                    for (var j = 0; j <= timeOffset; j++)
+                    {
+                        Console.Write("-- ");
+                    }
                 }
-                else if (i == 0x19)
+                else if (i == lensOffset - 1)
+                {
+                    Console.WriteLine();
+                    Console.Write("000 | ");
+                    for (var j = 0; j < lensOffset; j++)
+                    {
+                        Console.Write("-- ");
+                    }
+                }
+                else if (i == lensOffset + 14)
                 {
                     Console.WriteLine();
                     Console.Write($"      [lengths: ");
@@ -796,7 +813,11 @@ partial class SASTester
                         Console.Write(len + ",");
                     }
                     Console.WriteLine("]");
-                    Console.Write("010 | -- -- -- -- -- -- -- -- -- -- ");
+                    Console.Write("010 | ");
+                    for (var j = 0; j < lensOffset - 1; j++)
+                    {
+                        Console.Write("-- ");
+                    }
                 }
 #endif
             }
