@@ -21,6 +21,8 @@ partial class SASTester
     private const int PatchNoise = 126;     // "Applause"           // white noise approx. or maybe 122=Seashore
     private const int PatchDouble = 87;     // "Lead 8 (bass+lead)" // at this point a stand-in, for (I think) waveform doubling
 
+    private const string KeyStop = "Press any key to stop playback.";
+
     public void ShowSoundFiles(string abbrev)
     {
         var fileFound = false;
@@ -171,9 +173,12 @@ partial class SASTester
     }
 
     // This implementation is monophonic only, plays each channel one at a time
-    // It sounds more authentic to PC speaker, but the timing doesn't work as well
+    // It sounds more authentic to PC speaker (Apple II and IBM *.IB), but the timing doesn't work very well yet
+    // TODO: Fix timing
     private static void WaveOut(int beatLen, List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes)
     {
+        Console.WriteLine(KeyStop);
+
         var ch = 0;
         var patch = PatchSquare;
         var square = new SignalGenerator()
@@ -217,7 +222,8 @@ partial class SASTester
                 midi = 0; // set MIDI note to 0 if this is a rest
             }
             var lenStr = GetNoteLengthName(len);
-            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : midi > 0 ? GetNoteName(midi) : "") : midi > 0 ? "*" : "")}\t{lenStr}\tFreq:{Math.Round(freq, 2),7}\tMIDI:{midi,3}");
+            Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : midi > 0 ? GetNoteName(midi) : "") : midi > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tFreq:{Math.Round(freq, 2),7}\tMIDI:{midi,3}");
+
             // Not polyphonic, play next track separately
             if (Ch != ch)
             {
@@ -229,39 +235,57 @@ partial class SASTester
             if (Patch != 0)
                 patch = Patch;
 
+            if (len <= 0)
+                continue;
+
             switch (patch)
             {
                 case PatchSquare:
                     square.Frequency = freq;
-                    wave.Init(square.Take(TimeSpan.FromSeconds(2)));
+                    wave.Init(square.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
                     break;
                 case PatchSaw:
                     saw.Frequency = freq;
-                    wave.Init(saw.Take(TimeSpan.FromSeconds(2)));
+                    wave.Init(saw.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
                     break;
                 case PatchTriangle:
                     tri.Frequency = freq;
-                    wave.Init(tri.Take(TimeSpan.FromSeconds(2)));
+                    wave.Init(tri.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
                     break;
                 case PatchNoise:
                     noise.Frequency = freq;
-                    wave.Init(noise.Take(TimeSpan.FromSeconds(2)));
+                    wave.Init(noise.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
                     break;
             }
 
-            // TODO: Stop on keyboard input
-            if (len > 0)
+            wave.Play();
+            var stop = false;
+            while (true)
             {
-                wave.Play();
-                Thread.Sleep(Length * beatLen);
-                wave.Stop();
+                if (wave.PlaybackState == PlaybackState.Stopped)
+                    break;
+
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(true).Key;
+                    if (!key.Equals(ConsoleKey.None))
+                    {
+                        wave.Stop();
+                        stop = true;
+                        break;
+                    }
+                }
             }
+            if (stop)
+                break;
         }
     }
 
     // This implementation is monophonic only, plays each channel one at a time
     private void MidiOut(int beatLen, List<(int Pos, byte B, int Ch, int Midi, double Freq, int Length, int Patch)> notes)
     {
+        Console.WriteLine(KeyStop);
+
         var ch = 0;
         var patch = PatchSquare;
         using var midiOut = new MidiOut(0);
@@ -286,6 +310,7 @@ partial class SASTester
             }
             var lenStr = GetNoteLengthName(len);
             Console.WriteLine($"{Pos:x3} : {B:x2} {(len > 0 ? (rest ? "r" : midi > 0 ? GetNoteName(midi) : "") : midi > 0 ? "*" : Patch > 0 ? "P" + Patch : "")}\t{lenStr}\tMIDI:{midi,3}\tFreq:{Math.Round(freq, 2),7}");
+
             // Not polyphonic, play next track separately
             if (Ch != ch)
             {
@@ -296,9 +321,15 @@ partial class SASTester
             }
             if (Patch > 0)
                 midiOut.Send(MidiMessage.ChangePatch(patch, ch).RawData);
-            // TODO: Stop on keyboard input
+
             if (len > 0)
             {
+                if (Console.KeyAvailable)
+                {
+                    var key = Console.ReadKey(true).Key;
+                    if (!key.Equals(ConsoleKey.None))
+                        break;
+                }
                 midiOut.Send(MidiMessage.StartNote(midi, 127, ch).RawData);
                 Thread.Sleep(Length * beatLen);
                 midiOut.Send(MidiMessage.StopNote(midi, 0, ch).RawData);
@@ -313,7 +344,7 @@ partial class SASTester
         //    multiTrack = 0;
         IList<MidiEvent> track = [];
 
-        const int TicksPerQtrNote = 120;  // ticks per quarter note
+        const int TicksPerQtrNote = 480;  // ticks per quarter note
         const int DefVelocity = 127;      // 127=maximum velocity
         var ch = 0;
         long time = 0;
@@ -341,26 +372,23 @@ partial class SASTester
                 if (Patch != 0)
                     track = events.AddTrack([new PatchChangeEvent(0, ch, Patch)]);
 
-                if (ch == 1)
+                if (ch == 1 && beatLen > 0)
                 {
-                    var tempo = beatLen * TicksPerQtrNote * 18;
+                    int tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20); //beatLen * TicksPerQtrNote * 18;
                     //Console.WriteLine($"Beat Length: {beatLen} / Tempo: {tempo * 4} ms \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
                     track.Add(new TempoEvent(tempo, 0)); // in ms per quarter note
                 }
             }
-            if (ch > 0)
+            if (ch > 0 && beatLen > 0)
             {
-                if (beatLen > 0)
+                if (midi == 0)
+                    time += Length * beatLen;
+                else
                 {
-                    if (midi == 0)
-                        time += Length * beatLen;
-                    else
-                    {
-                        var duration = Length * beatLen;
-                        track.Add(new NoteOnEvent(time, ch, midi, DefVelocity, duration));
-                        time += duration;
-                        track.Add(new NoteEvent(time, ch, MidiCommandCode.NoteOff, midi, 0));
-                    }
+                    var duration = Length * beatLen;
+                    track.Add(new NoteOnEvent(time, ch, midi, DefVelocity, duration));
+                    time += duration;
+                    track.Add(new NoteEvent(time, ch, MidiCommandCode.NoteOff, midi, 0));
                 }
             }
         }
@@ -479,7 +507,7 @@ partial class SASTester
         var midiNote = 0;
         var beatLen = 48;
         var channel = 0;
-        var patch = PatchSquare;
+        var patch = 0;
         var numCtrl = 0;
         double freq = 0f;
         List<int> lengths = [];
@@ -505,6 +533,7 @@ partial class SASTester
         }
         foreach (var b in array)
         {
+            patch = 0;
             pitch = false;
             rest = false;
             if (pcType == Apple2Abb)
@@ -534,7 +563,6 @@ partial class SASTester
                 {
                     newCh = true;
                     keyChg = false;
-                    dbl = false;
                     control = true;
                     numCtrl = 1;
                     channel++;
@@ -579,6 +607,8 @@ partial class SASTester
                         dbl = true;
                         patch = PatchDouble;    // placeholder for now
                     }
+                    else
+                        dbl = false;
                     numCtrl++;
 #if _DEBUG
                     Console.Write(    "\n\t" + $"{b:x2} D.control [on] patch " + patch + " / " + numCtrl + ": ");
@@ -784,10 +814,12 @@ partial class SASTester
 
         Console.WriteLine();
         Console.WriteLine(Divider);
-        if (abbrev == Apple2Abb ||
-            (abbrev == IbmAbb && Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
+        /*
+        if (pcType == Apple2Abb || (pcType == IbmAbb &&
+            Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
             WaveOut(beatLen, notes);
         else
+        */
             MidiOut(beatLen, notes);
         Console.WriteLine(Divider);
         return;
