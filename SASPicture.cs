@@ -52,7 +52,7 @@ partial class SASTester
                     filePath = Path.Combine(RscPath, abbrev, input);
                     if (!File.Exists(filePath))
                     {
-                        Console.WriteLine($"{FileError} {filePath}");
+                        Console.Error.WriteLine($"{FileError} {filePath}");
                         break;
                     }
                 }
@@ -74,18 +74,25 @@ partial class SASTester
         }
         try
         {
-            foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
+            if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType)))
             {
-                var filename = Path.GetFileName(file);
-                if (!locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
-                    !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
-                    !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
+                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
                 {
-                    picFiles.Add(filename);
+                    var filename = Path.GetFileName(file);
+                    if (!locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                        !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                        !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
+                    {
+                        picFiles.Add(filename);
+                    }
                 }
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
         return picFiles;
     }
 
@@ -191,7 +198,7 @@ partial class SASTester
     // IBM only for now
     // The CGA medium-resolution graphics mode used here for PC is 320x200 x 4-color, with 2 possible palettes in mode 4
     // TODO: Figure out format for other ports
-    // TODO: Figure out how to extract from GRAPHPDS*.* for AMBAII, AMZAST, AMBAST
+    // TODO: Figure out how to extract from GRAPHPDS*.* for AMBAII, AMZAST, AMBAST, and pixa?.pds for AMZMAC
     private static void DrawPic(string abbrev, string filePath = "", bool toFile = false)
     {
         const byte Offset = 0x06; // The first 6 bytes have palette colors and height/width
@@ -213,7 +220,11 @@ partial class SASTester
             }
             array = File.ReadAllBytes(filePath);
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
         if (toFile)
             Console.WriteLine(filePath);
 
@@ -221,7 +232,7 @@ partial class SASTester
         if (!toFile)
         {
             Console.WriteLine("Off | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F");
-            Console.Write("----+------------------------------------------------");
+            Console.Write    ("----+------------------------------------------------");
         }
         foreach (var b in array)
         {

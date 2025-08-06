@@ -30,6 +30,7 @@ partial class SASTester
 
     const string ExpTag      = " [experimental]";
     const string SwitchMenu  = "Switch computer type";
+    const string ExtractPdsMenu = "Extract all container files";
     const string ExportPngMenu = "Export all pictures to PNG";
     const string ExportMidMenu = "Export all audio to MIDI";
     const string BackMenu    = "Back to Main Menu";
@@ -43,6 +44,9 @@ partial class SASTester
     const string SndMenu     = "Play audio";
     const string StrMenu     = "Strings";
     const string StrExpMenu  = "Strings (expanded)";
+    const string PdsMenu     = "Examine containers";
+
+    public const string AllGamesAbb = "ALL";
 
     // Amazon
     const string AmazonName         = "Amazon";
@@ -114,8 +118,9 @@ partial class SASTester
 
     const ConsoleKey key0 = ConsoleKey.D0, key1 = ConsoleKey.D1, key2 = ConsoleKey.D2, key3 = ConsoleKey.D3,
                      key4 = ConsoleKey.D4, key5 = ConsoleKey.D5, key6 = ConsoleKey.D6, key7 = ConsoleKey.D7,
-                     key8 = ConsoleKey.D8, key9 = ConsoleKey.D9, keySwitch = ConsoleKey.S, keyExpPng = ConsoleKey.P,
-                     keyExpMid = ConsoleKey.M, keyBack = ConsoleKey.B, keyQuit = ConsoleKey.Q, keyEsc = ConsoleKey.Escape;
+                     key8 = ConsoleKey.D8, key9 = ConsoleKey.D9, keyExtPds = ConsoleKey.X, keyExpPng = ConsoleKey.P,
+                     keyExpMid = ConsoleKey.M, keySwitch = ConsoleKey.S, keyBack = ConsoleKey.B,
+                     keyQuit = ConsoleKey.Q, keyEsc = ConsoleKey.Escape;
 
     // These enums are used by LookupPartOfSpeech()
 
@@ -242,14 +247,18 @@ partial class SASTester
                 ZipFile.ExtractToDirectory(zipfile, RscPath, overwriteFiles: false);
             }
         }
-        catch (Exception) { }
+        catch (IOException) {}
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
 
         var tester = new SASTester();
         tester.DoMainMenu();
         DoExit();
     }
 
-    void ShowLocs(string abbrev)
+    static void ShowLocs(string abbrev)
     {
         foreach (var loc in GetLocs(abbrev))
         {
@@ -257,7 +266,7 @@ partial class SASTester
         }
     }
 
-    void ShowExe(string abbrev, byte[]? start, byte[]? end)
+    static void ShowExe(string abbrev, byte[]? start, byte[]? end)
     {
         start ??= Encoding.ASCII.GetBytes(abbrev + ".   ");
         end ??= [Delim, Delim];
@@ -299,10 +308,13 @@ partial class SASTester
                 i++;
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
     }
 
-    void ShowTokens(string abbrev)
+    static void ShowTokens(string abbrev)
     {
         foreach (var token in GetTokens(abbrev))
         {
@@ -310,7 +322,7 @@ partial class SASTester
         }
     }
 
-    void ShowVocab(string abbrev)
+    static void ShowVocab(string abbrev)
     {
         const byte Offset = 0x3C;
         byte[] vDelim = [0x80, 0x8C]; // This represents the part of speech, but acts as delimiter as well here
@@ -343,7 +355,10 @@ partial class SASTester
                 i++;
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
     }
 
     void ShowStrings(string abbrev, byte start, bool expand = false)
@@ -381,7 +396,7 @@ partial class SASTester
                 var array = File.ReadAllBytes(filePath);
                 Dictionary<byte, string> tokens = [];
                 if (expand)
-                    tokens = GetTokens(abbrev, start);
+                    tokens = GetTokens(abbrev);
                 foreach (var entry in ProcessStrings(array, tokens))
                 {
                     var found = false;
@@ -422,7 +437,10 @@ partial class SASTester
                     DoExit();
 
             }
-            catch (Exception) { }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine(e.ToString());
+            }
         }
     }
 
@@ -473,7 +491,10 @@ partial class SASTester
                 }
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
 
         return exeDict;
     }
@@ -529,12 +550,15 @@ partial class SASTester
                 i++;
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
 
         return locs;
     }
 
-    static Dictionary<byte, string> GetTokens(string abbrev, int start = 0) // Only necessary for Amber
+    static Dictionary<byte, string> GetTokens(string abbrev) // Only necessary for Amber
     {
         const int Offset = 0x102;
         Dictionary<byte, string> tokens = [];
@@ -564,7 +588,10 @@ partial class SASTester
                 b++;
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
 
         return tokens;
     }
@@ -673,6 +700,271 @@ partial class SASTester
         stream.Close();
     }
 
+    static void ExaminePdsFiles(string abbrev = AllGamesAbb)
+    {
+        List<string> pdsFiles = [];
+        if (pcType == Apple2Abb && (abbrev == AmberAbb || abbrev == AllGamesAbb))
+        {
+            pdsFiles = [Path.Combine(RscPath, "AMBAII", "GRAPHPDS.a"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.b"),
+                        Path.Combine(RscPath, "AMBAII", "GRAPHPDS.c"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.d"),
+                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.a"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.b"),
+                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.c"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.d")];
+            //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAII", "PDS"));
+        }
+        else if (pcType == AtariStAbb)
+        {
+            if (abbrev == AmberAbb || abbrev == AllGamesAbb)
+            {
+                pdsFiles.AddRange([Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS"), Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS")]);
+                //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAST", "AMB", "PDS"));
+            }
+            if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
+            {
+                pdsFiles.AddRange([Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS.B"),
+                                Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS.B")]);
+                //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAST", "AMZ", "PDS"));
+            }
+        }
+        // TODO: For Mac, we might use the names.pds files to get the list of pds files
+        else if (pcType == MacAbb)
+        {
+            if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
+            {
+                pdsFiles.AddRange([Path.Combine(RscPath, "AMZMAC", "ctxa1.pds"), Path.Combine(RscPath, "AMZMAC", "musa1.pds"),
+                                Path.Combine(RscPath, "AMZMAC", "pixa1.pds"), Path.Combine(RscPath, "AMZMAC", "pixa2.pds")]);
+            }
+            if (abbrev == DragonAbb || abbrev == AllGamesAbb)
+            {
+                pdsFiles.AddRange([Path.Combine(RscPath, "DGWMAC", "ctxa1.pds"), Path.Combine(RscPath, "DGWMAC", "ctxb1.pds"),
+                                Path.Combine(RscPath, "DGWMAC", "ctxb2.pds"), Path.Combine(RscPath, "DGWMAC", "musa.pds"),
+                                Path.Combine(RscPath, "DGWMAC", "musb.pds"), Path.Combine(RscPath, "DGWMAC", "pixa1.pds"),
+                                Path.Combine(RscPath, "DGWMAC", "pixa2.pds"), Path.Combine(RscPath, "DGWMAC", "pixb1.pds"),
+                                Path.Combine(RscPath, "DGWMAC", "pixb2.pds")]);
+            }
+            if (abbrev == F451Abb || abbrev == AllGamesAbb)
+            {
+                pdsFiles.AddRange([Path.Combine(RscPath, "F451MAC", "ctxa.pds"), Path.Combine(RscPath, "F451MAC", "ctxb1.pds"),
+                                Path.Combine(RscPath, "F451MAC", "ctxb2.pds"), Path.Combine(RscPath, "F451MAC", "musa.pds"),
+                                Path.Combine(RscPath, "F451MAC", "musb.pds"), Path.Combine(RscPath, "F451MAC", "pixa1.pds"),
+                                Path.Combine(RscPath, "F451MAC", "pixa2.pds"), Path.Combine(RscPath, "F451MAC", "pixb1.pds"),
+                                Path.Combine(RscPath, "F451MAC", "pixb2.pds"), Path.Combine(RscPath, "F451MAC", "pixb3.pds")]);
+            }
+        }
+
+        OpenPds(pdsFiles, abbrev == AllGamesAbb);
+    }
+
+    static void OpenPds(List<string> pdsFiles, bool extract = false)
+    {
+        try
+        {
+            foreach (var pdsFile in pdsFiles)
+            {
+                if (!File.Exists(pdsFile))
+                {
+                    Console.Error.WriteLine($"{FileError} {pdsFile}");
+                }
+
+                List<(string Name, string InName, int InBeginAddress, int InEndAddress)> inFiles = [];
+                var numFileAddr = 0x00;
+                var fileListAddr = 0x02;
+                var fileAddrAddr = 0x10;
+                var firstFileAddr = 0x00;
+                var fileNameLength = 12;
+                var fileRefLength = 18;
+                var offset = 0;
+
+                // Apple II PDS have an extra three bytes at the beginning (2-byte full file length + separator)
+                if (pcType == Apple2Abb)
+                {
+                    offset = 3;
+                    numFileAddr += offset;
+                    fileListAddr += offset;
+                    fileAddrAddr += offset;
+                }
+                // Mac PDS files specify the first file address (twice for some reason) rather than a file count
+                else if (pcType == MacAbb)
+                {
+                    offset = 8;
+                    fileListAddr += offset;
+                    fileAddrAddr += offset - 4;
+                    fileNameLength = 8;
+                    fileRefLength = 12;
+                }
+
+                var numFiles = 0;
+                var inPrevFilename = "";
+                var inCurFilename = "";
+                var inListNum = 0;
+                if (pcType == MacAbb)
+                    inListNum = 1;
+                var inFileNum = 0;
+                byte inByte1 = 0x00;
+                byte inByte2 = 0x00;
+                var inPrevAddress = 0x000000;
+                var inBeginAddress = 0x000000;
+                var inEndAddress = 0x000000;
+                var allBytes = File.ReadAllBytes(pdsFile);
+                var eof = allBytes.Length - 1;
+                var nameDone = false;
+                List<byte> fileBytes = [];
+
+                int i = 0;
+                foreach (var b in allBytes)
+                {
+                    if (i == numFileAddr)
+                    {
+                        if (pcType == MacAbb)
+                            firstFileAddr = b * 0x100;
+                        else
+                        {
+                            numFiles = b;
+                            Console.WriteLine();
+                            Console.WriteLine($"{pdsFile} [0x{allBytes.Length:x6}] contains {numFiles} files:");
+                        }
+                    }
+                    else if ((i == numFileAddr + 1) && pcType == MacAbb)
+                    {
+                        firstFileAddr += b;
+                        numFiles = (firstFileAddr - offset - 2) / fileRefLength;
+                        Console.WriteLine();
+                        Console.WriteLine($"{pdsFile} [0x{allBytes.Length:x6}] contains {numFiles} files, beginning at 0x{firstFileAddr:x4}:");
+                    }
+
+                    if (i < fileListAddr)
+                    {
+                        // do nothing
+                    }
+                    else if (inListNum <= numFiles)
+                    {
+                        if ((i - fileListAddr) % fileRefLength == 0)       // new filename
+                        {
+                            inPrevFilename = inCurFilename;
+                            inCurFilename = "";
+                            inCurFilename += (char)b;
+                            inByte1 = 0x00;
+                            inByte2 = 0x00;
+                            if (pcType == MacAbb)
+                                inPrevAddress = inEndAddress;
+                            else
+                                inPrevAddress = inBeginAddress;
+                            inBeginAddress = 0x000000;
+                            nameDone = false;
+                        }
+                        else if (((i - fileAddrAddr) % fileRefLength == 0) && pcType != MacAbb)     // little byte
+                            inByte1 = b;
+                        else if ((i - fileAddrAddr) % fileRefLength == (pcType == MacAbb ? 0 : 1))  // middle byte (or big for Mac)
+                            inByte2 = b;
+                        else if ((i - fileAddrAddr) % fileRefLength == (pcType == MacAbb ? 1 : 2))  // big byte (or little for Mac)
+                        {
+                            // For Mac, the specified value is the length rather than the file address (and again twice for some reason),
+                            // and so we're only looking at the last two bytes
+                            if (pcType == MacAbb)
+                            {
+                                if (inListNum == 1)
+                                    inBeginAddress = firstFileAddr;
+                                else
+                                    inBeginAddress = inPrevAddress + 1;
+                                inEndAddress = inBeginAddress + (inByte2 * 0x100) + b - 1;
+                                if (inEndAddress > eof)
+                                    inEndAddress = eof;
+                                if (inListNum > 0)
+                                    inFiles.Add((pdsFile, inCurFilename, inBeginAddress, inEndAddress));
+
+                                inListNum++;
+                            }
+                            else
+                            {
+                                // Other than Mac, the 3-byte specified value is the starting address of the file
+                                inBeginAddress = (b * 0x10000) + (inByte2 * 0x100) + inByte1;
+                                if (inBeginAddress > eof)
+                                    inBeginAddress = eof + 1;
+                                if (inListNum == 0)
+                                    firstFileAddr = inBeginAddress;
+                                else if (inListNum > 0)
+                                    inFiles.Add((pdsFile, inPrevFilename, inPrevAddress, inBeginAddress - 1));
+
+                                inListNum++;
+                            }
+                        }
+                        else if (b == 0x00 || b == 0x20)
+                            nameDone = true;
+                        else if (!nameDone)
+                        {
+                            inCurFilename += (char)b;
+
+                            if (inCurFilename.Length >= fileNameLength)
+                                nameDone = true;
+                        }
+                    }
+
+                    if (firstFileAddr > 0 && i >= firstFileAddr) // file data
+                    {
+                        if (inFiles.Count == 0)
+                            continue;
+
+//#if DEBUG
+//                        if (i == inFiles[inFileNum].InBeginAddress)
+//                            Console.WriteLine($"\n{pdsFile}: {inFileNum + 1,2}.{inFiles[inFileNum].InName} (0x{inFiles[inFileNum].InBeginAddress:x6} to 0x{inFiles[inFileNum].InEndAddress:x6})");
+//#endif
+
+                        if (i == inFiles[inFileNum].InEndAddress || i == eof)
+                        {
+                            fileBytes.Add(b);
+                            if (extract)
+                                File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(pdsFile) ?? Directory.GetCurrentDirectory(), inFiles[inFileNum].InName), [.. fileBytes]);
+                            else
+                            {
+                                Console.WriteLine("\nOff | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F");
+                                Console.Write      ("----+------------------------------------------------");
+                                var j = 0;
+                                foreach (var fb in fileBytes)
+                                {
+                                    if (j % 16 == 0)
+                                    {
+                                        Console.Write($"\n{j / 16:x3} | ");
+                                    }
+                                    Console.Write($"{fb:x2} ");
+                                    j++;
+                                }
+                                Console.WriteLine($"\n\nEND {pdsFile}: {inFileNum + 1,2}.{inFiles[inFileNum].InName} (0x{inFiles[inFileNum].InBeginAddress:x6} to 0x{inFiles[inFileNum].InEndAddress:x6})");
+                                Console.Write(KeyPress);
+                                var k = Console.ReadKey(intercept: true);
+                                if (k.Key.Equals(keyEsc) ||
+                                    k.Key.Equals(keyBack))
+                                {
+                                    break;
+                                }
+                                else if (k.Key.Equals(keyQuit))
+                                    DoExit();
+                                Console.WriteLine();
+                            }
+                            inFileNum++;
+                            if (inFileNum >= inFiles.Count)
+                                break;
+                            fileBytes = [];
+                        }
+                        else
+                            fileBytes.Add(b);
+                    }
+                    i++;
+                }
+#if DEBUG
+                foreach (var file in inFiles)
+                {
+                    Console.WriteLine($"{file.Name}: {file.InName} at 0x{file.InBeginAddress:x6}");
+                }
+#endif
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
+        Console.WriteLine();
+    }
+
     static List<ArraySegment<byte>> Split(byte[] array, byte[] delim, bool range = false)
     {
         var segList = new List<ArraySegment<byte>>();
@@ -731,8 +1023,8 @@ partial class SASTester
     static ConsoleKey? ShowMenu(bool main, string title, params string[] options)
     {
         ConsoleKeyInfo? key = null;
-        while (key?.Key != keyEsc && key?.Key != keyBack && key?.Key != keyQuit &&
-               key?.Key != keySwitch && key?.Key != keyExpPng && key?.Key != keyExpMid &&
+        while (key?.Key != keyEsc && key?.Key != keyBack && key?.Key != keyQuit && key?.Key != keySwitch &&
+               key?.Key != keyExpPng && key?.Key != keyExpMid && key?.Key != keyExtPds &&
                key?.Key != key0 && key?.Key != key1 && key?.Key != key2 && key?.Key != key3 &&
                key?.Key != key4 && key?.Key != key5 && key?.Key != key6 && key?.Key != key7 &&
                key?.Key != key8 && key?.Key != key9)
@@ -753,11 +1045,13 @@ partial class SASTester
             Console.WriteLine();
             if (main)
             {
+                if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == MacAbb)
+                    Console.WriteLine($" X. {ExtractPdsMenu}");
                 if (pcType == IbmAbb)
                     Console.WriteLine($" P. {ExportPngMenu}");
-                if (pcType == AtariStAbb || pcType == CommodoreAbb || pcType == IbmAbb)
+                if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");
-                Console.WriteLine($" S. {SwitchMenu} ({pcType}){ExpTag}");
+                Console.WriteLine($" S. {SwitchMenu} ({pcType})");
             }
             else
                 Console.WriteLine($" B. {BackMenu}");
@@ -807,6 +1101,9 @@ partial class SASTester
                 case keySwitch:
                     DoSwitchMenu();
                     break;
+                case keyExtPds:
+                    ExaminePdsFiles();
+                    break;
                 case keyExpPng:
                     ExportPicFiles();
                     break;
@@ -829,7 +1126,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: amazonTitle, AmazonMenu1, AmazonMenu2, AmazonMenu3, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: amazonTitle, AmazonMenu1, AmazonMenu2, AmazonMenu3,
+                PicMenu, SndMenu, StrMenu, PdsMenu);
             switch (key)
             {
                 case key0:
@@ -862,6 +1160,13 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     ShowStrings(AmazonAbb, 0x03, expand: false);
                     break;
+                case key6:
+                    if (pcType == AtariStAbb || pcType == MacAbb)
+                    {
+                        Console.WriteLine(PdsMenu);
+                        ExaminePdsFiles(AmazonAbb);
+                    }
+                    break;
                 case keyBack:
                 case keyEsc:
                     break;
@@ -880,7 +1185,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: dragonTitle, DragonMenu1, DragonMenu2, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: dragonTitle, DragonMenu1, DragonMenu2,
+                PicMenu, SndMenu, StrMenu, PdsMenu);
             switch (key)
             {
                 case key0:
@@ -916,6 +1222,13 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     ShowStrings(DragonAbb, 0x03, expand: false);
                     break;
+                case key5:
+                    if (pcType == MacAbb)
+                    {
+                        Console.WriteLine(ExtractPdsMenu);
+                        ExaminePdsFiles(DragonAbb);
+                    }
+                    break;
                 case keyBack:
                 case keyEsc:
                     break;
@@ -934,7 +1247,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: f451Title, F451Menu1, F451Menu2, F451Menu3, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: f451Title, F451Menu1, F451Menu2, F451Menu3,
+                PicMenu, SndMenu, StrMenu, PdsMenu);
             switch (key)
             {
                 case key0:
@@ -967,6 +1281,13 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     ShowStrings(F451Abb, 0x03, expand: false);
                     break;
+                case key6:
+                    if (pcType == MacAbb)
+                    {
+                        Console.WriteLine(ExtractPdsMenu);
+                        ExaminePdsFiles(F451Abb);
+                    }
+                    break;
                 case keyBack:
                 case keyEsc:
                     break;
@@ -985,7 +1306,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: amberTitle, AmberMenu1, AmberMenu2, AmberMenu3, AmberMenu4, AmberMenu5, PicMenu, SndMenu, StrExpMenu);
+            var key = ShowMenu(main: false, title: amberTitle, AmberMenu1, AmberMenu2, AmberMenu3, AmberMenu4, AmberMenu5,
+                PicMenu, SndMenu, StrExpMenu, PdsMenu);
             switch (key)
             {
                 case key0:
@@ -1022,6 +1344,13 @@ partial class SASTester
                     Console.WriteLine(StrExpMenu);
                     ShowStrings(AmberAbb, 0x02, expand: true);
                     break;
+                case key8:
+                    if (pcType == Apple2Abb || pcType == AtariStAbb)
+                    {
+                        Console.WriteLine(ExtractPdsMenu);
+                        ExaminePdsFiles(AmberAbb);
+                    }
+                    break;
                 case keyBack:
                 case keyEsc:
                     break;
@@ -1040,7 +1369,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: perryTitle, PerryMenu1, PerryMenu2, PerryMenu3, PerryMenu4, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: perryTitle, PerryMenu1, PerryMenu2, PerryMenu3, PerryMenu4,
+                PicMenu, SndMenu, StrMenu);
             switch (key)
             {
                 case key0:
@@ -1089,7 +1419,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: ramaTitle, RamaMenu1, RamaMenu2, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: ramaTitle, RamaMenu1, RamaMenu2,
+                PicMenu, SndMenu, StrMenu);
             switch (key)
             {
                 case key0:
@@ -1140,7 +1471,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: islandTitle, IslandMenu1, IslandMenu2, IslandMenu3, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: islandTitle, IslandMenu1, IslandMenu2, IslandMenu3,
+                PicMenu, SndMenu, StrMenu);
             switch (key)
             {
                 case key0:
@@ -1191,7 +1523,8 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: ozTitle, OzMenu1, OzMenu2, OzMenu3, OzMenu4, PicMenu, SndMenu, StrMenu);
+            var key = ShowMenu(main: false, title: ozTitle, OzMenu1, OzMenu2, OzMenu3, OzMenu4,
+                PicMenu, SndMenu, StrMenu);
             switch (key)
             {
                 case key0:

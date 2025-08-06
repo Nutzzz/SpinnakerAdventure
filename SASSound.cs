@@ -1,5 +1,5 @@
 ﻿#if DEBUG
-//#define _DEBUG
+#define _DEBUG
 #endif
 
 using NAudio.Midi;
@@ -17,11 +17,12 @@ partial class SASTester
     private const int FirstOctave       = 0; //3;   // to nearest C
     private const int PatchSquare       = 80;       // "Lead 1 (square)"    // or maybe 13=Xylophone
     private const int PatchSaw          = 81;       // "Lead 2 (sawtooth)"  // or maybe 7=Harpsichord
-    private const int PatchTriangle     = 122;      // "Ocarina"            // triangle approx.
-    private const int PatchNoise        = 126;      // "Applause"           // white noise approx. or maybe 122=Seashore
+    private const int PatchTriangle     = 79;       // "Ocarina"            // triangle approx.
+    private const int PatchNoise        = 126;      // "Applause"           // white noise approx.
     private const int PatchDouble       = 87;       // "Lead 8 (bass+lead)" // at this point a stand-in, for (I think) waveform doubling
 
     private const string KeyStop        = "Press any key to stop playback.";
+    private const string BeatError      = "Error: Invalid beat length.";
 
     public void ShowSoundFiles(string abbrev)
     {
@@ -59,7 +60,7 @@ partial class SASTester
                     filePath = Path.Combine(RscPath, abbrev, input);
                     if (!File.Exists(filePath))
                     {
-                        Console.WriteLine($"{FileError} {filePath}");
+                        Console.Error.WriteLine($"{FileError} {filePath}");
                         break;
                     }
                 }
@@ -77,85 +78,97 @@ partial class SASTester
         List<string> sndFiles = [];
         try
         {
-            if (pcType == IbmAbb) // can rely on extensions
+            if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType)))
             {
-                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.IB").ToList())
+                if (pcType == IbmAbb) // can rely on extensions
                 {
-                    var filename = Path.GetFileName(file);
-                    sndFiles.Add(filename);
+                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.IB").ToList())
+                    {
+                        var filename = Path.GetFileName(file);
+                        sndFiles.Add(filename);
+                    }
+                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.JR").ToList())
+                    {
+                        var filename = Path.GetFileName(file);
+                        sndFiles.Add(filename);
+                    }
+                    return sndFiles;
                 }
-                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.JR").ToList())
+                else if (pcType == AtariStAbb) // doesn't always use extension + deeper folder structure
                 {
-                    var filename = Path.GetFileName(file);
-                    sndFiles.Add(filename);
+                    if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType, abbrev)))
+                    {
+                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.MST").ToList())
+                        {
+                            var filename = Path.GetFileName(file);
+                            sndFiles.Add(filename);
+                        }
+                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.").ToList())
+                        {
+                            if (abbrev == F451Abb)
+                                abbrev = "F4";
+                            else if (abbrev == OzAbb)  // no WOZAST port?
+                                abbrev = "WM";
+                            var filename = Path.GetFileName(file);
+                            if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
+                                !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
+                                !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
+                                !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
+                                continue;
+                            if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
+                                (abbrev == "F4" && (filename.Equals(F451Abb, StringComparison.OrdinalIgnoreCase) ||
+                                filename.Length < 5)))
+                                continue;
+                            sndFiles.Add(filename);
+                        }
+                    }
                 }
-                return sndFiles;
-            }
-            else if (pcType == AtariStAbb) // doesn't always use extension + deeper folder structure
-            {
-                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.MST").ToList())
+                else // if (pcType == Apple2Abb || pcType == CommodoreAbb || pcType == MacAbb)
                 {
-                    var filename = Path.GetFileName(file);
-                    sndFiles.Add(filename);
-                }
-                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.").ToList())
-                {
-                    if (abbrev == F451Abb)
-                        abbrev = "F4";
-                    else if (abbrev == OzAbb)  // no WOZAST port?
-                        abbrev = "WM";
-                    var filename = Path.GetFileName(file);
-                    if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
-                        (abbrev == "F4" && (filename.Equals(F451Abb, StringComparison.OrdinalIgnoreCase) ||
-                        filename.Length < 5)))
-                        continue;
-                    sndFiles.Add(filename);
-                }
-            }
-            else // if (pcType == apple2Abb || pcType == commodoreAbb)
-            {
-                foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
-                {
-                    if (abbrev == F451Abb)
-                        abbrev = "F4";
-                    else if (abbrev == OzAbb)
-                        abbrev = "WM";
+                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
+                    {
+                        if (abbrev == F451Abb)
+                            abbrev = "F4";
+                        else if (abbrev == OzAbb)
+                            abbrev = "WM";
 
-                    var filename = Path.GetFileName(file);
-                    //if (!filename.StartsWith("MUSICPDS") &&
-                    if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
-                        !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    if (abbrev == AmberAbb && (filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
-                        filename.EndsWith("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
-                        filename.EndsWith("AMBINIT", StringComparison.OrdinalIgnoreCase)))
-                        continue;
-                    if (abbrev == "F4" && ((filename.StartsWith(F451Abb, StringComparison.OrdinalIgnoreCase) &&
-                        !filename.EndsWith("OPEN", StringComparison.OrdinalIgnoreCase)) || filename.Length < 5))
-                        continue;
-                    if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
-                        continue;
-                    sndFiles.Add(filename);
+                        var filename = Path.GetFileName(file);
+                        if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
+                            !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
+                            !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
+                            !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        if (abbrev == AmberAbb && (filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
+                            filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
+                            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
+                            filename.Equals("AMBOPEN", StringComparison.OrdinalIgnoreCase)))
+                            continue;
+                        if (abbrev == "F4" && filename.StartsWith(F451Abb, StringComparison.OrdinalIgnoreCase) &&
+                            filename.Length < 5)
+                            continue;
+                        if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        sndFiles.Add(filename);
+                    }
                 }
             }
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
         return sndFiles;
     }
 
     private void ExportSndFiles()
     {
         if (pcType != Apple2Abb && pcType != AtariStAbb &&
-            pcType != CommodoreAbb && pcType != IbmAbb)
+            pcType != CommodoreAbb && pcType != IbmAbb &&
+            pcType != MacAbb)
             return;
         Console.WriteLine("Please wait ...");
         foreach (var abbrev in new[] { AmazonAbb, DragonAbb, F451Abb, AmberAbb,
@@ -235,23 +248,26 @@ partial class SASTester
             if (len <= 0)
                 continue;
 
+            // TODO: Why is dividing by 2 necessary here?
+            int beatLenAdjd = beatLen / 2;
+
             switch (patch)
             {
                 case PatchSquare:
                     square.Frequency = freq;
-                    wave.Init(square.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
+                    wave.Init(square.Take(TimeSpan.FromMilliseconds(Length * beatLenAdjd)));
                     break;
                 case PatchSaw:
                     saw.Frequency = freq;
-                    wave.Init(saw.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
+                    wave.Init(saw.Take(TimeSpan.FromMilliseconds(Length * beatLenAdjd)));
                     break;
                 case PatchTriangle:
                     tri.Frequency = freq;
-                    wave.Init(tri.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
+                    wave.Init(tri.Take(TimeSpan.FromMilliseconds(Length * beatLenAdjd)));
                     break;
                 case PatchNoise:
                     noise.Frequency = freq;
-                    wave.Init(noise.Take(TimeSpan.FromMilliseconds(Length * beatLen / 2)));
+                    wave.Init(noise.Take(TimeSpan.FromMilliseconds(Length * beatLenAdjd)));
                     break;
             }
 
@@ -333,16 +349,24 @@ partial class SASTester
 
     private static void WriteMidi(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes, string filePath = "")
     {
+        if (beatLen <= 0)
+        {
+            Console.Error.WriteLine(BeatError);
+            return;
+        }
+
         var multiTrack = 1;
+        /*
         if (pcType == Apple2Abb ||
             (pcType == IbmAbb && Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
             multiTrack = 0;
+        */
         IList<MidiEvent> track = [];
 
         const int TicksPerQtrNote = 480;  // ticks per quarter note
         const int DefVelocity = 127;      // 127=maximum velocity
         var ch = 0;
-        long time = 0;
+        var time = 0L;
 
         MidiEventCollection events = new(multiTrack, TicksPerQtrNote);
 
@@ -368,23 +392,30 @@ partial class SASTester
 #if _DEBUG
                 Console.Write($"Channel {ch} Begin: {time}");
 #endif
-
-                if (ch == 1 && beatLen > 0)
+                if (ch == 1)
                 {
-                    int tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20);
-                    track.Add(new TempoEvent(tempo, 0)); // in ms per quarter note
+                    // TODO: Get tempo to work properly
+
+                    if (beatLen <= 0)
+                        beatLen = 1;
+                    //var tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20);
+                    var tempo = beatLen * 64000;
+                    track.Add(new TempoEvent(tempo, 0L)); // tempo is in µs per quarter note
 #if _DEBUG
-                    Console.Write($"; Beat Length: {beatLen} / Tempo: {tempo * 4} ms / \u00bc={Math.Round(60000 / (double)(beatLen * 32), 2)} bpm");
+                    Console.Write($"; beatLen: {beatLen}; bpm: {60000 / (beatLen * 16)}; tempo: {tempo} µs/b");
 #endif
+
+                    //track.Add(new TimeSignatureEvent(0L, 4, 2, TicksPerQtrNote, 8)); // 4/4 time
+                    //track.Add(new KeySignatureEvent(0, 0, 0L)); // C major?
                 }
             }
             if (ch > 0)
             {
                 if (Patch != 0)
                 {
-                    track = events.AddTrack([new PatchChangeEvent(0, ch, Patch)]);
+                    track = events.AddTrack([new PatchChangeEvent(0L, ch, Patch)]);
 #if _DEBUG
-                    Console.Write($"; Patch Change: {Patch}");
+                    Console.Write($"; Patch: {Patch}");
 #endif
                 }
                 if (Length > 0)
@@ -409,7 +440,7 @@ partial class SASTester
         }
         track.Add(new MetaEvent(MetaEventType.EndTrack, 0, time));
 #if _DEBUG
-        Console.WriteLine($"; Channel {ch} End: {time}; Done");
+        Console.WriteLine($"; Channel {ch} End: {time}; EOF");
 #endif
         if (ch == 1)
             events.MidiFileType = 0;
@@ -505,22 +536,25 @@ partial class SASTester
         };
     }
 
-    // The IBM PC Speaker was monophonic, but the PCjr was quadraphonic (though these games only use the 3 waveform channels; the fourth noise channel isn't used)
-    // TODO: Figure out how to extract from MUSICPDS*.* for AMBAII, AMZAST, AMBAST
+    // The IBM PC Speaker was monophonic, but the PCjr was quadraphonic (though the fourth channel only produces white noise)
+    // TODO: Figure out how to extract from MUSICPDS*.* for AMBAII, AMZAST, AMBAST, and musa?.pds for AMZMAC
+    // TODO: Pitch changes aren't always right yet; for instance, pitch changes going from below C2 to above it seem to go down rather than up
     private void PlaySound(string abbrev, string filePath = "", bool toFile = false)
     {
         byte timeOffset = 0x02;
         byte lensOffset = 0x0B;
         byte noteOffset = 0x1A;
+        bool altSeq = false;
         bool control = false;
         bool keyChg = false;
         bool dbl = false;
         bool newCh = false;
+        bool newChAlt = false;
         bool pitch = false;
         bool rest = false;
         byte[] array = [];
         var midiNote = 0;
-        var beatLen = 48;
+        var beatLen = 128;
         var channel = 0;
         var patch = 0;
         var numCtrl = 0;
@@ -533,6 +567,8 @@ partial class SASTester
             lensOffset += 0x3;
             noteOffset += 0x3;
         }
+        else if (pcType == AtariStAbb && (abbrev == "AMB" || abbrev == "PMN"))
+            altSeq = true;
         else if (pcType == CommodoreAbb)
         {
             timeOffset += 0x2;
@@ -548,7 +584,11 @@ partial class SASTester
             }
             array = File.ReadAllBytes(filePath);
         }
-        catch (Exception) { }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+        
         if (toFile)
             Console.WriteLine(filePath);
 
@@ -556,7 +596,7 @@ partial class SASTester
         if (!toFile)
         {
             Console.WriteLine("Off | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F");
-            Console.Write("----+------------------------------------------------");
+            Console.Write    ("----+------------------------------------------------");
         }
         foreach (var b in array)
         {
@@ -564,9 +604,9 @@ partial class SASTester
             pitch = false;
             rest = false;
             if (i == timeOffset)
-                beatLen = b * 0x10;         // Beat time length (gives tempo)
+                beatLen = b * 0x10;                         // beat length in ms per beat = b * 16
             else if (i >= lensOffset && i < noteOffset)
-                lengths.Add(b);             // Note lengths
+                lengths.Add(b);                             // Note lengths
             else if (i >= noteOffset)
             {
                 // Note data
@@ -574,9 +614,11 @@ partial class SASTester
                 var nibble1 = (byte)((b & 0xF0) >> 4);
                 var nibble2 = (byte)(b & 0x0F);
 
-                if (!control && b == 0x50)  // New channel
+                if (!control && b == 0x50)                  // New channel
                 {
                     newCh = true;
+                    if (altSeq)
+                        newChAlt = true;
                     keyChg = false;
                     control = true;
                     numCtrl = 1;
@@ -594,6 +636,27 @@ partial class SASTester
                     }
 #endif
                 }
+                else if (altSeq && !control && b == 0x60)   // New channel for AMB & PMN on AST
+                {
+                    newCh = true;
+                    newChAlt = true;
+                    keyChg = false;
+                    control = true;
+                    numCtrl = 1;
+                    channel++;
+                    // we shouldn't have more than 3 or 4 channels, but just in case don't use the percussion channel
+                    if (channel == 10)
+                        channel++;
+                    if (channel > 16)
+                        channel = 16;
+#if _DEBUG
+                    if (!toFile)
+                    {
+                        Console.Write($"\n{b:x2} B.new channel {channel} ALT / {numCtrl}: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
+#endif
+                }
                 else if (!control && b == 0x80)
                 {
                     newCh = true;
@@ -602,12 +665,12 @@ partial class SASTester
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} B.end channel {channel} / {numCtrl}: ");
+                        Console.Write($"{b:x2} C.end channel {channel} / {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
                 }
-                else if (!newCh && b == 0x00) // Key change
+                else if (!newCh && b == 0x00)               // Key change
                 {
                     if (!keyChg)
                         numCtrl = 0;
@@ -617,19 +680,53 @@ partial class SASTester
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} C.keyChg on {numCtrl}: ");
+                        Console.Write($"{b:x2} D.keyChg on {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
                 }
-                else if (newCh && numCtrl == 2) // Doubled waveform? (ST only)
+                else if (newChAlt && numCtrl < 9)           // More special handling for AMB & PMN on AST
+                {
+                    // TODO: What's 0x38 mean?
+                    if (b == 0x00 || b == 0x60 || b == 0x38)
+                    {
+#if _DEBUG
+                        if (!toFile)
+                        {
+                            Console.Write($"{b:x2} E.newChAlt [on] ??? {numCtrl}: ");
+                            Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                        }
+#endif
+                        continue;
+                    }
+
+                    // TODO: These are definitely waveform types, but I'm guessing which ones are which at this point
+                    if (b == 0x0D)
+                        patch = PatchTriangle;
+                    else if (b == 0x0E)
+                        patch = PatchSaw;
+                    else if (b == 0x0F)
+                        patch = PatchSquare;
+                    else if (b == 0x10)
+                        patch = PatchNoise;
+                    numCtrl = 6;
+#if _DEBUG
+                    if (!toFile)
+                    {
+                        Console.Write($"{b:x2} F.newChAlt off patch??? {patch} /  {numCtrl} [faked]: ");
+                        Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
+                    }
+                    newChAlt = false;
+#endif
+                }
+                else if (newCh && !newChAlt && numCtrl == 2) // Doubled waveform? (ST only)
                 {
                     // almost always 0x08
                     // TODO: Is 0x0F the only other value?
-                    if (b == 0x0F)              // (This is always combined with 0x40 in the next byte)
+                    if (b == 0x0F)                          // (This is always combined with 0x40 in the next byte)
                     {
                         dbl = true;
-                        patch = PatchDouble;    // placeholder for now
+                        patch = PatchDouble;                // placeholder for now
                     }
                     else
                         dbl = false;
@@ -637,12 +734,12 @@ partial class SASTester
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} D.control [on] patch {patch} /  {numCtrl}: ");
+                        Console.Write($"{b:x2} G.control [on] patch {patch} /  {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
                 }
-                else if (newCh && numCtrl == 3) // Change waveform
+                else if (newCh && !newChAlt && numCtrl == 3) // Change waveform
                 {
                     // PCjr and Atari ST only have square waveforms [and unused? noise channels], but the ST can adjust envelope
                     if (!dbl)
@@ -661,7 +758,7 @@ partial class SASTester
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} E.control [on] patch {patch} / {numCtrl}: ");
+                        Console.Write($"{b:x2} H.control [on] patch {patch} / {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
@@ -672,13 +769,14 @@ partial class SASTester
                     if (b >= FirstPitchByte) // Absolute pitch, first byte after a new channel
                     {
                         newCh = false;
+                        newChAlt = false;
                         pitch = true;
                         control = false;
                         midiNote = GetMidiNote(b);
 #if _DEBUG
                         if (!toFile)
                         {
-                            Console.Write($"{b:x2} F.control off [pitch] {numCtrl}: ");
+                            Console.Write($"{b:x2} I.control off [pitch] {numCtrl}: ");
                             Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                         }
 #endif
@@ -691,7 +789,7 @@ partial class SASTester
 #if _DEBUG
                         if (!toFile)
                         {
-                            Console.Write($"{b:x2} G.tacit {numCtrl}: ");
+                            Console.Write($"{b:x2} J.tacit {numCtrl}: ");
                             Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                         }
 #endif
@@ -702,7 +800,7 @@ partial class SASTester
 #if _DEBUG
                         if (!toFile)
                         {
-                            Console.Write($"{b:x2} H.control [on] 0x00 {numCtrl}: ");
+                            Console.Write($"{b:x2} K.control [on] 0x00 {numCtrl}: ");
                             Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                         }
 #endif
@@ -710,25 +808,26 @@ partial class SASTester
                     else  // I don't think we should get here with a properly formatted file
                     {
                         newCh = false;
+                        newChAlt = false;
                         control = false;
 #if _DEBUG
                         if (!toFile)
                         {
-                            Console.Write($"{b:x2} I.control off ??? {numCtrl}: ");
+                            Console.Write($"{b:x2} L.control off ??? {numCtrl}: ");
                             Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                         }
 #endif
                         numCtrl = 0;
                     }
                 }
-                else if (newCh && (numCtrl < 2 || numCtrl > 3))
+                else if (newCh && !newChAlt && (numCtrl < 2 || numCtrl > 3))
                 {
                     // not sure what these do, do nothing for now
                     numCtrl++;
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} J.control [on] ??? {numCtrl}: ");
+                        Console.Write($"{b:x2} M.control [on] ??? {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
@@ -737,16 +836,17 @@ partial class SASTester
                 else if (keyChg) // Key change, first byte after one or more 0x00
                 {
                     newCh = false;
+                    newChAlt = false;
                     pitch = true;
                     numCtrl++;
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} K.keyChg [on] [pitch] {numCtrl}: ");
+                        Console.Write($"{b:x2} N.keyChg [on] [pitch] {numCtrl}: ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
-                    if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
+                    if ((nibble1 & 0x08) == 0)                  // positive nibble (< 0x8)
                     {
                         keyChg = false;
                         control = false;
@@ -754,7 +854,7 @@ partial class SASTester
                         // 0:+0 octaves, 1:+1 octaves, etc.?
                         midiNote += nibble1 * 12 + nibble2;
                     }
-                    else if (nibble1 > 0x8)     // negative nibble (> 0x8)
+                    else if (nibble1 > 0x8)                     // negative nibble (> 0x8)
                     {
                         keyChg = false;
                         control = false;
@@ -762,7 +862,7 @@ partial class SASTester
                         // F:-0 octaves, E:-1 octaves, etc.?
                         midiNote -= ((0xF - nibble1) * 12) + (0x10 - nibble2);
                     }
-                    else // (nibble1 == 0x8)  // I don't think we should get here with a properly formatted file
+                    else // (nibble1 == 0x8)                    // I don't think we should get here with a properly formatted file
                     {
                         pitch = false;
                         if (nibble2 != 0x0)
@@ -773,6 +873,7 @@ partial class SASTester
                 else
                 {
                     newCh = false;
+                    newChAlt = false;
                     keyChg = false;
                     control = false;
                     if (nibble1 == 0x8)
@@ -785,10 +886,10 @@ partial class SASTester
                         else
                             rest = true;
                     }
-                    else if ((nibble1 & 0x08) == 0)  // positive nibble (< 0x8)
+                    else if ((nibble1 & 0x08) == 0)                 // positive nibble (< 0x8)
                         midiNote += nibble1;
-                    else if (nibble1 > 0x8)     // negative nibble (> 0x8)
-                        midiNote -= 0xF - nibble1 + 1;  // F:-1, E:-2, D:-3, C:-4, B:-5, A:-6, 9:-7
+                    else if (nibble1 > 0x8)                         // negative nibble (> 0x8)
+                        midiNote -= 0xF - nibble1 + 1;              // F:-1, E:-2, D:-3, C:-4, B:-5, A:-6, 9:-7
 
                     if (nibble2 > 0x0 && nibble2 <= lengths.Count)
                         len = lengths[nibble2 - 1];
@@ -797,7 +898,7 @@ partial class SASTester
 #if _DEBUG
                     if (!toFile)
                     {
-                        Console.Write($"{b:x2} L.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
+                        Console.Write($"{b:x2} O.note data " + (rest ? "[rest] " : "") + numCtrl + ": ");
                         Console.WriteLine(pitch ? "P" : keyChg ? "K" : newCh ? "N" : rest ? "R" : control ? "C" : "n/a");
                     }
 #endif
@@ -891,13 +992,11 @@ partial class SASTester
         Console.WriteLine(Divider);
         Console.WriteLine(KeyStop);
         Console.WriteLine(Divider);
-        /*
         if (pcType == Apple2Abb || (pcType == IbmAbb &&
             Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
             WaveOut(beatLen, notes);
         else
-        */
-        MidiOut(beatLen, notes);
+            MidiOut(beatLen, notes);
         Console.WriteLine(Divider);
         return;
     }
