@@ -19,18 +19,46 @@ Because I feel nostalgic about some of these games, but at the same time find th
 These are the games created with the Spinnaker Advanture System:
 
 
-| abbrev | game                                         | year | imprint           | Apple II | Atari ST | Commodore 64 | IBM PC/PCjr | Macintosh | MSX* |
-| -------- | ---------------------------------------------- | ------ | ------------------- | ---------- | ---------- | -------------- | ------------- | ----------- | ------ |
-| AMZ    | Amazon                                       | 1984 | Trillium/Telarium | AII      | AST      | C64          | IBM         | MAC       | MSX  |
-| DGW    | Dragonworld                                  | 1984 | Trillium/Telarium | AII      |          | C64          | IBM         | MAC       | MSX  |
-| F451   | Fahrenheit 451                               | 1984 | Trillium/Telarium | AII      | AST      | C64          | IBM         | MAC       | MSX  |
-| AMB    | Nice Princes in Amber                        | 1985 | Telarium          | AII      | AST      | C64          | IBM         |           | MSX  |
-| PMN    | Perry Mason: The Case of the Mandarin Murder | 1985 | Telarium          | AII      | AST      | C64          | IBM         |           | MSX  |
-| RDV    | Rendezvous with Rama                         | 1984 | Trillium/Telarium | AII      |          | C64          | IBM         |           | MSX  |
-| TRI    | Treasure Island                              | 1985 | Windham Classics  | AII      | AST      | C64          | IBM         |           | MSX  |
-| WOZ    | The Wizard of Oz                             | 1984 | Windham Classics  | AII      |          | C64          | IBM         |           | MSX  |
+| game                                         | abbrev | year | imprint           | Apple II | Atari ST | Commodore 64 | IBM PC/PCjr | Macintosh | MSX* |
+| ---------------------------------------------- | -------- | ------ | ------------------- | ---------- | ---------- | -------------- | ------------- | ----------- | ------ |
+| Amazon                                       | AMZ    | 1984 | Trillium/Telarium | AII      | AST      | C64          | IBM         | MAC       | MSX  |
+| Dragonworld                                  | DGW    | 1984 | Trillium/Telarium | AII      |          | C64          | IBM         | MAC       | MSX  |
+| Fahrenheit 451                               | F451   | 1984 | Trillium/Telarium | AII      | AST      | C64          | IBM         | MAC       | MSX  |
+| Nice Princes in Amber                        | AMB    | 1985 | Telarium          | AII      | AST      | C64          | IBM         |           | MSX  |
+| Perry Mason: The Case of the Mandarin Murder | PMN    | 1985 | Telarium          | AII      | AST      | C64          | IBM         |           | MSX  |
+| Rendezvous with Rama                         | RDV    | 1984 | Trillium/Telarium | AII      |          | C64          | IBM         |           | MSX  |
+| Treasure Island                              | TRI    | 1985 | Windham Classics  | AII      | AST      | C64          | IBM         |           | MSX  |
+| The Wizard of Oz                             | WOZ    | 1984 | Windham Classics  | AII      |          | C64          | IBM         |           | MSX  |
 
 \* = The MSX ports were published by Idealogic, in Spanish only. They appear to use a different engine altogether, so much of the information below does not apply.
+
+## Unextracted ports
+
+I have managed to extract files from all known dumps except AMZAII. Due to copy protection, I am unable to extract one of the files from most of the Atari games.
+
+## PDS container files
+
+For some reason, the pictures and music for AMZAST, AMBAII, and AMBAST have been packed into files called GRAPHPDS and MUSICPDS. Additionally, all 3 of the Mac ports have a similarly packed set of files with a different header format ending with .pds. See below for more information about the [PDS container format](#pds-container-format).
+
+## Vocabularies
+
+The vocabulary files list all of the words the parser understands. Note that nearly all words are truncated, but the game can be played this way, e.g. "EXAM CHAL" will examine the chalice. For DGW & RDV, the vocabularies are embedded in the .EXE files.
+
+## Tokenization in "Nine Princes"
+
+To save disk space, AMB (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the Amber location files, then that represents the number of the token word--just subtract `0x80`. The Tester Tool expands strings for "Nine Princes" automatically.
+
+## Amiga port of "Perry Mason"
+
+An Amiga magazine reviewed "Perry Mason" (and is referenced by [the Wikipedia article](https://en.wikipedia.org/w/index.php?title=Perry_Mason:_The_Case_of_the_Mandarin_Murder)), but I can find no other indication that Amiga ports were created. Perhaps the magazine was reviewing the C64 version.
+
+## Macintosh ports
+
+There are Mac ports for at least 3 of the games: "Amazon", "Dragonworld", and "Fahrenheit 451." The pictures are similar but in a higher resolution and in black-and-white. I also saw somewhere that "Rendezvous with Rama" may also have a Mac port, but I haven't been able to find it (perhaps the reference was mistakenly referring to "Rama", an entirely different game based on the same book). As mentioned above, graphics, sounds, and strings/data for these ports are packed into .pds files. The [PDS container format](#pds-container-format) is described below.
+
+## MSX ports
+
+Finally there's the Spanish-only remakes for MSX with redrawn art in a different style. I suspect it's a different engine. However, it's difficult to test these; the SAS parser is hard enough to deal with when you're fluent in the language. Trying to use Google Translate as an intermediary is quite painful!
 
 ## File types
 
@@ -48,64 +76,42 @@ Some observations about the files used by these games: Thankfully, game strings 
 | **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC         | Additional help particular to this game.                                                                                                               |
 | **VOLT**                | all             | AII,C64,IBM,MAC         | Identifies the current disk.                                                                                                                           |
 | **SAVED**               | all             | all                     | Saved game file.                                                                                                                                       |
+| **\*.DIB**              | F451 & RDV only | MSX only                | Maybe [graphics files](#picture-format) for F451 and RDV on MSX?                                                                            |
 | \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                            |
-| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                                         |
-| **\*.DIB**              | F451 & RDV only | MSX only                | Graphics files for F451 and RDV on MSX.                                                                                                                |
+| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                             |
 | **DIR**                 | all but AMB,PMN | all                     | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
 | \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only                | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
 | **OUTSIDE**             | AMB only        | AST only                | Additional directory of locations with disk nmbers ("a" or "b") for AMB on AST.                                                                        |
 | \<abbrev\>**.EXE**      | all             | IBM only                | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.             |
 | \<abbrev\>**.PRG**      | all             | AST only                | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.        |
 | **AVENTURA.COM**        | all             | MSX only                | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                              |
-| **TRILL**               | all             | AII & C64 only          | The game executable?                                                                                                                                   |
-| **TRILLIUM**            | all             | AII & C64 only          | ???                                                                                                                                                    |
+| **TRILL**               | all             | AII & C64 only          | Maybe the game executable?                                                                                                                                   |
+| **TRILLIUM**            | all             | AII & C64 only          | An intro [sound file](#sound-format)                                                                                                                               |
 | **\*.STR**              | PMN             | AST, C64, & IBM         | Strings for some location files have been separated into a separate file.                                                                              |
 | **\*.STR**              | AMB, AMZ, & PMN | MSX only                | Some game strings that have been separated into separate files on MSX.                                                                                 |
-| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM         | List of game functions? |                                                                                                                              |
+| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM         | Maybe a list of game functions? |                                                                                                                              |
 | \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM         | [Token file](#tokenization-in-nine-princes).                                                                                                           |
 | \<abbrev\>**.V**        | all but DGW,RDV | all but AST             | [Vocabulary file](#vocabularies).                                                                                                                      |
-| **\*.IB** \| **\*.JR**  | all             | IBM only                | Sound files in IBM PC and PCjr formats.                                                                                                                |
-| **\*.MST**              | PMN & TRI only  | AST only                | Sound files for PMN and TRI on Atari ST.                                                                                                               |
+| **\*.IB** \| **\*.JR**  | all             | IBM only                | [Sound files](#sound-format) in IBM PC and PCjr formats.                                                                                                                |
+| **\*.MST**              | PMN & TRI only  | AST only                | [Sound files](#sound-format) for PMN and TRI on Atari ST.                                                                                                               |
 | **\*.FEN**              | AMB only        | all                     | Data specific to the fencing (swordfighting) events for AMB.                                                                                           |
 | **\*.STR**              | PMN only        | all                     | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                 |
 | **\*.CST**              | AMB,AMZ,PMN,TRI | AST only                | Location files.                                                                                                                                        |
-| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | Packed graphics files.                                                                                                                                 |
-| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | Packed sound files.                                                                                                                                    |
-| **\*.PDS**              | all             | MAC only                | Packed graphics, sound, and strings/data files.                                                                                                        |
-| **\*.** (no extension)  | all             | IBM only                | Mostly location or[graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
+| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | [Packed graphics files](#pds-container-format).                                                                                                                                 |
+| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | [Packed sound files](#pds-container-format).                                                                                                                                    |
+| **\*.PDS**              | all             | MAC only                | [Packed graphics, sound, and strings/data files](#pds-container-format).                                                                                                        |
+| **\*.** (no extension)  | all             | IBM only                | Mostly location or [graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
 | **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                      |
 
 Game strings and other data is found in the appropriate location files.
 
-## Container files in "Amazon" and "Nine Princes"
-
-I have no experience with the Commodore 64/128 or Atari ST, but I figured it'd be nice to have the 16-color version of the images, and potentially some better sound files. However, for some reason, the pictures and music for "Amazon" and "Nine Princes" on Atari ST--and on "Nine Princes" for Apple II (not sure about "Amazon", since I've been unable to dump its files so far)--and also the Mac version of "Amazon" (and this is the only one I've been able to dump so far)--have been packed into files called GRAPHPDS and MUSICPDS, or a set of files ending with .pds in the Mac's case. The Tester Tool permits unpacking the contents of these files.
-
-## Vocabularies
-
-The vocabulary files list all of the words the parser understands. Note that nearly all words are truncated, but the game can be played this way, e.g. "EXAM CHAL" will examine the chalice. For DGW & RDV, the vocabularies are embedded in the .EXE files.
-
-## Tokenization in "Nine Princes"
-
-To save disk space, AMB (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the Amber location files, then that represents the number of the token word--just subtract `0x80`. The Tester Tool expands strings for "Nine Princes" automatically.
-
-## Amiga port of "Perry Mason"
-
-An Amiga magazine reviewed "Perry Mason" (and is referenced by [the Wikipedia article](https://en.wikipedia.org/w/index.php?title=Perry_Mason:_The_Case_of_the_Mandarin_Murder)), but I can find no other indication that Amiga ports were created. Perhaps the magazine was reviewing the C64 version.
-
-## Macintosh ports
-
-There are Mac ports for at least 3 of the games: "Amazon", "Dragonworld", and "Fahrenheit 451." The pictures are similar but in a higher resolution and in black-and-white. I also saw somewhere that "Rendezvous with Rama" may also have a Mac port, but I haven't been able to find it (perhaps the reference was mistakenly referring to "Rama", an entirely different game based on the same book). The graphics and sounds for these ports are packed into .pds files: mus*.pds and pix*.pds. There are also files with strings and data called ctx*.pds, and a names.pds that just lists these other .pds filenames. The format of these container files are described below.
-
-## MSX ports
-
-Finally there's the Spanish-only remakes for MSX with redrawn art in a different style. I suspect it's a different engine. However, it's difficult to test these; the SAS parser is hard enough to deal with when you're fluent in the language. Trying to use Google Translate as an intermediary is quite painful!
-
 ## PDS Container Format
+
+The Tester Tool has a function to unpack the contents of all files of the selected port type. It also allows a preview hex dump for the files of individual ports.
 
 ### Apple II container format
 
-With the 4 GRAPHPDS and 4 MUSICPDS files (one for each disk) from the Apple II version of "Nine Princes": the first two bytes represent the total number of bytes in the file in little endian (i.e., 2nd byte then 1st byte); though for some reason it seems the value given is always 5 bytes larger.
+With the 4 GRAPHPDS and 4 MUSICPDS files (one for each disk) from the Apple II port of "Nine Princes": the first two bytes represent the total number of bytes in the file in little endian (i.e., 2nd byte then 1st byte); though for some reason it seems the value given is always 5 bytes larger.
 
 There is a `00` separator, then address 0x03 is the number of file entries, and another `00` separator.
 
@@ -113,11 +119,11 @@ At byte 0x05, the filenames begin, with 12 characters (8.3) per filename, padded
 
 ### Atari ST container format
 
-For the GRAPHPDS/MUSICPDS files from the Atari ST versions of "Amazon" (2 files) and "Nine Princes" (1 file), the format is the same as the Apple II except the initial three bytes are not present. The first byte is the number of file entries, then the file list starts at address 0x02; otherwise it appears to be the same.
+For the GRAPHPDS/MUSICPDS files from the Atari ST ports of "Amazon" (2 files) and "Nine Princes" (1 file), the format is the same as the Apple II except the initial three bytes are not present. The first byte is the number of file entries, then the file list starts at address 0x02; otherwise it appears to be the same.
 
 ### Macintosh container format
 
-For the pix*.pds, mus*.pds, and ctx*.pds files from the Macintosh version of "Amazon", "Dragonworld", and "Fahrenheit 451", the format differs from the above. The first two bytes are the starting address of the data section (little-endian). For some reason, this address is repeated at 0x2 and 0x3. Between `00` separators, there is a section between 0x05 and 0x08 that seems to always be `01 20 20 20`. I'm unclear what this represents. The filename entries for Mac begin at 0x0A. Unlike the Apple and Atari, the filenames have a max length of only 8, and `00` and/or `20` is used as filler where necessary. There is no separator before an ending 4 bytes; unlike the above this value is the file's length (rather than the address within the PDS file); it is little-endian rather than big; and for some reason similar to the address at the beginning, it is 2 bytes repeated twice. The first file is always a 1-byte file called dummy1 which I assume aids the SAS PDS parsing routine.
+For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) files from the Macintosh ports of "Amazon", "Dragonworld", and "Fahrenheit 451", the format differs from the above. The first two bytes are the starting address of the data section (little-endian). For some reason, this address is repeated at 0x2 and 0x3. Between `00` separators, there is a section between 0x05 and 0x08 that seems to always be `01 20 20 20`. I'm unclear what this represents. The filename entries for Mac begin at 0x0A. Unlike the Apple and Atari, the filenames have a max length of only 8, and `00` and/or `20` is used as filler where necessary. There is no separator before an ending 4 bytes; unlike the above this value is the file's length (rather than the address within the PDS file); it is little-endian rather than big; and for some reason similar to the address at the beginning, it is 2 bytes repeated twice. The first file is always a 1-byte file called dummy1 which I assume aids the SAS PDS parsing routine.
 
 ## Picture Format
 
@@ -139,7 +145,7 @@ The first 6 bytes are used as a header with the following layout:
 | 00      | Palette      | For PC CGA,`00`=GRY (Green/Red/Yellow) or `01`=CMW (Cyan/Magenta/White)                                                                                                                                          |
 | 01      | Intensity/Bg | For PC CGA, 1st hex nibble is intensity (`0`=low; `1`=bright), 2nd is background color (0-F) corresponding to PC color codes*                                                                                    |
 | 02      | Unknown      | Lots of variance. Maybe an identifier of some kind? Differs between ports.                                                                                                                                       |
-| 03      | Unknown      | Small variance, i.e.`00`-`10`?; the game freezes after drawing is complete when values are too large, or the drawing does not complete when values are too small. Buffer size, maybe? Same values in PC and C64. |
+| 03      | Unknown      | Small variance, i.e.`00`-`10`?; Probably buffer size: the game freezes after drawing is complete when values are too large, or the drawing does not complete when values are too small. Same values in PC and C64. |
 | 04      | Height       | For PC and C64, typically either`B0` (176px) = 88% height, or `50` (80px) = 40%-height                                                                                                                           |
 | 05      | Width / 2    | For PC and C64, typically either`A0` (160=>320px) = 100% width, or `48` (72=>144px) = 45%-width; though this field seems to be ignored                                                                           |
 
@@ -199,7 +205,7 @@ colorMap[3] = byteArray & 0x3;
 
 #### Examples
 
-So, take an example 3 bytes: `0x1BF7C6`. You'll get a 4x15-pixel block above a 4x7-pixel block, with sets of 4-color stripes based on the color map. If it's palette `0`, low-intensity and a black background, you'll get the following (8x zoom for clarity):
+So, take an example 3 bytes: `1B F7 C6`. You'll get a 4x15-pixel block above a 4x7-pixel block, with sets of 4-color stripes based on the color map. If it's palette `0`, low-intensity and a black background, you'll get the following (8x zoom for clarity):
 
 ![example](images/gfx-example1.png "example")
 
@@ -253,6 +259,8 @@ Note that this file doesn't include the feet shown; these are drawn with a small
 
 ### Commodore 64 picture format
 
+![screenshot](images/f451-c64-screenshot.png "Fahrenheit 451 for Commodore 64 screenshot")
+
 OK, I've just started this analysis, but here's what I've got so far.
 
 It's clearly a different format from IBM, but the header is similar, and there appeared to be the tantalizing similarity of three byte sequences starting at address 0x65 (after the third reference to [50A0], the resolution). Twiddling bits showed me that I was sort of correct; that there was indeed something similar going on here with a pattern of blocks with colors being placed in the first and third byte, and a size in each of the 2 nibbles of the second byte. However, here it was instead doing color fills. So the colors are also split into nibbles, with each one representing one of 16 colors in the current palette:
@@ -283,7 +291,27 @@ In any case, the three-byte pattern looks like it changes again around address 0
 
 ### Atari ST picture format
 
-Though the ST had a more flexible color system than the Commodore, based on the screenshots online it doesn't look like Telarium really leveraged it very well. In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
+![screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
+
+Though the ST had a more flexible color system than the Commodore, based on the screenshots it doesn't look like Telarium really leveraged it very well. In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
+
+### Apple II picture format
+
+![screenshot](images/f451-aii-screenshot.png "Fahrenheit 451 for MSX screenshot") ![screenshot](images/amb-aii-screenshot.png "Nine Princes in Amber for MSX screenshot")
+
+I have yet to look at these.
+
+### Macintosh picture format
+
+![screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
+
+Similar art style in high-res, but black-and-white only.
+
+### MSX picture format
+
+![screenshot](images/f451-msx-screenshot.png "Fahrenheit 451 for MSX screenshot") ![screenshot](images/amb-msx-screenshot.png "Nine Princes in Amber for MSX screenshot")
+
+Redrawn art in a new art style.
 
 ### Animations
 
@@ -291,11 +319,15 @@ Some of the graphic files invoke simple animations (for "Amazon" in particular),
 
 ## Sound Format
 
-These games feature some music and sound effects that are... serviceable. The IBM ports come with two sound file formats, \*.IB for the IBM PC internal speaker (monophonic) and \*.JR for the IBM PCjr [TI SN76489 chip](https://en.wikipedia.org/wiki/Texas_Instruments_SN76489) (polyphonic, featuring a 3-channel square wave generator, and a 1-channel white noise generator, though I'm pretty sure the noise channel is not used on the IBM ports).
+These games feature some music and sound effects that are... serviceable.
 
-I'm close to having the format figured out. The Tester Tool does permit you to export all audio files to .MID for the IBM (PC and PCjr formats), as well as the Apple, Atari, Commodore, and Mac versions of all 8 games, but unfortunately it's still a work in progress, and it isn't quite right yet. Here's what I've deciphered so far:
+I've got the format figured out for the most part, but there are some bugs to work out. For what it's worth, the Tester Tool permits you to export all audio files to .MID for all games (except MSX ports) as far as my current understanding goes (and will automatically extract files from PDS containers first), but the pitch is incorrect in some cases. The tool will also preview sound files for individual games, but in that case it will only play one channel at a time.
+
+So here's what I've deciphered so far:
 
 ### IBM PC/PCjr sound format
+
+The IBM ports come with two sound file formats, \*.IB for the IBM PC internal speaker (monophonic) and \*.JR for the IBM PCjr [TI SN76489 chip](https://en.wikipedia.org/wiki/Texas_Instruments_SN76489) (polyphonic, featuring a 3-channel square wave generator, and a 1-channel white noise generator, though I'm pretty sure the noise channel is not used on the IBM ports).
 
 #### Header
 
