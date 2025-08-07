@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp;
+﻿using NAudio.Midi;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SASTester;
@@ -198,7 +199,6 @@ partial class SASTester
     // IBM only for now
     // The CGA medium-resolution graphics mode used here for PC is 320x200 x 4-color, with 2 possible palettes in mode 4
     // TODO: Figure out format for other ports
-    // TODO: Figure out how to extract from GRAPHPDS*.* for AMBAII, AMZAST, AMBAST, and pixa?.pds for AMZMAC
     private static void DrawPic(string abbrev, string filePath = "", bool toFile = false)
     {
         const byte Offset = 0x06; // The first 6 bytes have palette colors and height/width
@@ -369,6 +369,9 @@ partial class SASTester
                 }
             }
         });
-        img.SaveAsPng(filePath + ".png");
+        var dir = Path.Combine(Path.GetDirectoryName(filePath) ?? Directory.GetCurrentDirectory(), "PNG");
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+        img.SaveAsPng(Path.Combine(dir, Path.GetFileName(filePath) + ".png"));
     }
 }

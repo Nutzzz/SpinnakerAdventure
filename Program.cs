@@ -709,20 +709,17 @@ partial class SASTester
                         Path.Combine(RscPath, "AMBAII", "GRAPHPDS.c"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.d"),
                         Path.Combine(RscPath, "AMBAII", "MUSICPDS.a"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.b"),
                         Path.Combine(RscPath, "AMBAII", "MUSICPDS.c"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.d")];
-            //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAII", "PDS"));
         }
         else if (pcType == AtariStAbb)
         {
             if (abbrev == AmberAbb || abbrev == AllGamesAbb)
             {
                 pdsFiles.AddRange([Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS"), Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS")]);
-                //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAST", "AMB", "PDS"));
             }
             if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
             {
                 pdsFiles.AddRange([Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS.B"),
                                 Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS.B")]);
-                //Directory.CreateDirectory(Path.Combine(RscPath, "AMBAST", "AMZ", "PDS"));
             }
         }
         // TODO: For Mac, we might use the names.pds files to get the list of pds files
@@ -912,11 +909,16 @@ partial class SASTester
                         {
                             fileBytes.Add(b);
                             if (extract)
-                                File.WriteAllBytes(Path.Combine(Path.GetDirectoryName(pdsFile) ?? Directory.GetCurrentDirectory(), inFiles[inFileNum].InName), [.. fileBytes]);
+                            {
+                                var dir = Path.Combine(Path.GetDirectoryName(pdsFile) ?? Directory.GetCurrentDirectory(), "PDS");
+                                if (!Directory.Exists(dir))
+                                    Directory.CreateDirectory(dir);
+                                File.WriteAllBytes(Path.Combine(dir, inFiles[inFileNum].InName), [.. fileBytes]);
+                            }
                             else
                             {
                                 Console.WriteLine("\nOff | 00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F");
-                                Console.Write      ("----+------------------------------------------------");
+                                Console.Write("----+------------------------------------------------");
                                 var j = 0;
                                 foreach (var fb in fileBytes)
                                 {
@@ -1161,7 +1163,8 @@ partial class SASTester
                     ShowStrings(AmazonAbb, 0x03, expand: false);
                     break;
                 case key6:
-                    if (pcType == AtariStAbb || pcType == MacAbb)
+                    // TODO: I suspect AMZAII may have PDS files, but I'm unable to extract any files at all (copy protection?)
+                    if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == MacAbb)
                     {
                         Console.WriteLine(PdsMenu);
                         ExaminePdsFiles(AmazonAbb);

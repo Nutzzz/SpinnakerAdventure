@@ -98,6 +98,17 @@ partial class SASTester
                 {
                     if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType, abbrev)))
                     {
+                        if (abbrev == AmazonAbb || abbrev == AmberAbb)
+                        {
+                            if (!Directory.Exists(Path.Combine(RscPath, abbrev + pcType, abbrev, "PDS")))
+                                ExaminePdsFiles();
+
+                            foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev, "PDS"), "*.MST").ToList())
+                            {
+                                var filename = Path.GetFileName(file);
+                                sndFiles.Add(filename);
+                            }
+                        }
                         foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.MST").ToList())
                         {
                             var filename = Path.GetFileName(file);
@@ -105,53 +116,34 @@ partial class SASTester
                         }
                         foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.").ToList())
                         {
-                            if (abbrev == F451Abb)
-                                abbrev = "F4";
-                            else if (abbrev == OzAbb)  // no WOZAST port?
-                                abbrev = "WM";
-                            var filename = Path.GetFileName(file);
-                            if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
-                                !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
-                                !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
-                                !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
-                                continue;
-                            if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase) ||
-                                (abbrev == "F4" && (filename.Equals(F451Abb, StringComparison.OrdinalIgnoreCase) ||
-                                filename.Length < 5)))
-                                continue;
-                            sndFiles.Add(filename);
+                            var filename = ScreenSoundFiles(abbrev, file);
+
+                            if (filename is not null)
+                                sndFiles.Add(filename);
                         }
                     }
                 }
                 else // if (pcType == Apple2Abb || pcType == CommodoreAbb || pcType == MacAbb)
                 {
+                    if (pcType == MacAbb || (pcType == Apple2Abb && (abbrev == AmazonAbb || abbrev == AmberAbb)))
+                    {
+                        if (!Directory.Exists(Path.Combine(RscPath, abbrev + pcType, "PDS")))
+                            ExaminePdsFiles();
+
+                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, "PDS"), "*.").ToList())
+                        {
+                            var filename = ScreenSoundFiles(abbrev, file);
+
+                            if (filename is not null)
+                                sndFiles.Add(filename);
+                        }
+                    }
                     foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
                     {
-                        if (abbrev == F451Abb)
-                            abbrev = "F4";
-                        else if (abbrev == OzAbb)
-                            abbrev = "WM";
+                        var filename = ScreenSoundFiles(abbrev, file);
 
-                        var filename = Path.GetFileName(file);
-                        if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
-                            !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
-                            !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
-                            !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
-                            continue;
-                        if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
-                            continue;
-                        if (abbrev == AmberAbb && (filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
-                            filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
-                            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
-                            filename.Equals("AMBOPEN", StringComparison.OrdinalIgnoreCase)))
-                            continue;
-                        if (abbrev == "F4" && filename.StartsWith(F451Abb, StringComparison.OrdinalIgnoreCase) &&
-                            filename.Length < 5)
-                            continue;
-                        if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
-                            continue;
-
-                        sndFiles.Add(filename);
+                        if (filename is not null)
+                            sndFiles.Add(filename);
                     }
                 }
             }
@@ -164,11 +156,38 @@ partial class SASTester
         return sndFiles;
     }
 
+    private string? ScreenSoundFiles(string abbrev, string file)
+    {
+        if (abbrev == F451Abb)
+            abbrev = "F4";
+        else if (abbrev == OzAbb)
+            abbrev = "WM";
+
+        var filename = Path.GetFileName(file);
+        if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
+            !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
+            !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
+            !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
+            return null;
+        if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
+            return null;
+        if (abbrev == AmberAbb && (filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("AMBOPEN", StringComparison.OrdinalIgnoreCase)))
+            return null;
+        if (abbrev == "F4" && filename.StartsWith(F451Abb, StringComparison.OrdinalIgnoreCase) &&
+            filename.Length < 5)
+            return null;
+        if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
+            return null;
+
+        return filename;
+    }
+
     private void ExportSndFiles()
     {
-        if (pcType != Apple2Abb && pcType != AtariStAbb &&
-            pcType != CommodoreAbb && pcType != IbmAbb &&
-            pcType != MacAbb)
+        if (pcType == MsxAbb)
             return;
         Console.WriteLine("Please wait ...");
         foreach (var abbrev in new[] { AmazonAbb, DragonAbb, F451Abb, AmberAbb,
@@ -442,10 +461,13 @@ partial class SASTester
 #if _DEBUG
         Console.WriteLine($"; Channel {ch} End: {time}; EOF");
 #endif
-        if (ch == 1)
+        if (ch == 1) 
             events.MidiFileType = 0;
         events.PrepareForExport();
-        MidiFile.Export($"{filePath}.mid", events);
+        var dir = Path.Combine(Path.GetDirectoryName(filePath) ?? Directory.GetCurrentDirectory(), "MID");
+        if (!Directory.Exists(dir))
+            Directory.CreateDirectory(dir);
+        MidiFile.Export(Path.Combine(dir, Path.GetFileName(filePath) + ".mid"), events);
     }
 
     private static double GetFreqOffset(int n)
@@ -537,7 +559,6 @@ partial class SASTester
     }
 
     // The IBM PC Speaker was monophonic, but the PCjr was quadraphonic (though the fourth channel only produces white noise)
-    // TODO: Figure out how to extract from MUSICPDS*.* for AMBAII, AMZAST, AMBAST, and musa?.pds for AMZMAC
     // TODO: Pitch changes aren't always right yet; for instance, pitch changes going from below C2 to above it seem to go down rather than up
     private void PlaySound(string abbrev, string filePath = "", bool toFile = false)
     {
