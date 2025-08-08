@@ -78,16 +78,17 @@ partial class SASTester
         List<string> sndFiles = [];
         try
         {
-            if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType)))
+            var dir = Path.Combine(RscPath, abbrev + pcType);
+            if (Directory.Exists(dir))
             {
                 if (pcType == IbmAbb) // can rely on extensions
                 {
-                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.IB").ToList())
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.IB").ToList())
                     {
                         var filename = Path.GetFileName(file);
                         sndFiles.Add(filename);
                     }
-                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.JR").ToList())
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.JR").ToList())
                     {
                         var filename = Path.GetFileName(file);
                         sndFiles.Add(filename);
@@ -96,25 +97,30 @@ partial class SASTester
                 }
                 else if (pcType == AtariStAbb) // doesn't always use extension + deeper folder structure
                 {
-                    if (Directory.Exists(Path.Combine(RscPath, abbrev + pcType, abbrev)))
+                    var astDir = Path.Combine(dir, abbrev);
+                    if (Directory.Exists(astDir))
                     {
                         if (abbrev == AmazonAbb || abbrev == AmberAbb)
                         {
-                            if (!Directory.Exists(Path.Combine(RscPath, abbrev + pcType, abbrev, "PDS")))
+                            var astPdsDir = Path.Combine(astDir, "PDS");
+                            if (!Directory.Exists(astPdsDir))
                                 ExaminePdsFiles();
 
-                            foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev, "PDS"), "*.MST").ToList())
+                            if (Directory.Exists(astPdsDir))
                             {
-                                var filename = Path.GetFileName(file);
-                                sndFiles.Add(filename);
+                                foreach (var file in Directory.EnumerateFiles(astPdsDir, "*.MST").ToList())
+                                {
+                                    var filename = Path.Combine("PDS", Path.GetFileName(file));
+                                    sndFiles.Add(filename);
+                                }
                             }
                         }
-                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.MST").ToList())
+                        foreach (var file in Directory.EnumerateFiles(astDir, "*.MST").ToList())
                         {
                             var filename = Path.GetFileName(file);
                             sndFiles.Add(filename);
                         }
-                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, abbrev), "*.").ToList())
+                        foreach (var file in Directory.EnumerateFiles(astDir, "*.").ToList())
                         {
                             var filename = ScreenSoundFiles(abbrev, file);
 
@@ -127,18 +133,22 @@ partial class SASTester
                 {
                     if (pcType == MacAbb || (pcType == Apple2Abb && (abbrev == AmazonAbb || abbrev == AmberAbb)))
                     {
-                        if (!Directory.Exists(Path.Combine(RscPath, abbrev + pcType, "PDS")))
+                        var pdsDir = Path.Combine(dir, "PDS");
+                        if (!Directory.Exists(pdsDir))
                             ExaminePdsFiles();
 
-                        foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType, "PDS"), "*.").ToList())
+                        if (Directory.Exists(pdsDir))
                         {
-                            var filename = ScreenSoundFiles(abbrev, file);
+                            foreach (var file in Directory.EnumerateFiles(pdsDir, "*.").ToList())
+                            {
+                                var filename = ScreenSoundFiles(abbrev, file);
 
-                            if (filename is not null)
-                                sndFiles.Add(filename);
+                                if (filename is not null)
+                                    sndFiles.Add(Path.Combine("PDS", filename));
+                            }
                         }
                     }
-                    foreach (var file in Directory.EnumerateFiles(Path.Combine(RscPath, abbrev + pcType), "*.").ToList())
+                    foreach (var file in Directory.EnumerateFiles(dir, "*.").ToList())
                     {
                         var filename = ScreenSoundFiles(abbrev, file);
 
@@ -176,8 +186,8 @@ partial class SASTester
             filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("AMBOPEN", StringComparison.OrdinalIgnoreCase)))
             return null;
-        if (abbrev == "F4" && filename.StartsWith(F451Abb, StringComparison.OrdinalIgnoreCase) &&
-            filename.Length < 5)
+        if (abbrev == "F4" && (filename.Equals("F451", StringComparison.OrdinalIgnoreCase) ||
+            filename.Length < 5))
             return null;
         if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
             return null;
