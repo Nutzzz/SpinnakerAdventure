@@ -1,4 +1,5 @@
-﻿## Spinnaker Adventure System
+![logo](images/spinnaker-logo.png "Spinnaker logo")
+ ## Spinnaker Adventure System
 
 ![logo](images/telarium-logo.jpg "Telarium logo") ![logo](images/windham-logo.png "Windham Classics logo")
 
