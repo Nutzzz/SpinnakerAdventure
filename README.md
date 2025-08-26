@@ -95,6 +95,8 @@ So its setting was changed from Africa to South America, and the ape that could 
 
 The game was written in Apple assembly, and was released in its native form, which is why I was unable to dump the file contents. The other ports were adapted into SAS but some features were apparently lost in translation.
 
+The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
+
 ### Other non-SAS games
 
 For completeness, I'll mention that Telarium published two other non-SAS adventure games: Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game)), and [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game)) [[filfre]](https://www.filfre.net/2013/10/shadowkeep/) (novelized by Alan Dean Foster so they could say it was based on a book).
@@ -139,43 +141,45 @@ To save disk space, AMB (only) uses a tokenizer of its 256 most common words to 
 Some observations about the files used by these games: Thankfully, game strings are ASCII-encoded (though AMB is partially tokenized).
 
 
-| filename                | games           | platforms               | description                                                                                                                                            |
+| filename                | games           | platforms               | description                                                                                                                                             |
 | ------------------------- | ----------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \<abbrev\>              | all             | all                     | Strings and data used globally.                                                                                                                        |
-| **DEFAULTS.CST**        | AMB only        | AST only                | I'm guessing these are strings and data used globally.                                                                                                 |
-| **0** \| **1**          | DGW & RDV       | IBM only                | I'm guessing these are strings and data used globally across a specific disk.                                                                          |
-| **A** \| **B**          | AMB, F451, PMN  | IBM only                | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                 |
-| **A** \| **B** \| **C** | all             | MSX only                | I'm guessing these identify the current disk.                                                                                                          |
-| **AMBGLOB**             | AMB only        | AII,C64,IBM,MSX         | Additional strings and data used globally for AMB.                                                                                                     |
-| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC         | Additional help particular to this game.                                                                                                               |
-| **VOLT**                | all             | AII,C64,IBM,MAC         | Identifies the current disk.                                                                                                                           |
-| **SAVED**               | all             | all                     | Saved game file.                                                                                                                                       |
-| **\*.DIB**              | F451 & RDV only | MSX only                | Maybe [graphics files](#picture-format) for F451 and RDV on MSX?                                                                            |
-| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                            |
-| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                             |
-| **DIR**                 | all but AMB,PMN | all                     | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
-| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only                | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
+| \<abbrev\>              | all             | all                     | Strings and data used globally.                                                                                                                         |
+| **DEFAULTS.CST**        | AMB only        | AST only                | I'm guessing these are strings and data used globally.                                                                                                  |
+| **0** \| **1**          | DGW & RDV       | IBM only                | I'm guessing these are strings and data used globally across a specific disk.                                                                           |
+| **A** \| **B**          | AMB, F451, PMN  | IBM only                | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                  |
+| **A** \| **B** \| **C** | all             | MSX only                | I'm guessing these identify the current disk.                                                                                                           |
+| **AMBGLOB**             | AMB only        | AII,C64,IBM,MSX         | Additional strings and data used globally for AMB.                                                                                                      |
+| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC         | Additional help particular to this game.                                                                                                                |
+| **VOLT**                | all             | AII,C64,IBM,MAC         | Identifies the current disk.                                                                                                                            |
+| **SAVED**               | all             | all                     | Saved game file.                                                                                                                                        |
+| **\*.DIB**              | F451 & RDV only | MSX only                | Maybe [graphics files](#picture-format) for F451 and RDV on MSX?                                                                                        |
+| **DIR**                 | all but AMB,PMN | all                     | Directory of locations with disk numbers ("a" or "b").                                                                                                  |
+| \<abbrev\>**.DAP**      | AMB & PMN only  | AII only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on AII.                                                                             |
+| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                             |
+| \<abbrev\>**.DC6**      | AMB & PMN only  | C64 only                | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on C64.                                                                             |
+| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only                | Directory of locations with disk numbers ("a" or "b").                                                                                                  |
+| **\*.GST**              | PMN & TRI only  | AST only                | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                                          |
 | **OUTSIDE**             | AMB only        | AST only                | Additional directory of locations with disk numbers ("a" or "b") for AMB on AST.                                                                        |
-| \<abbrev\>**.EXE**      | all             | IBM only                | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.             |
-| \<abbrev\>**.PRG**      | all             | AST only                | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.        |
-| **AVENTURA.COM**        | all             | MSX only                | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                              |
-| **TRILL**               | all             | AII & C64 only          | Maybe the game executable?                                                                                                                                   |
-| **TRILLIUM**            | all             | AII & C64 only          | An intro [sound file](#sound-format)                                                                                                                               |
-| **\*.STR**              | PMN             | AST, C64, & IBM         | Strings for some location files have been separated into a separate file.                                                                              |
-| **\*.STR**              | AMB, AMZ, & PMN | MSX only                | Some game strings that have been separated into separate files on MSX.                                                                                 |
-| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM         | Maybe a list of game functions? |                                                                                                                              |
-| \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM         | [Token file](#tokenization-in-nine-princes).                                                                                                           |
-| \<abbrev\>**.V**        | all but DGW,RDV | all but AST             | [Vocabulary file](#vocabularies).                                                                                                                      |
-| **\*.IB** \| **\*.JR**  | all             | IBM only                | [Sound files](#sound-format) in IBM PC and PCjr formats.                                                                                                                |
-| **\*.MST**              | PMN & TRI only  | AST only                | [Sound files](#sound-format) for PMN and TRI on Atari ST.                                                                                                               |
-| **\*.FEN**              | AMB only        | all                     | Data specific to the fencing (swordfighting) events for AMB.                                                                                           |
-| **\*.STR**              | PMN only        | all                     | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                 |
-| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only                | Location files.                                                                                                                                        |
-| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | [Packed graphics files](#pds-container-format).                                                                                                                                 |
-| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | [Packed sound files](#pds-container-format).                                                                                                                                    |
-| **\*.PDS**              | all             | MAC only                | [Packed graphics, sound, and strings/data files](#pds-container-format).                                                                                                        |
+| \<abbrev\>**.EXE**      | all             | IBM only                | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.              |
+| \<abbrev\>**.PRG**      | all             | AST only                | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.         |
+| **AVENTURA.COM**        | all             | MSX only                | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                               |
+| **TRILL**               | all             | AII & C64 only          | Maybe the game executable?                                                                                                                              |
+| **TRILLIUM**            | all             | AII & C64 only          | An intro [sound file](#sound-format)                                                                                                                    |
+| **\*.STR**              | PMN             | AST, C64, & IBM         | Strings for some location files have been separated into a separate file.                                                                               |
+| **\*.STR**              | AMB, AMZ, & PMN | MSX only                | Some game strings that have been separated into separate files on MSX.                                                                                  |
+| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM         | Maybe a list of game functions? |                                                                                                                       |
+| \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM         | [Token file](#tokenization-in-nine-princes).                                                                                                            |
+| \<abbrev\>**.V**        | all but DGW,RDV | all but AST             | [Vocabulary file](#vocabularies).                                                                                                                       |
+| **\*.IB** \| **\*.JR**  | all             | IBM only                | [Sound files](#sound-format) in IBM PC and PCjr formats.                                                                                                |
+| **\*.MST**              | PMN & TRI only  | AST only                | [Sound files](#sound-format) for PMN and TRI on Atari ST.                                                                                               |
+| **\*.FEN**              | AMB only        | all                     | Data specific to the fencing (swordfighting) events for AMB.                                                                                            |
+| **\*.STR**              | PMN only        | all                     | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                  |
+| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only                | Location files.                                                                                                                                         |
+| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only          | [Packed graphics files](#pds-container-format).                                                                                                         |
+| **MUSICPDS**            | AMB & AMZ only  | AII & AST only          | [Packed sound files](#pds-container-format).                                                                                                            |
+| **\*.PDS**              | all             | MAC only                | [Packed graphics, sound, and strings/data files](#pds-container-format).                                                                                |
 | **\*.** (no extension)  | all             | IBM only                | Mostly location or [graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
-| **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                      |
+| **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                       |
 
 Game strings and other data is found in the appropriate location files.
 
@@ -205,7 +209,7 @@ For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) f
 
 ## Picture Format
 
-Pictures in SAS games are either placed at the top in landscape orientation (often multiple pictures at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width. *Amazon* is laid out differently from the others and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 320x160) [and the text is in all-caps, ungh].
+Pictures in SAS games are either placed at the top in landscape orientation (often multiple pictures at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width. *Amazon* is laid out differently from the others and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 320x160).
 
 The Tester Tool permits you to export all pictures to .PNG from the IBM ports of all 8 games. You can also get a preview of an individual file with ANSI block characters. Note that the Tester's list of pictures shows files with (usually) no extension that weren't found in the location dir file (other than \<abbrev\>,1,2,A,B,DIR,NEWDATA,SAVED,VOLT), but there may still be false positives. For non-IBM ports, though the tester attempts to list the picture files, the PNG exporter is unavailable, and the preview feature will print out a garbled mess.
 

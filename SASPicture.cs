@@ -1,5 +1,4 @@
-﻿using NAudio.Midi;
-using SixLabors.ImageSharp;
+﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
 namespace SASTester;
@@ -44,16 +43,18 @@ partial class SASTester
             if (!string.IsNullOrEmpty(input))
             {
                 var filePath = "";
-                if (pcType == AtariStAbb)
-                    filePath = Path.Combine(RscPath, abbrev + pcType, abbrev, input);
+                var gameDir = abbrev + pcType;
+                if (pcType == AtariAbb)
+                    filePath = Path.Combine(RscPath, gameDir, abbrev, input);
                 else
-                    filePath = Path.Combine(RscPath, abbrev + pcType, input);
+                    filePath = Path.Combine(RscPath, gameDir, input);
                 if (!File.Exists(filePath))
                 {
-                    filePath = Path.Combine(RscPath, abbrev, input);
+                    Console.Error.WriteLine($"{FileError} {filePath}");
+                    gameDir = abbrev;
+                    filePath = Path.Combine(RscPath, gameDir, input);
                     if (!File.Exists(filePath))
                     {
-                        Console.Error.WriteLine($"{FileError} {filePath}");
                         break;
                     }
                 }
