@@ -1,28 +1,30 @@
-﻿using System.IO.Compression;
+﻿using System.ComponentModel.Design;
+using System.IO.Compression;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace SASTester;
 
 partial class SASTester
 {
-    public const string RscPath = @"Resources";
+    public const string RscPath = "Resources";
 
     public const string FilePrompt = "Enter a filename, or press Enter to continue:";
     public const string FilePromptWarn = "[Warning: There may be false positives.]";
     public const string Divider = "---------------------------------------";
 
-    public const string Apple2Abb   = "AII";
-    const string Apple2Type         = "Apple II";
-    public const string AtariStAbb  = "AST";
-    const string AtariStType        = "Atari ST";
+    public const string AppleAbb   = "AII";
+    const string AppleName         = "Apple II";
+    public const string AtariAbb   = "AST";
+    const string AtariName         = "Atari ST";
     public const string CommodoreAbb = "C64";
-    const string CommodoreType      = "Commodore 64";
+    const string CommodoreName      = "Commodore 64";
     public const string IbmAbb      = "IBM";
-    const string IbmType            = "IBM PC (default)";
+    const string IbmName            = "IBM PC (default)";
     public const string MacAbb      = "MAC";
-    const string MacType            = "Macintosh";
+    const string MacName            = "Macintosh";
     public const string MsxAbb      = "MSX";
-    const string MsxType            = "MSX";
+    const string MsxName            = "MSX";
 
     const string MainTitle   = "SPINNAKER ADVENTURE LANGUAGE TESTER";
     const string TitleDecor  = "**";
@@ -37,8 +39,10 @@ partial class SASTester
     const string QuitMenu    = "Quit";
     const string Prompt      = "Press number/letter of an option to proceed:";
     const string KeyPress    = "Press Esc or B for back, Q to quit, or any key when ready for more.";
-    const string KeyError    = "Error: Bad entry.";
-    const string FileError   = "Error: File not found:";
+    const string ErrorPrefix = "Error: ";
+    const string KeyError    = ErrorPrefix + "Bad entry.";
+    const string FileError   = ErrorPrefix + "File not found:";
+    const string NoPortError = " was not ported to ";
 
     const string PicMenu     = "View pictures";
     const string SndMenu     = "Play audio";
@@ -74,7 +78,7 @@ partial class SASTester
     // Nine Princes in Amber
     const string AmberName          = "Nine Princes in Amber";
     public const string AmberAbb    = "AMB";
-    const string AmberMenu1         = "AMB.DIB: Location directory";
+    const string AmberMenu1         = "AMB.D??: Location directory";
     const string AmberMenu2         = "AMB Executable";
     const string AmberMenu3         = "AMB.T: Functions";
     const string AmberMenu4         = "AMB.TOK: String tokens";
@@ -84,7 +88,7 @@ partial class SASTester
     // Perry Mason: The Case of the Mandarin Murder
     const string PerryName          = "Perry Mason";
     public const string PerryAbb    = "PMN";
-    const string PerryMenu1         = "PMN.DIB: Location directory";
+    const string PerryMenu1         = "PMN.D??: Location directory";
     const string PerryMenu2         = "PMN Executable";
     const string PerryMenu3         = "PMN.T: Functions";
     const string PerryMenu4         = "PMN.V: Vocabulary";
@@ -238,13 +242,26 @@ partial class SASTester
 
     static void Main()
     {
-        string zipfile = Path.Combine(RscPath, "Resources.zip");
+        string zipfile = RscPath + ".zip";
         try
         {
             if (File.Exists(zipfile))
             {
-                Console.WriteLine("Extracting Resources.zip ...");
+                Console.WriteLine("Extracting " + zipfile + " ...");
+                if (!Directory.Exists(RscPath))
+                    Directory.CreateDirectory(RscPath);
                 ZipFile.ExtractToDirectory(zipfile, RscPath, overwriteFiles: false);
+            }
+            else
+            {
+                zipfile = Path.Combine(RscPath, RscPath + ".zip");
+                if (File.Exists(zipfile))
+                {
+                    Console.WriteLine("Extracting " + zipfile + " ...");
+                    if (!Directory.Exists(RscPath))
+                        Directory.CreateDirectory(RscPath);
+                    ZipFile.ExtractToDirectory(zipfile, RscPath, overwriteFiles: false);
+                }
             }
         }
         catch (IOException) {}
@@ -282,16 +299,21 @@ partial class SASTester
         byte[] funcEnd = [0x00, 0x00, 0x00];
         ushort i = 0;
         var funcPath = "";
-        if (pcType == AtariStType)
-            funcPath = Path.Combine(RscPath, abbrev + pcType, abbrev, abbrev + ".T");
+        var gameDir = abbrev + pcType;
+        if (pcType == AtariAbb)
+            funcPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".T");
         else
-            funcPath = Path.Combine(RscPath, abbrev + pcType, abbrev + ".T");
+            funcPath = Path.Combine(RscPath, gameDir, abbrev + ".T");
         try
         {
             if (!File.Exists(funcPath))
             {
                 Console.Error.WriteLine($"{FileError} {funcPath}");
-                funcPath = Path.Combine(RscPath, abbrev, abbrev + ".T");
+                gameDir = abbrev;
+                if (pcType == AtariAbb)
+                    funcPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".T");
+                else
+                    funcPath = Path.Combine(RscPath, gameDir, abbrev + ".T");
                 if (!File.Exists(funcPath))
                 {
                     return;
@@ -328,16 +350,21 @@ partial class SASTester
         byte[] vDelim = [0x80, 0x8C]; // This represents the part of speech, but acts as delimiter as well here
         ushort i = 0;
         var vocabPath = "";
-        if (pcType == AtariStType)
-            vocabPath = Path.Combine(RscPath, abbrev + pcType, abbrev, abbrev + ".V");
+        var gameDir = abbrev + pcType;
+        if (pcType == AtariAbb)
+            vocabPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".V");
         else
-            vocabPath = Path.Combine(RscPath, abbrev + pcType, abbrev + ".V");
+            vocabPath = Path.Combine(RscPath, gameDir, abbrev + ".V");
         try
         {
             if (!File.Exists(vocabPath))
             {
                 Console.Error.WriteLine($"{FileError} {vocabPath}");
-                vocabPath = Path.Combine(RscPath, abbrev, abbrev + ".V");
+                gameDir = abbrev;
+                if (pcType == AtariAbb)
+                    vocabPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".V");
+                else
+                    vocabPath = Path.Combine(RscPath, gameDir, abbrev + ".V");
                 if (!File.Exists(vocabPath))
                 {
                     return;
@@ -371,25 +398,17 @@ partial class SASTester
             Console.WriteLine(Divider);
             Console.WriteLine(locName.ToUpperInvariant());
 
-            var filePath = "";
-            if (pcType == AtariStAbb)
-                filePath = Path.Combine(RscPath, abbrev + pcType, abbrev, locName);
-            else
-                filePath = Path.Combine(RscPath, abbrev + pcType, locName);
+            var filePath = GetStringDir(abbrev, abbrev + pcType, locName);
+
             try
             {
                 if (!File.Exists(filePath))
                 {
-                    if (pcType == MsxAbb && File.Exists(filePath + ".STR"))
-                        filePath += ".STR";
-                    else
+                    Console.WriteLine($"{FileError} {filePath}");
+                    filePath = GetStringDir(abbrev, abbrev, locName);
+                    if (!File.Exists(filePath))
                     {
-                        Console.WriteLine($"{FileError} {filePath}");
-                        filePath = Path.Combine(RscPath, abbrev, locName);
-                        if (!File.Exists(filePath))
-                        {
-                            continue;
-                        }
+                        continue;
                     }
                 }
                 var i = 0;
@@ -444,25 +463,69 @@ partial class SASTester
         }
     }
 
+    static string GetStringDir(string abbrev, string gameDir, string locName)
+    {
+        var filePath = "";
+
+        if (pcType == AtariAbb)
+        {
+            if (abbrev == PerryAbb)
+            {
+                filePath = Path.Combine(RscPath, gameDir, abbrev, locName + ".STR");
+                if (!File.Exists(filePath))
+                    filePath = Path.Combine(RscPath, gameDir, abbrev, locName + ".CST");
+            }
+            else if (abbrev != F451Abb)
+                filePath = Path.Combine(RscPath, gameDir, abbrev, locName + ".CST");
+        }
+        else if (pcType == MacAbb)
+            filePath = Path.Combine(RscPath, gameDir, "PDS", locName);
+        else if (abbrev == PerryAbb)
+        {
+            filePath = Path.Combine(RscPath, gameDir, locName + ".STR");
+            if (!File.Exists(filePath))
+                filePath = Path.Combine(RscPath, gameDir, locName);
+        }
+        else if (pcType == MsxAbb && (abbrev == AmberAbb || abbrev == AmazonAbb || abbrev == PerryAbb))
+        {
+            filePath = Path.Combine(RscPath, gameDir, locName + ".STR");
+            if (!File.Exists(filePath))
+                filePath = Path.Combine(RscPath, gameDir, locName);
+        }
+        else
+            filePath = Path.Combine(RscPath, gameDir, locName);
+
+        return filePath;
+    }
+
     static Dictionary<ushort, string> GetExe(string abbrev, byte[] start, byte[] end)
     {
         Dictionary<ushort, string> exeDict = [];
         var exePath = "";
-        if (pcType == AtariStAbb)
-            exePath = Path.Combine(RscPath, abbrev + pcType, abbrev, abbrev);
+        var gameDir = abbrev + pcType;
+        if (pcType == AtariAbb)
+            exePath = Path.Combine(RscPath, gameDir, abbrev + ".PRG");
         else if (pcType == IbmAbb)
-            exePath = Path.Combine(RscPath, abbrev + pcType, abbrev + ".EXE");
+            exePath = Path.Combine(RscPath, gameDir, abbrev + ".EXE");
         else if (pcType == MsxAbb)
-            exePath = Path.Combine(RscPath, abbrev + pcType, "AVENTURA.COM");
+            exePath = Path.Combine(RscPath, gameDir, "AVENTURA.COM");
         else
-            exePath = Path.Combine(RscPath, abbrev + pcType, abbrev);
+            exePath = Path.Combine(RscPath, gameDir, abbrev);
 
         try
         {
             if (!File.Exists(exePath))
             {
                 Console.Error.WriteLine($"{FileError} {exePath}");
-                exePath = Path.Combine(RscPath, abbrev, abbrev + ".EXE");
+                gameDir = abbrev;
+                if (pcType == AtariAbb)
+                    exePath = Path.Combine(RscPath, gameDir, abbrev + ".PRG");
+                else if (pcType == IbmAbb)
+                    exePath = Path.Combine(RscPath, gameDir, abbrev + ".EXE");
+                else if (pcType == MsxAbb)
+                    exePath = Path.Combine(RscPath, gameDir, "AVENTURA.COM");
+                else
+                    exePath = Path.Combine(RscPath, gameDir, abbrev);
                 if (!File.Exists(exePath))
                 {
                     return exeDict;
@@ -510,31 +573,13 @@ partial class SASTester
             Console.WriteLine("GetLocs(): AVENTURA.COM parsing not yet implemented for MSX");
             return locs;
         }
-        var locPath = "";
-        if (abbrev == AmberAbb || abbrev == PerryAbb)
-        {
-            if (pcType == AtariStType)
-                locPath = Path.Combine(RscPath, abbrev + pcType, abbrev, abbrev + ".DIB");
-            else
-                locPath = Path.Combine(RscPath, abbrev + pcType, abbrev + ".DIB");
-        }
-        else
-        {
-            if (pcType == AtariStType)
-                locPath = Path.Combine(RscPath, abbrev + pcType, abbrev, "DIR");
-            else
-                locPath = Path.Combine(RscPath, abbrev + pcType, "DIR");
-        }
+        var locPath = GetLocDir(abbrev, abbrev + pcType);
         try
         {
             if (!File.Exists(locPath))
             {
                 Console.Error.WriteLine($"{FileError} {locPath}");
-                locPath = Path.Combine(RscPath, abbrev, abbrev + ".DIB");
-                if (abbrev == AmberAbb || abbrev == PerryAbb)
-                {
-                    locPath = Path.Combine(RscPath, abbrev, abbrev + ".DIB");
-                }
+                locPath = GetLocDir(abbrev, abbrev);
                 if (!File.Exists(locPath))
                 {
                     return locs;
@@ -558,22 +603,55 @@ partial class SASTester
         return locs;
     }
 
+    static string GetLocDir(string abbrev, string gameDir)
+    {
+        var locPath = "";
+
+        if (pcType == AtariAbb)
+        {
+            if (abbrev == F451Abb)
+                locPath = Path.Combine(RscPath, gameDir, abbrev, "DIR");
+            else
+                locPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".DST");
+        }
+        else if (abbrev == AmberAbb || abbrev == PerryAbb)
+        {
+            if (pcType == AppleAbb)
+                locPath = Path.Combine(RscPath, gameDir, abbrev + ".DAP");
+            else if (pcType == CommodoreAbb)
+                locPath = Path.Combine(RscPath, gameDir, abbrev + ".DC6");
+            else if (pcType == IbmAbb)
+                locPath = Path.Combine(RscPath, gameDir, abbrev + ".DIB");
+            else
+                locPath = Path.Combine(RscPath, gameDir, "DIR");
+        }
+        else
+            locPath = Path.Combine(RscPath, gameDir, "DIR");
+
+        return locPath;
+    }
+
     static Dictionary<byte, string> GetTokens(string abbrev) // Only necessary for Amber
     {
         const int Offset = 0x102;
         Dictionary<byte, string> tokens = [];
         byte b = 0x80;
         var tokenPath = "";
-        if (pcType == AtariStType)
-            tokenPath = Path.Combine(RscPath, abbrev + pcType, abbrev, abbrev + ".TOK");
+        var gameDir = abbrev + pcType;
+        if (pcType == AtariAbb)
+            tokenPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".TOK");
         else
-            tokenPath = Path.Combine(RscPath, abbrev + pcType, abbrev + ".TOK");
+            tokenPath = Path.Combine(RscPath, gameDir, abbrev + ".TOK");
         try
         {
             if (!File.Exists(tokenPath))
             {
                 Console.Error.WriteLine($"{FileError} {tokenPath}");
-                tokenPath = Path.Combine(RscPath, abbrev, abbrev + ".TOK");
+                gameDir = abbrev;
+                if (pcType == AtariAbb)
+                    tokenPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".TOK");
+                else
+                    tokenPath = Path.Combine(RscPath, gameDir, abbrev + ".TOK");
                 if (!File.Exists(tokenPath))
                 {
                     return tokens;
@@ -666,31 +744,34 @@ partial class SASTester
                 }
                 else if (b == 0x7E) // tilde
                     accent = true;
-                else if (accent)
-                    accent = false;
 
                 n = 0;
                 var output = b;
-                switch (b)
+
+                if (accent)
                 {
-                    case 0x61: // a
-                        output = 0xE1;
-                        break;
-                    case 0x65: // e
-                        output = 0xE9;
-                        break;
-                    case 0x69: // i
-                        output = 0xED;
-                        break;
-                    case 0x6E: // n
-                        output = 0xF1;
-                        break;
-                    case 0x6F: // o
-                        output = 0xF3;
-                        break;
-                    case 0x75: // u
-                        output = 0xFA;
-                        break;
+                    switch (b)
+                    {
+                        case 0x61: // a
+                            output = 0xE1;
+                            break;
+                        case 0x65: // e
+                            output = 0xE9;
+                            break;
+                        case 0x69: // i
+                            output = 0xED;
+                            break;
+                        case 0x6E: // n
+                            output = 0xF1;
+                            break;
+                        case 0x6F: // o
+                            output = 0xF3;
+                            break;
+                        case 0x75: // u
+                            output = 0xFA;
+                            break;
+                    }
+                    accent = false;
                 }
                 result.Write(output);
             }
@@ -700,17 +781,15 @@ partial class SASTester
         stream.Close();
     }
 
-    static void ExaminePdsFiles(string abbrev = AllGamesAbb)
+    static void ExaminePdsFiles(string abbrev = AllGamesAbb, bool extract = false)
     {
         List<string> pdsFiles = [];
-        if (pcType == Apple2Abb && (abbrev == AmberAbb || abbrev == AllGamesAbb))
+        if (pcType == AppleAbb && (abbrev == AmberAbb || abbrev == AllGamesAbb))
         {
-            pdsFiles = [Path.Combine(RscPath, "AMBAII", "GRAPHPDS.a"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.b"),
-                        Path.Combine(RscPath, "AMBAII", "GRAPHPDS.c"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.d"),
-                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.a"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.b"),
-                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.c"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.d")];
+            pdsFiles = [.. Directory.GetFiles(Path.Combine(RscPath, "AMBAII"), "GRAPHPDS*.*")];
+            pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAII"), "MUSICPDS*.*")]);
         }
-        else if (pcType == AtariStAbb)
+        else if (pcType == AtariAbb)
         {
             if (abbrev == AmberAbb || abbrev == AllGamesAbb)
             {
@@ -718,8 +797,8 @@ partial class SASTester
             }
             if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
             {
-                pdsFiles.AddRange([Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS.B"),
-                                Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS.B")]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS*.*"))]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS*.*"))]);
             }
         }
         // TODO: For Mac, we might use the names.pds files to get the list of pds files
@@ -748,7 +827,7 @@ partial class SASTester
             }
         }
 
-        OpenPds(pdsFiles, abbrev == AllGamesAbb);
+        OpenPds(pdsFiles, extract || abbrev == AllGamesAbb);
     }
 
     static void OpenPds(List<string> pdsFiles, bool extract = false)
@@ -772,7 +851,7 @@ partial class SASTester
                 var offset = 0;
 
                 // Apple II PDS have an extra three bytes at the beginning (2-byte full file length + separator)
-                if (pcType == Apple2Abb)
+                if (pcType == AppleAbb)
                 {
                     offset = 3;
                     numFileAddr += offset;
@@ -1047,11 +1126,11 @@ partial class SASTester
             Console.WriteLine();
             if (main)
             {
-                if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == MacAbb)
+                if (pcType == AppleAbb || pcType == AtariAbb || pcType == MacAbb)
                     Console.WriteLine($" X. {ExtractPdsMenu}");
                 if (pcType == IbmAbb)
                     Console.WriteLine($" P. {ExportPngMenu}");
-                if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
+                if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");
                 Console.WriteLine($" S. {SwitchMenu} ({pcType})");
             }
@@ -1126,6 +1205,11 @@ partial class SASTester
 
     void DoAmazonMenu()
     {
+        if (pcType == AppleAbb)
+        {
+            Console.WriteLine(ErrorPrefix + AmazonName + " was not a SAS game for " + AppleName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: amazonTitle, AmazonMenu1, AmazonMenu2, AmazonMenu3,
@@ -1160,11 +1244,13 @@ partial class SASTester
                     break;
                 case key5:
                     Console.WriteLine(StrMenu);
+                    if (pcType == MacAbb)
+                        ExaminePdsFiles(AmazonAbb, true);
                     ShowStrings(AmazonAbb, 0x03, expand: false);
                     break;
                 case key6:
                     // TODO: I suspect AMZAII may have PDS files, but I'm unable to extract any files at all (copy protection?)
-                    if (pcType == Apple2Abb || pcType == AtariStAbb || pcType == MacAbb)
+                    if (pcType == AtariAbb || pcType == MacAbb)
                     {
                         Console.WriteLine(PdsMenu);
                         ExaminePdsFiles(AmazonAbb);
@@ -1186,6 +1272,11 @@ partial class SASTester
 
     void DoDragonMenu()
     {
+        if (pcType == AtariAbb)
+        {
+            Console.WriteLine(ErrorPrefix + DragonName + NoPortError + AtariName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: dragonTitle, DragonMenu1, DragonMenu2,
@@ -1223,6 +1314,8 @@ partial class SASTester
                     break;
                 case key4:
                     Console.WriteLine(StrMenu);
+                    if (pcType == MacAbb)
+                        ExaminePdsFiles(DragonAbb, true);
                     ShowStrings(DragonAbb, 0x03, expand: false);
                     break;
                 case key5:
@@ -1282,6 +1375,8 @@ partial class SASTester
                     break;
                 case key5:
                     Console.WriteLine(StrMenu);
+                    if (pcType == MacAbb)
+                        ExaminePdsFiles(F451Abb, true);
                     ShowStrings(F451Abb, 0x03, expand: false);
                     break;
                 case key6:
@@ -1307,6 +1402,11 @@ partial class SASTester
 
     void DoAmberMenu()
     {
+        if (pcType == MacAbb)
+        {
+            Console.WriteLine(ErrorPrefix + AmberName + NoPortError + MacName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: amberTitle, AmberMenu1, AmberMenu2, AmberMenu3, AmberMenu4, AmberMenu5,
@@ -1348,7 +1448,7 @@ partial class SASTester
                     ShowStrings(AmberAbb, 0x02, expand: true);
                     break;
                 case key8:
-                    if (pcType == Apple2Abb || pcType == AtariStAbb)
+                    if (pcType == AppleAbb || pcType == AtariAbb)
                     {
                         Console.WriteLine(ExtractPdsMenu);
                         ExaminePdsFiles(AmberAbb);
@@ -1370,6 +1470,11 @@ partial class SASTester
 
     void DoPerryMenu()
     {
+        if (pcType == MacAbb)
+        {
+            Console.WriteLine(ErrorPrefix + PerryName + NoPortError + MacName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: perryTitle, PerryMenu1, PerryMenu2, PerryMenu3, PerryMenu4,
@@ -1420,6 +1525,16 @@ partial class SASTester
 
     void DoRamaMenu()
     {
+        if (pcType == AtariAbb)
+        {
+            Console.WriteLine(ErrorPrefix + RamaName + NoPortError + AtariName);
+            return;
+        }
+        if (pcType == MacAbb)
+        {
+            Console.WriteLine(ErrorPrefix + RamaName + NoPortError + MacName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: ramaTitle, RamaMenu1, RamaMenu2,
@@ -1472,6 +1587,11 @@ partial class SASTester
 
     void DoIslandMenu()
     {
+        if (pcType == MacAbb)
+        {
+            Console.WriteLine(ErrorPrefix + IslandName + NoPortError + MacName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: islandTitle, IslandMenu1, IslandMenu2, IslandMenu3,
@@ -1524,6 +1644,16 @@ partial class SASTester
 
     void DoOzMenu()
     {
+        if (pcType == AtariAbb)
+        {
+            Console.WriteLine(ErrorPrefix + OzName + NoPortError + AtariName);
+            return;
+        }
+        if (pcType == MacAbb)
+        {
+            Console.WriteLine(ErrorPrefix + OzName + NoPortError + MacName);
+            return;
+        }
         while (true)
         {
             var key = ShowMenu(main: false, title: ozTitle, OzMenu1, OzMenu2, OzMenu3, OzMenu4,
@@ -1576,32 +1706,32 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: SwitchMenu, Apple2Type, AtariStType, CommodoreType, IbmType, MacType, MsxType);
+            var key = ShowMenu(main: false, title: SwitchMenu, AppleName, AtariName, CommodoreName, IbmName, MacName, MsxName);
 
             switch (key)
             {
                 case key0:
-                    Console.WriteLine(Apple2Type);
-                    pcType = Apple2Abb;
+                    Console.WriteLine(AppleName);
+                    pcType = AppleAbb;
                     break;
                 case key1:
-                    Console.WriteLine(AtariStType);
-                    pcType = AtariStAbb;
+                    Console.WriteLine(AtariName);
+                    pcType = AtariAbb;
                     break;
                 case key2:
-                    Console.WriteLine(CommodoreType);
+                    Console.WriteLine(CommodoreName);
                     pcType = CommodoreAbb;
                     break;
                 case key3:
-                    Console.WriteLine(IbmType);
+                    Console.WriteLine(IbmName);
                     pcType = IbmAbb;
                     break;
                 case key4:
-                    Console.WriteLine(MacType);
+                    Console.WriteLine(MacName);
                     pcType = MacAbb;
                     break;
                 case key5:
-                    Console.WriteLine(MsxType);
+                    Console.WriteLine(MsxName);
                     pcType = MsxAbb;
                     break;
                 case keyBack:

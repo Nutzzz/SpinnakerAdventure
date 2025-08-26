@@ -17,12 +17,12 @@ partial class SASTester
     private const int FirstOctave       = 0; //3;   // to nearest C
     private const int PatchSquare       = 80;       // "Lead 1 (square)"    // or maybe 13=Xylophone
     private const int PatchSaw          = 81;       // "Lead 2 (sawtooth)"  // or maybe 7=Harpsichord
-    private const int PatchTriangle     = 79;       // "Ocarina"            // triangle approx.
-    private const int PatchNoise        = 126;      // "Applause"           // white noise approx.
+    private const int PatchTriangle     = 82;       // "Lead 3 (calliope)"  // or maybe 79=Ocarina [triangle approx.]
+    private const int PatchNoise        = 126;      // "Applause"           // [white noise approx.]
     private const int PatchDouble       = 87;       // "Lead 8 (bass+lead)" // at this point a stand-in, for (I think) waveform doubling
 
     private const string KeyStop        = "Press any key to stop playback.";
-    private const string BeatError      = "Error: Invalid beat length.";
+    private const string BeatError      = ErrorPrefix + "Invalid beat length.";
 
     public void ShowSoundFiles(string abbrev)
     {
@@ -51,16 +51,21 @@ partial class SASTester
             if (!string.IsNullOrEmpty(input))
             {
                 var filePath = "";
-                if (pcType == AtariStAbb)
-                    filePath = Path.Combine(RscPath, abbrev + pcType, abbrev, input);
+                var gameDir = abbrev + pcType;
+                if (pcType == AtariAbb)
+                    filePath = Path.Combine(RscPath, gameDir, abbrev, input);
                 else
-                    filePath = Path.Combine(RscPath, abbrev + pcType, input);
+                    filePath = Path.Combine(RscPath, gameDir, input);
                 if (!File.Exists(filePath))
                 {
-                    filePath = Path.Combine(RscPath, abbrev, input);
+                    Console.WriteLine($"{FileError} {filePath}");
+                    gameDir = abbrev;
+                    if (pcType == AtariAbb)
+                        filePath = Path.Combine(RscPath, gameDir, abbrev, input);
+                    else
+                        filePath = Path.Combine(RscPath, gameDir, input);
                     if (!File.Exists(filePath))
                     {
-                        Console.Error.WriteLine($"{FileError} {filePath}");
                         break;
                     }
                 }
@@ -95,7 +100,7 @@ partial class SASTester
                     }
                     return sndFiles;
                 }
-                else if (pcType == AtariStAbb) // doesn't always use extension + deeper folder structure
+                else if (pcType == AtariAbb) // doesn't always use extension + deeper folder structure
                 {
                     var astDir = Path.Combine(dir, abbrev);
                     if (Directory.Exists(astDir))
@@ -131,7 +136,7 @@ partial class SASTester
                 }
                 else // if (pcType == Apple2Abb || pcType == CommodoreAbb || pcType == MacAbb)
                 {
-                    if (pcType == MacAbb || (pcType == Apple2Abb && (abbrev == AmazonAbb || abbrev == AmberAbb)))
+                    if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
                     {
                         var pdsDir = Path.Combine(dir, "PDS");
                         if (!Directory.Exists(pdsDir))
@@ -207,7 +212,7 @@ partial class SASTester
             foreach (var file in sndFiles)
             {
                 var sub = "";
-                if (pcType == AtariStAbb)
+                if (pcType == AtariAbb)
                     sub = abbrev;
                 PlaySound(abbrev, Path.Combine(RscPath, abbrev + pcType, sub, file), toFile: true);
             }
@@ -427,15 +432,16 @@ partial class SASTester
 
                     if (beatLen <= 0)
                         beatLen = 1;
-                    //var tempo = (int.MaxValue / 2) / (beatLen * TicksPerQtrNote / 20);
-                    var tempo = beatLen * 64000;
+                    /*
+                    var tempo = (int)(beatLen * 64000f / (TicksPerQtrNote));
                     track.Add(new TempoEvent(tempo, 0L)); // tempo is in µs per quarter note
 #if _DEBUG
                     Console.Write($"; beatLen: {beatLen}; bpm: {60000 / (beatLen * 16)}; tempo: {tempo} µs/b");
 #endif
 
-                    //track.Add(new TimeSignatureEvent(0L, 4, 2, TicksPerQtrNote, 8)); // 4/4 time
-                    //track.Add(new KeySignatureEvent(0, 0, 0L)); // C major?
+                    track.Add(new TimeSignatureEvent(0L, 4, 2, TicksPerQtrNote, 8)); // 4/4 time
+                    track.Add(new KeySignatureEvent(0, 0, 0L)); // C major?
+                    */
                 }
             }
             if (ch > 0)
@@ -592,13 +598,13 @@ partial class SASTester
         double freq = 0f;
         List<int> lengths = [];
         List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes = [];
-        if (pcType == Apple2Abb)
+        if (pcType == AppleAbb)
         {
             timeOffset += 0x3;
             lensOffset += 0x3;
             noteOffset += 0x3;
         }
-        else if (pcType == AtariStAbb && (abbrev == "AMB" || abbrev == "PMN"))
+        else if (pcType == AtariAbb && (abbrev == "AMB" || abbrev == "PMN"))
             altSeq = true;
         else if (pcType == CommodoreAbb)
         {
@@ -733,11 +739,11 @@ partial class SASTester
 
                     // TODO: These are definitely waveform types, but I'm guessing which ones are which at this point
                     if (b == 0x0D)
-                        patch = PatchTriangle;
+                        patch = PatchSquare;
                     else if (b == 0x0E)
                         patch = PatchSaw;
                     else if (b == 0x0F)
-                        patch = PatchSquare;
+                        patch = PatchTriangle;
                     else if (b == 0x10)
                         patch = PatchNoise;
                     numCtrl = 6;
@@ -1023,7 +1029,7 @@ partial class SASTester
         Console.WriteLine(Divider);
         Console.WriteLine(KeyStop);
         Console.WriteLine(Divider);
-        if (pcType == Apple2Abb || (pcType == IbmAbb &&
+        if (pcType == AppleAbb || (pcType == IbmAbb &&
             Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
             WaveOut(beatLen, notes);
         else

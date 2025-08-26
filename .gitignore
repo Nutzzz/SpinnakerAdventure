@@ -398,5 +398,9 @@ FodyWeavers.xsd
 *.msm
 *.msp
 
+# Built package archives
+*.zip
+*.7z
+
 # JetBrains Rider
 *.sln.iml
