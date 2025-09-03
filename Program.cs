@@ -7,7 +7,7 @@ namespace SASTester;
 
 partial class SASTester
 {
-    public const string RscPath = @"Resources";
+    public const string RscPath = "Resources";
 
     public const string FilePrompt = "Enter a filename, or press Enter to continue:";
     public const string FilePromptWarn = "[Warning: There may be false positives.]";
@@ -242,13 +242,26 @@ partial class SASTester
 
     static void Main()
     {
-        string zipfile = Path.Combine(RscPath, "Resources.zip");
+        string zipfile = RscPath + ".zip";
         try
         {
             if (File.Exists(zipfile))
             {
-                Console.WriteLine("Extracting Resources.zip ...");
+                Console.WriteLine("Extracting " + zipfile + " ...");
+                if (!Directory.Exists(RscPath))
+                    Directory.CreateDirectory(RscPath);
                 ZipFile.ExtractToDirectory(zipfile, RscPath, overwriteFiles: false);
+            }
+            else
+            {
+                zipfile = Path.Combine(RscPath, RscPath + ".zip");
+                if (File.Exists(zipfile))
+                {
+                    Console.WriteLine("Extracting " + zipfile + " ...");
+                    if (!Directory.Exists(RscPath))
+                        Directory.CreateDirectory(RscPath);
+                    ZipFile.ExtractToDirectory(zipfile, RscPath, overwriteFiles: false);
+                }
             }
         }
         catch (IOException) {}
@@ -773,10 +786,8 @@ partial class SASTester
         List<string> pdsFiles = [];
         if (pcType == AppleAbb && (abbrev == AmberAbb || abbrev == AllGamesAbb))
         {
-            pdsFiles = [Path.Combine(RscPath, "AMBAII", "GRAPHPDS.a"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.b"),
-                        Path.Combine(RscPath, "AMBAII", "GRAPHPDS.c"), Path.Combine(RscPath, "AMBAII", "GRAPHPDS.d"),
-                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.a"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.b"),
-                        Path.Combine(RscPath, "AMBAII", "MUSICPDS.c"), Path.Combine(RscPath, "AMBAII", "MUSICPDS.d")];
+            pdsFiles = [.. Directory.GetFiles(Path.Combine(RscPath, "AMBAII"), "GRAPHPDS*.*")];
+            pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAII"), "MUSICPDS*.*")]);
         }
         else if (pcType == AtariAbb)
         {
@@ -786,8 +797,8 @@ partial class SASTester
             }
             if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
             {
-                pdsFiles.AddRange([Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "GRAPHPDS.B"),
-                                Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS"), Path.Combine(RscPath, "AMZAST", "AMZ", "MUSICPDS.B")]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS*.*"))]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS*.*"))]);
             }
         }
         // TODO: For Mac, we might use the names.pds files to get the list of pds files

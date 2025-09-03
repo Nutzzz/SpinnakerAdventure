@@ -1,29 +1,29 @@
-![logo](images/spinnaker-logo.png "Spinnaker logo")
+![spinnaker-logo](images/spinnaker-logo.png "Spinnaker logo")
 ## Spinnaker Adventure System
 **Technical data and an Extractor/Analyzer tool for Telarium and Windham Classics SAS adventure games**
 
-![logo](images/telarium-logo.jpg "Telarium logo") ![logo](images/windham-logo.png "Windham Classics logo")
+![telarium-logo](images/telarium-logo.jpg "Telarium logo") ![windham-logo](images/windham-logo.png "Windham Classics logo")
 
 ## Introduction
 
-I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" (SAS) or its \"Spinnaker Adventure Language\" (SAL), used in creating 8 adventure games published by Spinnaker's imprints [Windham Classics](https://en.wikipedia.org/wiki/Windham_Classics) and [Trillium/Telarium](https://en.wikipedia.org/wiki/Telarium) [the name changed to the latter because of a trademark dispute]. These games are unique as they are mostly based on books. Besides the *Wikipedia* article linked above, there is some interesting in-depth historical background that can be found at Jimmy Maher's *filfre.net*: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/) about "bookware" generally, with pieces about most of these games specifically, and in some cases the authors and books on which they are based; and a later article that focuses on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/), a central figure in the development of these games (and the co-author of the book on which the *Dragonworld* game was based).
+I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" (SAS) or its \"Spinnaker Adventure Language\" (SAL), used in creating 8 adventure games published by Spinnaker's imprints [Windham Classics](https://en.wikipedia.org/wiki/Windham_Classics) and [Trillium/Telarium](https://en.wikipedia.org/wiki/Telarium) [the name changed to the latter because of a trademark dispute]. These games are somewhat unique as they are based on books. Besides the *Wikipedia* article linked above, there is some interesting in-depth historical background that can be found at Jimmy Maher's *filfre.net*: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/) about "bookware" generally, with pieces about most of these games specifically, and in some cases the authors and books on which they are based; and a later article that focuses on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/), a central figure in the development of these games (and the co-author of the book on which the *Dragonworld* game was based).
 
-![screenshot](images/f451-ibm-screenshot.png "Fahrenheit 451 for IBM PC screenshot") ![screenshot](images/tri-ibm-screenshot.png "Treasure Island for IBM PC screenshot")
+![f451-ibm-screenshot](images/f451-ibm-screenshot.png "Fahrenheit 451 for IBM PC/PCjr screenshot") ![tri-ibm-screenshot](images/tri-ibm-screenshot.png "Treasure Island for IBM PC/PCjr screenshot")
 
 Because I feel nostalgic about some of these games, but at the same time find their input text parser to be extraordinarily frustrating, I wanted to update one or more of them to a choice-based format that would enable modern players to better enjoy them. As a first step along this path, I'm documenting here my discoveries from examining the binaries for these games and comparing the various games to one another and their different ports, and for what little it might be worth, sharing the Tester Tool I created in C# to assist in my analysis. I have no particular experience in reverse engineering, but hopefully this will inspire and assist the beginning of such an effort. For instance, it'd be great to eventually have these games added to [Gargoyle](https://ccxvii.net/gargoyle/) and/or [ScummVM](https://www.scummvm.org/)'s Glk engine, which could provide an enhanced experience compared to DOSBox.
 
 > [!IMPORTANT]
-> **To analyze a game, the Tester Tool expects to find its files in a subdirectory of ".\Resources\\". The directory must be named using the game's abbreviation from the [table below](#sas-games), followed by the port's abbreviation (e.g., "AMBAII" or "PMNIBM").**
+> **To analyze a game, the Tester Tool expects to find its files in a subdirectory of ".\Resources\\". The directory must be named using the game's abbreviation from the [table below](#sas-games), followed by the port's abbreviation (e.g., "AMBAII" or "PMNIBM"):**
 >
 > Port abbreviations:
 > * AII = Apple II
+> * AST = Atari ST
 > * C64 = Commodore 64
 > * IBM = IBM PC/PCjr
-> * MSX = MSX
-> * AST = Atari ST
 > * MAC = Macintosh
+> * MSX = MSX
 >
-> **Note if a file called ".\Resources\Resources.zip" exists, it will automatically be extracted.**
+> **Note if a file called ".\Resources.zip" or ".\Resources\Resources.zip" exists, it will automatically be extracted.**
 
 ### Extracting data files
 
@@ -32,13 +32,16 @@ Files must be extracted from disk images before they can be analyzed. These are 
 * Apple II: [*CiderPress II*](https://ciderpress2.com/)
 * Atari ST: [*Steem SEE*](https://sourceforge.net/projects/steemsse/) emulator
 * Commodore 64: [*DirMaster*](https://style64.org/dirmaster)
-* Macintosh: [*ShrinkWrap*](https://www.macintoshrepository.org/266-shrinkwrap-3-x) within the [*Basilisk II*](https://basilisk.cebix.net/) emulator
+* Macintosh: [*ShrinkWrap*](https://www.macintoshrepository.org/266-shrinkwrap-3-x) app within the [*Basilisk II*](https://basilisk.cebix.net/) emulator
 * MSX: [*WinImage*](https://www.winimage.com/winimage.htm)
 
-Steem SSE allows you to mount a specified directory on the host system as an emulated GEMDOS hard drive; Basilisk II similarly allows you to add an icon to the guest that mounts specified host drive letters. In either case, files can then be copied from a mounted floppy disk to the emulated hard disk using the guest OS's GUI.
+For Atari, *Steem SSE* allows you to mount a specified directory on the host system as an emulated GEMDOS hard drive; for Mac, *Basilisk II* similarly allows you to add an icon to the guest that mounts specified host drive letters. In the Mac's case, the game's files are hidden from Finder, but they are accessible with the *ShrinkWrap* tool. In either case, files can then be copied from the mounted floppy disk to the emulated hard disk using the guest OS's GUI.
 
 > [!NOTE]
-> **The Atari ST games will have a subdirectory (named with the abbreviation in the table below) for their data files, and the Tester Tool expects this layout.**
+> **There will be duplicate filenames between multiple disks, e.g., for the games with GRAPHPDS/MUSICPDS files, be sure to add an extension to keep the files separate while still allow the Tester Tool to find them. The VOLT file is less important as it merely identifies the disk.**
+
+> [!NOTE]
+> **Unlike the other ports, the Atari ST games will have a subdirectory (named with the abbreviation in the table below) for their data files (all files other than the .PRG executable), and the Tester Tool expects this layout.**
 
 ---
 
@@ -48,14 +51,14 @@ These are the games created with the Spinnaker Adventure System:
 
 | game                                                                                                                         | abbrev | year | imprint             | source author          | ports                                 | manuals                                                                                                                                                                        | reviews                                                                                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | --------------------- | ------------------------ | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [*Amazon*](https://en.wikipedia.org/wiki/Amazon_(video_game))                                                                | AMZ    | 1984 | Trillium / Telarium | Michael Crichton       | AII&dagger;, C64, IBM, MSX*, AST, MAC | [[manual]](https://www.mocagh.org/spinnaker/amazon-manual.pdf)                                                                                                                 | [[Maher]](https://www.filfre.net/2013/10/from-congo-to-amazon/) [[Dobson]](https://gamingafter40.blogspot.com/2010/02/adventure-of-week-michael-crichtons.html) [[Creosote]](https://www.goodolddays.net/en/game/Amazon/) |
-| [*Dragonworld*](https://en.wikipedia.org/wiki/Dragonworld_(video_game))                                                      | DGW    | 1984 | Trillium / Telarium | B. Preiss / M. Reaves  | AII, C64, IBM, MSX*, MAC              | [[manual]](https://www.mocagh.org/spinnaker/dragonworld-manual.pdf)                                                                                                            | [[Maher]](https://www.filfre.net/2013/10/dragonworld/)                                                                                                                                                                    |
-| [*Fahrenheit 451*](https://en.wikipedia.org/wiki/Fahrenheit_451_(video_game))                                                | F451   | 1984 | Trillium / Telarium | Ray Bradbury           | AII, C64, IBM, MSX*, AST, MAC         | [[manual]](https://www.mocagh.org/spinnaker/fahrenheit-manual.pdf) [[note]](https://www.mocagh.org/spinnaker/fahrenheit-note.pdf)                                              | [[Maher]](https://www.filfre.net/2013/09/fahrenheit-451-the-game/) [[Dobson]](https://gamingafter40.blogspot.com/2010/11/adventure-of-week-fahrenheit-451-1984.html)                                                      |
-| [*Nice Princes in Amber*](https://en.wikipedia.org/wiki/Nine_Princes_in_Amber_(video_game))                                  | AMB    | 1985 | Telarium            | Roger Zelazny          | AII, C64, IBM, MSX*, AST              | [[manual]](https://www.mocagh.org/spinnaker/nineprinces-manual.pdf)                                                                                                            | [[Maher]](https://www.filfre.net/2014/06/nine-princes-in-amber/)                                                                                                                                                          |
-| [*Perry Mason: The Case of the Mandarin Murder*](https://en.wikipedia.org/wiki/Perry_Mason:_The_Case_of_the_Mandarin_Murder) | PMN    | 1985 | Telarium            | Erle Stanley Gardner   | AII, C64, IBM, MSX*, AST              | [[manual]](https://www.mocagh.org/spinnaker/perrymason-manual.pdf)                                                                                                             | [[Maher]](https://www.filfre.net/2014/06/perry-mason-the-case-of-the-mandarin-murder/) [[Creosote]](https://www.goodolddays.net/en/game/Perry-Mason-The-Case-of-the-Mandarin-Murder/)                                     |
-| [*Rendezvous with Rama*](https://en.wikipedia.org/wiki/Rendezvous_with_Rama_(video_game))                                    | RDV    | 1984 | Trillium / Telarium | Arthur C. Clarke       | AII, C64, IBM, MSX*                   | [[manual]](https://www.mocagh.org/spinnaker/rama-manual.pdf) [[hints]](https://www.mocagh.org/spinnaker/rama-hints.pdf) [[map]](https://www.mocagh.org/spinnaker/rama-map.pdf) | [[Maher]](https://www.filfre.net/2013/09/rendezvous-with-rama/)                                                                                                                                                           |
-| [*Treasure Island*](https://en.wikipedia.org/wiki/Treasure_Island#Video_games)                                               | TRI    | 1985 | Windham Classics    | Robert Louis Stevenson | AII, C64, IBM, MSX*, AST              | [[manual]](https://www.mocagh.org/spinnaker/treasureisland-manual.pdf) [[map]](https://www.mocagh.org/spinnaker/treasureisland-map.jpg)                                        |                                                                                                                                                                                                                           |
-| [*The Wizard of Oz*](https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1985_video_game))                                       | WOZ    | 1984 | Windham Classics    | L. Frank Baum          | AII, C64, IBM, MSX*                   | [[manual]](https://www.mocagh.org/spinnaker/wizardoz-manual.pdf)                                                                                                               |                                                                                                                                                                                                                           |
+| [*Amazon*](https://en.wikipedia.org/wiki/Amazon_(video_game))                                                                | AMZ    | 1984 | Trillium / Telarium | Michael Crichton       | AII&dagger;, C64, IBM, MSX*, AST, MAC | [[manual](https://www.mocagh.org/spinnaker/amazon-manual.pdf)]                                                                                                                 | [[Maher](https://www.filfre.net/2013/10/from-congo-to-amazon/)] [[Dobson](https://gamingafter40.blogspot.com/2010/02/adventure-of-week-michael-crichtons.html)] [[Creosote](https://www.goodolddays.net/en/game/Amazon/)] |
+| [*Dragonworld*](https://en.wikipedia.org/wiki/Dragonworld_(video_game))                                                      | DGW    | 1984 | Trillium / Telarium | B. Preiss / M. Reaves  | AII, C64, IBM, MSX*, MAC              | [[manual](https://www.mocagh.org/spinnaker/dragonworld-manual.pdf)]                                                                                                            | [[Maher](https://www.filfre.net/2013/10/dragonworld/)]                                                                                                                                                                    |
+| [*Fahrenheit 451*](https://en.wikipedia.org/wiki/Fahrenheit_451_(video_game))                                                | F451   | 1984 | Trillium / Telarium | Ray Bradbury           | AII, C64, IBM, MSX*, AST, MAC         | [[manual](https://www.mocagh.org/spinnaker/fahrenheit-manual.pdf)] [[note](https://www.mocagh.org/spinnaker/fahrenheit-note.pdf)]                                              | [[Maher](https://www.filfre.net/2013/09/fahrenheit-451-the-game/)] [[Dobson](https://gamingafter40.blogspot.com/2010/11/adventure-of-week-fahrenheit-451-1984.html)]                                                      |
+| [*Nice Princes in Amber*](https://en.wikipedia.org/wiki/Nine_Princes_in_Amber_(video_game))                                  | AMB    | 1985 | Telarium            | Roger Zelazny          | AII, C64, IBM, MSX*, AST              | [[manual](https://www.mocagh.org/spinnaker/nineprinces-manual.pdf)]                                                                                                            | [[Maher](https://www.filfre.net/2014/06/nine-princes-in-amber/)]                                                                                                                                                          |
+| [*Perry Mason: The Case of the Mandarin Murder*](https://en.wikipedia.org/wiki/Perry_Mason:_The_Case_of_the_Mandarin_Murder) | PMN    | 1985 | Telarium            | Erle Stanley Gardner   | AII, C64, IBM, MSX*, AST              | [[manual](https://www.mocagh.org/spinnaker/perrymason-manual.pdf)]                                                                                                             | [[Maher](https://www.filfre.net/2014/06/perry-mason-the-case-of-the-mandarin-murder/) [[Creosote](https://www.goodolddays.net/en/game/Perry-Mason-The-Case-of-the-Mandarin-Murder/)]                                      |
+| [*Rendezvous with Rama*](https://en.wikipedia.org/wiki/Rendezvous_with_Rama_(video_game))                                    | RDV    | 1984 | Trillium / Telarium | Arthur C. Clarke       | AII, C64, IBM, MSX*                   | [[manual](https://www.mocagh.org/spinnaker/rama-manual.pdf)] [[hints](https://www.mocagh.org/spinnaker/rama-hints.pdf)] [[map](https://www.mocagh.org/spinnaker/rama-map.pdf)] | [[Maher](https://www.filfre.net/2013/09/rendezvous-with-rama/)]                                                                                                                                                           |
+| [*Treasure Island*](https://en.wikipedia.org/wiki/Treasure_Island#Video_games)                                               | TRI    | 1985 | Windham Classics    | Robert Louis Stevenson | AII, C64, IBM, MSX*, AST              | [[manual](https://www.mocagh.org/spinnaker/treasureisland-manual.pdf)] [[map](https://www.mocagh.org/spinnaker/treasureisland-map.jpg)]                                        |                                                                                                                                                                                                                           |
+| [*The Wizard of Oz*](https://en.wikipedia.org/wiki/The_Wizard_of_Oz_(1985_video_game))                                       | WOZ    | 1984 | Windham Classics    | L. Frank Baum          | AII, C64, IBM, MSX*                   | [[manual](https://www.mocagh.org/spinnaker/wizardoz-manual.pdf)]                                                                                                               |                                                                                                                                                                                                                           |
 
 ##### \* = The MSX versions were published by Idealogic, in Spanish only. They may use a different engine altogether, in which case much of the information below would not apply. [See below](#msx-ports).
 
@@ -63,15 +66,15 @@ These are the games created with the Spinnaker Adventure System:
 
 ## Ports
 
-The main ports were for Apple II, Commodore 64, and IBM PC/PCjr.
+The main ports were for Apple II, Commodore 64, and IBM PC/PCjr. Later ports were made to Atari ST and Macintosh for some of the games.
 
 ### Atari ST ports
 
-There are Atari ST ports for 5 of the games: *Amazon*, *Fahrenheit 451*, *Nine Princes*, *Perry Mason*, and *Treasure Island*.
+There are Atari ST ports for 5 of the games: *Amazon*, *Fahrenheit 451*, *Nine Princes*, *Perry Mason*, and *Treasure Island*. Note I was unable to find disk 2 of AMBAST anywhere.
 
 ### Macintosh ports
 
-There are Mac ports for 3 of the games: *Amazon*, *Dragonworld*, and *Fahrenheit 451*. The pictures are similar but in a higher resolution and in black-and-white. As mentioned above, graphics, sounds, and strings/data for these ports are packed into .pds files. The [PDS container format](#pds-container-format) is described below.
+There are Mac ports for 3 of the games: *Amazon*, *Dragonworld*, and *Fahrenheit 451*. The pictures are similar but in a higher resolution and in black-and-white (not even grayscale).
 
 I've seen a reference to a Mac version of *Rendezvous with Rama*, but I believe this is a mistake, probably referring to the 1996 Dynamix game *Rama* (which covers parts of *Rendezvous* as well as its sequel, *Rama II*).
 
@@ -91,17 +94,21 @@ I find it difficult to test these; the parser is hard enough to deal with when y
 
 *Amazon* was purchased from Michael Crichton as a mostly complete game, though at that point it was based on his book, *Congo*. However, Crichton didn't realize that when he sold the movie rights, he had actually sold all adaptation rights. The *Congo* movie wouldn't actually be released until 1995.
 
-So its setting was changed from Africa to South America, and the ape that could use sign language was changed to a talking parrot. There were some oversights, like including an incident involving hippos--there were no hippos in South America until some escaped from the notorious Pablo Escobar's zoo in the '90s!
+So the game's setting was changed from Africa to South America, and the ape that could use sign language was changed to a talking parrot. There were some oversights, like including an incident involving hippos--there were no hippos in the wilds of South America until some escaped from the notorious Pablo Escobar's zoo in the '90s!
 
-The game was written in Apple assembly, and was released in its native form, which is why I was unable to dump the file contents. The other ports were adapted into SAS but some features were apparently lost in translation.
+The game was written in Apple assembly, and was released in its native form, and I'm unable to dump the file contents; presumably the pictures are included in the binary. The other ports were adapted into SAS but from what I've read some features were apparently lost in translation.
+
+The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
 
 The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
 
 ### Other non-SAS games
 
-For completeness, I'll mention that Telarium published two other non-SAS adventure games: Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game)), and [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game)) [[filfre]](https://www.filfre.net/2013/10/shadowkeep/) (novelized by Alan Dean Foster so they could say it was based on a book).
+For completeness, I'll mention that Telarium published two other non-SAS games during its short life: [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game)) [[Maher review](https://www.filfre.net/2013/10/shadowkeep/)] (novelized by Alan Dean Foster so they could say it was based on a book) and Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game)).
 
-Windham Classics published three others: Lewis Carroll's [*Alice in Wonderland*](https://en.wikipedia.org/wiki/Alice_in_Wonderland_(1985_video_game)), Zilpha Keatley Snyder's [*Below The Root*](https://en.wikipedia.org/wiki/Below_the_Root_(video_game)), and Johann David Wyss's [*The Swiss Family Robinson*](https://en.wikipedia.org/wiki/The_Swiss_Family_Robinson#Other_adaptations).
+Windham Classics published three others: Zilpha Keatley Snyder's [*Below The Root*](https://en.wikipedia.org/wiki/Below_the_Root_(video_game)), Lewis Carroll's [*Alice in Wonderland*](https://en.wikipedia.org/wiki/Alice_in_Wonderland_(1985_video_game)) (both of which use the same Disharoon engine), and Johann David Wyss's [*The Swiss Family Robinson*](https://en.wikipedia.org/wiki/The_Swiss_Family_Robinson#Other_adaptations).
+
+See [this Maher article](https://www.filfre.net/2014/12/bookwares-sunset-2/) for some discussion of *The Scoop* and the two Disharoon games.
 
 ## Unreleased games
 
@@ -126,7 +133,7 @@ One file on disk 1 of each of the following games exists, but cannot be read or 
 
 ## PDS container files
 
-For some reason, the pictures and music for AMZAST, AMBAST, and AMBAII have been packed into files called GRAPHPDS and MUSICPDS. Additionally, all three Mac ports have a similarly packed set of files with a different header format ending with .pds. See below for more information about the [PDS container format](#pds-container-format).
+For some reason, the pictures and music for AMZAST, AMBAST, and AMBAII have been packed into files called GRAPHPDS and MUSICPDS. Additionally, all three Mac ports have a similarly packed set of files (with a different header format) with .pds extensions. See below for more information about the [PDS container format](#pds-container-format).
 
 ## Vocabularies
 
@@ -134,11 +141,15 @@ The vocabulary files list all of the words the parser understands. Note that nea
 
 ## Tokenization in *Nine Princes*
 
-To save disk space, AMB (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the Amber location files, then that represents the number of the token word--just subtract `0x80`. The Tester Tool expands strings for "Nine Princes" automatically.
+Presumably to save disk space, AMB (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the Amber location files, then that represents the number of the token word--just subtract `0x80`.
+
+The Tester Tool expands strings for "Nine Princes" automatically.
 
 ## File types
 
-Some observations about the files used by these games: Thankfully, game strings are ASCII-encoded (though AMB is partially tokenized).
+Some observations about the files used by these games follow in the table below.
+
+Most game strings and other data is found in the appropriate location files, with some general strings found in the executable. Thankfully, strings are ASCII-encoded (though AMB is [partially tokenized](#tokenization-in-nine-princes)).
 
 
 | filename                | games           | platforms               | description                                                                                                                                             |
@@ -181,13 +192,11 @@ Some observations about the files used by these games: Thankfully, game strings 
 | **\*.** (no extension)  | all             | IBM only                | Mostly location or [graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
 | **\*.** (no extension)  | all             | all but IBM & some AST  | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                       |
 
-Game strings and other data is found in the appropriate location files.
-
 ---
 
 ## PDS Container Format
 
-The Tester Tool has a function to unpack the contents of all files of the selected port type. It also allows a preview hex dump for the files of individual ports.
+The Tester Tool has a function to unpack the contents of all PDS files of the selected port type in a new "PDS\\" directory under each game's directory. The extraction process runs automatically where necessary (e.g., when listing picture or sound files). A hex dump of the each file within a PDS can also be previewed.
 
 ### Apple II container format
 
@@ -199,11 +208,11 @@ At byte 0x05, the filenames begin, with 12 characters (8.3) per filename, padded
 
 ### Atari ST container format
 
-For the GRAPHPDS/MUSICPDS files from the Atari ST ports of *Amazon* (2 files) and *Nine Princes* (1 file), the format is the same as the Apple II except the initial three bytes are not present. The first byte is the number of file entries, then the file list starts at address 0x02; otherwise it appears to be the same.
+For the GRAPHPDS/MUSICPDS files from the Atari ST ports of *Amazon* and *Nine Princes*, the format is the same as the Apple II except the initial three bytes are not present. The first byte is the number of file entries, then the file list starts at address 0x02; otherwise it appears to be the same.
 
 ### Macintosh container format
 
-For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) files from the Macintosh ports, the format differs from the above. The first two bytes are the starting address of the data section (little-endian). For some reason, this address is repeated at 0x2 and 0x3. Between `00` separators, there is a section between 0x05 and 0x08 that seems to always be `01 20 20 20`. I'm unclear what this represents. The filename entries for Mac begin at 0x0A. Unlike the Apple and Atari, the filenames have a max length of only 8, and `00` and/or `20` is used as filler where necessary. There is no separator before an ending 4 bytes; unlike the above this value is the file's length (rather than the address within the PDS file); it is little-endian rather than big; and for some reason similar to the address at the beginning, it is 2 bytes repeated twice. The first file is always a 1-byte file called "dummy1" which I assume aids the PDS file parsing routine used on the Macintosh.
+For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) files from the Macintosh ports, the format differs from the above. The first two bytes are the starting address of the data section (little-endian). For some reason, this address is repeated at 0x2 and 0x3. Between `00` separators, there is a section between 0x05 and 0x08 that seems to always be `01 20 20 20`. I'm unclear what this represents. The filename entries for Mac begin at 0x0A. Unlike the Apple and Atari, the filenames have a max length of only 8, and `00` and/or `20` is used as filler where necessary. There is no separator before an ending 4 bytes; unlike the GRAPHPDS/MUSICPDS format above, this value is the file's length rather than the memory address within the PDS file; it is little-endian rather than big; and for some reason, like the address at the beginning, it is 2 bytes repeated twice. The first file is always a 1-byte file called "dummy1" which I assume aids the PDS file parsing routine used on the Macintosh.
 
 ---
 
@@ -289,7 +298,7 @@ colorMap[3] = byteArray & 0x3;
 
 So, take an example 3 bytes: `1B F7 C6`. You'll get a 4x15-pixel block above a 4x7-pixel block, with sets of 4-color stripes based on the color map. If it's palette `0`, low-intensity and a black background, you'll get the following (8x zoom for clarity):
 
-![example](images/gfx-example1.png "example")
+![gfx-example1](images/gfx-example1.png "example")
 
 
 | 1B          | F         |   | 7        | C6          |
@@ -300,7 +309,7 @@ So, take an example 3 bytes: `1B F7 C6`. You'll get a 4x15-pixel block above a 4
 
 So, taking the first location of *Nine Princes* as an example:
 
-![screenshot](images/amb-ibm-screenshot.png "Nine Princes in Amber for IBM PC screenshot")
+![amb-ibm-screenshot](images/amb-ibm-screenshot.png "Nine Princes in Amber for IBM PC/PCjr screenshot")
 
 
 | address | `00 01 02 03 04 05` |
@@ -324,7 +333,7 @@ Looking at the pixel data, we see that it's pretty boring at first: 61 pixels do
 
 Note that this file doesn't include the feet shown; these are drawn with a small separate picture file (called FEET), then HOSPITL is redrawn when the player stands up.
 
-![example](images/gfx-example2.png "pixel layout")
+![gfx-example2](images/gfx-example2.png "pixel layout")
 
 
 | address | color data                                                                                                                                                | height  |   | address | height  | color data                                                                                                           |
@@ -341,7 +350,7 @@ Note that this file doesn't include the feet shown; these are drawn with a small
 
 ### Commodore 64 picture format
 
-![screenshot](images/f451-c64-screenshot.png "Fahrenheit 451 for Commodore 64 screenshot")
+![f451-c64-screenshot](images/f451-c64-screenshot.png "Fahrenheit 451 for Commodore 64 screenshot")
 
 The Commodore 64 and Atari ST ports use the same 320x200 resolution, but with 16 colors.
 
@@ -356,7 +365,7 @@ It's clearly a different format from IBM, but the header is similar, and there a
 
 So, returning to *Nine Princes* for our example:
 
-![screenshot](images/amb-c64-screenshot.png "Nine Princes in Amber for Commodore 64 screenshot")
+![amb-c64-screenshot](images/amb-c64-screenshot.png "Nine Princes in Amber for Commodore 64 screenshot")
 
 
 | 0x65       | 0x68       | 0x6B       | 0x6E       |
@@ -375,13 +384,13 @@ In any case, the three-byte pattern looks like it changes again around address 0
 
 ### Atari ST picture format
 
-![screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
+![f451-ast-screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![amb-ast-screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
 
-The Atari ST ports use the same 320x200 resolution.  Though the ST had a more flexible color system than the Commodore, based on the screenshots it doesn't look like Telarium really leveraged it very well. It also requries the Atari to be in low resolution mode. In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
+The Atari ST ports use the same 320x200 resolution. Though the ST had a more flexible color system than the Commodore, based on the screenshots it doesn't look like Telarium really leveraged it very well. It also requries the Atari to be in low resolution mode. In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
 
 ### Apple II picture format
 
-![screenshot](images/f451-aii-screenshot.png "Fahrenheit 451 for MSX screenshot") ![screenshot](images/amb-aii-screenshot.png "Nine Princes in Amber for MSX screenshot")
+![f451-aii-screenshot](images/f451-aii-screenshot.png "Fahrenheit 451 for MSX screenshot") ![amb-aii-screenshot](images/amb-aii-screenshot.png "Nine Princes in Amber for MSX screenshot")
 
 The Apple II ports use 280x192 "HIRES" resolution, with 6 "[fringed](https://www.xtof.info/hires-graphics-apple-ii.html#hires-oddities)" colors.
 
@@ -389,7 +398,7 @@ I have yet to look at these.
 
 ### Macintosh picture format
 
-![screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
+![f451-mac-screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
 
 The Mac ports use a similar art style to the other ports, but in a higher resolution--though the full screen resolution is 512x342, the game only uses 480x288--and in black-and-white only (not even grayscale), as that's all that the first Macs supported.
 
@@ -399,7 +408,7 @@ The first two bytes are the width in pixels, and the next two are the height. 0x
 
 ### MSX picture format
 
-![screenshot](images/f451-msx-screenshot.png "Fahrenheit 451 for MSX screenshot") ![screenshot](images/amb-msx-screenshot.png "Nine Princes in Amber for MSX screenshot")
+![f451-msx-screenshot](images/f451-msx-screenshot.png "Fahrenheit 451 for MSX screenshot") ![amb-msx-screenshot](images/amb-msx-screenshot.png "Nine Princes in Amber for MSX screenshot")
 
 These "ports" were released by a different company, and the art was redrawn with a new art style. I'm not clear whether these are actually SAS games, or adaptations in a different engine.
 
@@ -507,7 +516,7 @@ Given that, perhaps it should not be surprising that the sound files are very si
 
 #### Format for *Nine Princes* and *Perry Mason*
 
-For AMB and PMN (the last 2 SAS games to be released), the control code format is a bit different from the other Atari ports (though note AMB has its music files packed into a MUSICPDS file). The first channel uses 8 bytes instead of 6, but later channels only use 2 bytes. The first channel often begins with `50 00 00 00 38 00`. The following two bytes always start with `60`, which is usually followed by `0D`, but is sometimes `0E`, `0F`, or `10`. This seems to be the waveform type: `0D` is a square wave, but I haven't yet figured out the others. The second and third channel codes consist of only 2 bytes, again `60` and one of `0D` through `10`.
+For AMB and PMN (the last 2 SAS games to be released), the Atari control code format is a bit different from the other Atari ports (though note AMB has its music files packed into a MUSICPDS file). The first channel uses 8 bytes instead of 6, but later channels only use 2 bytes. The first channel often begins with `50 00 00 00 38 00`. The following two bytes always start with `60`, which is usually followed by `0D`, but is sometimes `0E`, `0F`, or `10`. This seems to be the waveform type: `0D` is a square wave, but I haven't yet figured out the others. The second and third channel codes consist of only 2 bytes, again `60` and one of `0D` through `10`.
 
 ### Commodore 64 sound format
 
@@ -517,6 +526,6 @@ Note I have also heard at least one instance of the noise channel being used by 
 
 There are an additional two bytes at the beginning of a file that are always `20 41` in the ones that I've looked at so far.
 
-The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform and ADSR envelope. Initially I thought the `80` in the sixth byte on PC and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`.  The latter seems to add a duplicate waveform (sawtooth maybe?) with the same pitch on top, though it only seems to work if it is followed by `40` (square wave); as the fourth byte is the waveform type: it seems that `10` is triangle and `20` is sawtooth; I believe `80` is white noise.
+The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform (and ADSR envelope?). Initially I thought the `80` in the sixth byte on PC and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`.  The latter seems to add a duplicate waveform (sawtooth maybe?) with the same pitch on top, though it only seems to work if it is followed by `40` (square wave); as the fourth byte is the waveform type: it seems that `10` is triangle and `20` is sawtooth; I believe `80` is white noise.
 
 C64 also has a final byte after the last `80` that varies: I've seen e.g., `00`, `01`, `02`, `81`, and `FF`.
