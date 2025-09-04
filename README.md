@@ -70,13 +70,13 @@ The main ports were for Apple II, Commodore 64, and IBM PC/PCjr. Later ports wer
 
 ### Atari ST ports
 
-There are Atari ST ports for 5 of the games: *Amazon*, *Fahrenheit 451*, *Nine Princes*, *Perry Mason*, and *Treasure Island*. Note I was unable to find disk 2 of AMBAST anywhere.
+There are Atari ST ports for 5 of the games: *Amazon*, *Fahrenheit 451*, *Nine Princes*, *Perry Mason*, and *Treasure Island*.
 
 ### Macintosh ports
 
 There are Mac ports for 3 of the games: *Amazon*, *Dragonworld*, and *Fahrenheit 451*. The pictures are similar but in a higher resolution and in black-and-white (not even grayscale).
 
-I've seen a reference to a Mac version of *Rendezvous with Rama*, but I believe this is a mistake, probably referring to the 1996 Dynamix game *Rama* (which covers parts of *Rendezvous* as well as its sequel, *Rama II*).
+I've seen a reference to a Mac version of *Rendezvous with Rama*, but I believe this is a mistake, probably referring to the 1996 Dynamix game *Rama* (which covers parts of the *Rendezvous* book as well as its sequel, *Rama II*).
 
 ### Reported Amiga port of *Perry Mason*
 
@@ -124,6 +124,7 @@ Most of the games had copy protection, e.g., expecting an extra corrupted sector
 
 One file on disk 1 of each of the following games exists, but cannot be read or extracted. These files do not exist in the other ports, so they appear to be dummy files used as a copy protection measure:
 
+* AMB: "OUTSIDE.CST"
 * AMZ: "R2E.CST"
 * F451: "F4LOCA"
 * PMN: "GMGETUP.CST"
