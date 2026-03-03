@@ -100,8 +100,6 @@ The game was written in Apple assembly, and was released in its native form, and
 
 The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
 
-The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
-
 ### Other non-SAS games
 
 For completeness, I'll mention that Telarium published two other non-SAS games during its short life: [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game)) [[Maher review](https://www.filfre.net/2013/10/shadowkeep/)] (novelized by Alan Dean Foster so they could say it was based on a book) and Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game)).
@@ -499,7 +497,7 @@ The next section at 0x1A is the control sequence at the start of a channel, whic
 
 C#4 x1, G#4 x6, rest x1, C#4 x1, G#4 x1, rest x2, C#4 x1, G#4 x16
 
-It sounds like: "Da-doooo, da-do da-dooooooo!"
+It sounds like: "Da-doooo, da-do da-dooooooo!"  [Listen to the MIDI conversion here](https://codepen.io/Nutzzz-the-animator/full/wBzMzbP).
 
 And finally, we get the `80` stop control code.
 
