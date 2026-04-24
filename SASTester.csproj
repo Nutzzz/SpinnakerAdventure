@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageReference Include="SixPix" Version="0.3.2" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
+using SixPix;
 
 namespace SASTester;
 
@@ -202,11 +203,15 @@ partial class SASTester
     // TODO: Figure out format for other ports
     private static void DrawPic(string abbrev, string filePath = "", bool toFile = false)
     {
+        bool doSixel = false;
+        if (Sixel.IsSupported())
+            doSixel = true;
+        
         const byte Offset = 0x06; // The first 6 bytes have palette colors and height/width
         ushort x = 0, y = 0, w = 0, h = 0, palette = 0;
         byte[] array = [];
         var fg = ConsoleColor.Gray;
-        if (!toFile)
+        if (!toFile && !doSixel)
         {
             fg = Console.ForegroundColor;
             Console.Clear();
@@ -263,7 +268,7 @@ partial class SASTester
             }
             i++;
         }
-        if (!toFile)
+        if (!toFile && !doSixel)
         {
             Console.WriteLine();
             Console.WriteLine(Divider);
@@ -303,7 +308,7 @@ partial class SASTester
                     pixmap.TryAdd(new(x + 1, y), GetRGBColor(cols[0][1], palette));
                     pixmap.TryAdd(new(x + 2, y), GetRGBColor(cols[0][2], palette));
                     pixmap.TryAdd(new(x + 3, y), GetRGBColor(cols[0][3], palette));
-                    if (!toFile && (y + 3) < Console.WindowHeight && (x + 3) < Console.WindowWidth)
+                    if (!toFile && !doSixel && (y + 3) < Console.WindowHeight && (x + 3) < Console.WindowWidth)
                     {
                         Console.SetCursorPosition(x, y);
                         Console.ForegroundColor = GetCColor(cols[0][0], palette);
@@ -328,7 +333,7 @@ partial class SASTester
                     pixmap.TryAdd(new(x + 1, y), GetRGBColor(cols[1][1], palette));
                     pixmap.TryAdd(new(x + 2, y), GetRGBColor(cols[1][2], palette));
                     pixmap.TryAdd(new(x + 3, y), GetRGBColor(cols[1][3], palette));
-                    if (!toFile && (y + 3) < Console.WindowHeight && (x + 3) < Console.WindowWidth)
+                    if (!toFile && !doSixel && (y + 3) < Console.WindowHeight && (x + 3) < Console.WindowWidth)
                     {
                         Console.SetCursorPosition(x, y);
                         Console.ForegroundColor = GetCColor(cols[1][0], palette);
@@ -350,9 +355,12 @@ partial class SASTester
             }
             i++;
         }
-        Console.ForegroundColor = fg;
-        Console.SetCursorPosition(0, Console.WindowHeight - 1);
-        if (!toFile || w < 1 || h < 1)
+        if (!doSixel)
+        {
+            Console.ForegroundColor = fg;
+            Console.SetCursorPosition(0, Console.WindowHeight - 1);
+        }
+        if ((!toFile && !doSixel) || w < 1 || h < 1)
             return;
 
         using var img = new Image<Rgb24>(w, h);
@@ -373,6 +381,12 @@ partial class SASTester
         var dir = Path.Combine(Path.GetDirectoryName(filePath) ?? Directory.GetCurrentDirectory(), "PNG");
         if (!Directory.Exists(dir))
             Directory.CreateDirectory(dir);
-        img.SaveAsPng(Path.Combine(dir, Path.GetFileName(filePath) + ".png"));
+        if (toFile)
+            img.SaveAsPng(Path.Combine(dir, Path.GetFileName(filePath) + ".png"));
+        else if (doSixel)
+        {
+            Console.WriteLine();
+            Console.WriteLine(Sixel.Encode(img.CloneAs<Rgba32>()).ToArray());
+        }
     }
 }
