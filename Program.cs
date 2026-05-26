@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.Design;
-using System.IO.Compression;
-using System.Runtime.CompilerServices;
+﻿using System.IO.Compression;
 using System.Text;
 
 namespace SASTester;
@@ -20,7 +18,7 @@ partial class SASTester
     public const string CommodoreAbb = "C64";
     const string CommodoreName      = "Commodore 64";
     public const string IbmAbb      = "IBM";
-    const string IbmName            = "IBM PC (default)";
+    const string IbmName            = "IBM PC";
     public const string MacAbb      = "MAC";
     const string MacName            = "Macintosh";
     public const string MsxAbb      = "MSX";
@@ -30,6 +28,7 @@ partial class SASTester
     const string TitleDecor  = "**";
     const string Goodbye     = "Game over.";
 
+    const string DefTag      = " [default]";
     const string ExpTag      = " [experimental]";
     const string SwitchMenu  = "Switch computer type";
     const string ExtractPdsMenu = "Extract all container files";
@@ -124,7 +123,7 @@ partial class SASTester
                      key4 = ConsoleKey.D4, key5 = ConsoleKey.D5, key6 = ConsoleKey.D6, key7 = ConsoleKey.D7,
                      key8 = ConsoleKey.D8, key9 = ConsoleKey.D9, keyExtPds = ConsoleKey.X, keyExpPng = ConsoleKey.P,
                      keyExpMid = ConsoleKey.M, keySwitch = ConsoleKey.S, keyBack = ConsoleKey.B,
-                     keyQuit = ConsoleKey.Q, keyEsc = ConsoleKey.Escape;
+                     keyQuit = ConsoleKey.Q, keyDefault = ConsoleKey.Enter, keyEsc = ConsoleKey.Escape;
 
     // These enums are used by LookupPartOfSpeech()
 
@@ -298,7 +297,7 @@ partial class SASTester
         const byte Offset = 0x06;
         byte[] funcEnd = [0x00, 0x00, 0x00];
         ushort i = 0;
-        var funcPath = "";
+        string funcPath;
         var gameDir = abbrev + pcType;
         if (pcType == AtariAbb)
             funcPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".T");
@@ -349,7 +348,7 @@ partial class SASTester
         const byte Offset = 0x3C;
         byte[] vDelim = [0x80, 0x8C]; // This represents the part of speech, but acts as delimiter as well here
         ushort i = 0;
-        var vocabPath = "";
+        string vocabPath;
         var gameDir = abbrev + pcType;
         if (pcType == AtariAbb)
             vocabPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".V");
@@ -501,7 +500,7 @@ partial class SASTester
     static Dictionary<ushort, string> GetExe(string abbrev, byte[] start, byte[] end)
     {
         Dictionary<ushort, string> exeDict = [];
-        var exePath = "";
+        string exePath;
         var gameDir = abbrev + pcType;
         if (pcType == AtariAbb)
             exePath = Path.Combine(RscPath, gameDir, abbrev + ".PRG");
@@ -591,7 +590,8 @@ partial class SASTester
                 if (loc[0].Equals(LocEnd))
                     break;
                 var str = Encoding.ASCII.GetString(loc);
-                locs.Add(i, (str[0], str[2..])); // format is "<disk>:<locname>" where <disk> = a-d
+                if (str.Length > 2)
+                    locs.Add(i, (str[0], str[2..])); // format is "<disk>:<locname>" where <disk> = a-d
                 i++;
             }
         }
@@ -605,7 +605,7 @@ partial class SASTester
 
     static string GetLocDir(string abbrev, string gameDir)
     {
-        var locPath = "";
+        string locPath;
 
         if (pcType == AtariAbb)
         {
@@ -636,7 +636,7 @@ partial class SASTester
         const int Offset = 0x102;
         Dictionary<byte, string> tokens = [];
         byte b = 0x80;
-        var tokenPath = "";
+        string tokenPath;
         var gameDir = abbrev + pcType;
         if (pcType == AtariAbb)
             tokenPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".TOK");
@@ -696,7 +696,7 @@ partial class SASTester
     static string SegmentToHex(ArraySegment<byte> segment)
     {
         StringBuilder hexString = new();
-        for (int i = segment.Offset; i < segment.Offset + segment.Count; i++)
+        for (var i = segment.Offset; i < segment.Offset + segment.Count; i++)
         {
             hexString.Append(segment.Array?[i].ToString("x2"));
         }
@@ -707,7 +707,7 @@ partial class SASTester
     {
         const byte First = 0x0B;
         const byte Min = 0x7F;
-        bool accent = false;
+        var accent = false;
         MemoryStream stream = new();
         BinaryWriter result = new(stream);
         ushort i = 0;
@@ -793,12 +793,13 @@ partial class SASTester
         {
             if (abbrev == AmberAbb || abbrev == AllGamesAbb)
             {
-                pdsFiles.AddRange([Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS"), Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS")]);
+                pdsFiles = [.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB"), "GRAPHPDS*.*")];
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB"), "MUSICPDS*.*")]);
             }
             if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
             {
-                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "GRAPHPDS*.*"))]);
-                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMBAST", "AMB", "MUSICPDS*.*"))]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMZAST", "AMZ"), "GRAPHPDS*.*")]);
+                pdsFiles.AddRange([.. Directory.GetFiles(Path.Combine(RscPath, "AMZAST", "AMZ"), "MUSICPDS*.*")]);
             }
         }
         // TODO: For Mac, we might use the names.pds files to get the list of pds files
@@ -885,7 +886,7 @@ partial class SASTester
                 var nameDone = false;
                 List<byte> fileBytes = [];
 
-                int i = 0;
+                var i = 0;
                 foreach (var b in allBytes)
                 {
                     if (i == numFileAddr)
@@ -1104,8 +1105,8 @@ partial class SASTester
     static ConsoleKey? ShowMenu(bool main, string title, params string[] options)
     {
         ConsoleKeyInfo? key = null;
-        while (key?.Key != keyEsc && key?.Key != keyBack && key?.Key != keyQuit && key?.Key != keySwitch &&
-               key?.Key != keyExpPng && key?.Key != keyExpMid && key?.Key != keyExtPds &&
+        while (key?.Key != keyEsc && key?.Key != keyBack && key?.Key != keyQuit && key?.Key != keyDefault &&
+               key?.Key != keySwitch && key?.Key != keyExpPng && key?.Key != keyExpMid && key?.Key != keyExtPds &&
                key?.Key != key0 && key?.Key != key1 && key?.Key != key2 && key?.Key != key3 &&
                key?.Key != key4 && key?.Key != key5 && key?.Key != key6 && key?.Key != key7 &&
                key?.Key != key8 && key?.Key != key9)
@@ -1128,7 +1129,7 @@ partial class SASTester
             {
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == MacAbb)
                     Console.WriteLine($" X. {ExtractPdsMenu}");
-                if (pcType == IbmAbb)
+                if (pcType == CommodoreAbb || pcType == IbmAbb) // (pcType == AtariAbb ||
                     Console.WriteLine($" P. {ExportPngMenu}");
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");
@@ -1706,7 +1707,7 @@ partial class SASTester
     {
         while (true)
         {
-            var key = ShowMenu(main: false, title: SwitchMenu, AppleName, AtariName, CommodoreName, IbmName, MacName, MsxName);
+            var key = ShowMenu(main: false, title: SwitchMenu, AppleName, AtariName, CommodoreName, $"{IbmName}{DefTag}", MacName, MsxName);
 
             switch (key)
             {
@@ -1723,7 +1724,8 @@ partial class SASTester
                     pcType = CommodoreAbb;
                     break;
                 case key3:
-                    Console.WriteLine(IbmName);
+                case keyDefault:
+                    Console.WriteLine($"{IbmName}{DefTag}");
                     pcType = IbmAbb;
                     break;
                 case key4:
@@ -1745,7 +1747,7 @@ partial class SASTester
             }
             if (key == key0 || key == key1 || key == key2 || key == key3 || key == key4 || key == key5 ||
                 //key == key6 || key == key7 || key == key8 || key == key9
-                key == keyBack || key == keyEsc)
+                key == keyDefault || key == keyBack || key == keyEsc)
             {
                 break;
             }

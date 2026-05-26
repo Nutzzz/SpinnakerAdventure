@@ -50,7 +50,7 @@ partial class SASTester
             input = Console.ReadLine();
             if (!string.IsNullOrEmpty(input))
             {
-                var filePath = "";
+                string filePath;
                 var gameDir = abbrev + pcType;
                 if (pcType == AtariAbb)
                     filePath = Path.Combine(RscPath, gameDir, abbrev, input);
@@ -283,7 +283,7 @@ partial class SASTester
                 continue;
 
             // TODO: Why is dividing by 2 necessary here?
-            int beatLenAdjd = beatLen / 2;
+            var beatLenAdjd = beatLen / 2;
 
             switch (patch)
             {
@@ -581,14 +581,14 @@ partial class SASTester
         byte timeOffset = 0x02;
         byte lensOffset = 0x0B;
         byte noteOffset = 0x1A;
-        bool altSeq = false;
-        bool control = false;
-        bool keyChg = false;
-        bool dbl = false;
-        bool newCh = false;
-        bool newChAlt = false;
-        bool pitch = false;
-        bool rest = false;
+        var altSeq = false;
+        var control = false;
+        var keyChg = false;
+        var dbl = false;
+        var newCh = false;
+        var newChAlt = false;
+        var pitch = false;
+        var rest = false;
         byte[] array = [];
         var midiNote = 0;
         var beatLen = 128;

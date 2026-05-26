@@ -38,7 +38,7 @@ Files must be extracted from disk images before they can be analyzed. These are 
 For Atari, *Steem SSE* allows you to mount a specified directory on the host system as an emulated GEMDOS hard drive; for Mac, *Basilisk II* similarly allows you to add an icon to the guest that mounts specified host drive letters. In the Mac's case, the game's files are hidden from Finder, but they are accessible with the *ShrinkWrap* tool. In either case, files can then be copied from the mounted floppy disk to the emulated hard disk using the guest OS's GUI.
 
 > [!NOTE]
-> **There will be duplicate filenames between multiple disks, e.g., for the games with GRAPHPDS/MUSICPDS files, be sure to add an extension to keep the files separate while still allow the Tester Tool to find them. The VOLT file is less important as it merely identifies the disk.**
+> **There will be duplicate filenames between multiple disks, e.g., for the games with GRAPHPDS/MUSICPDS files, be sure to add an extension to keep the files separate while still allowing the Tester Tool to find them. The VOLT file is less important as it merely identifies the disk.**
 
 > [!NOTE]
 > **Unlike the other ports, the Atari ST games will have a subdirectory (named with the abbreviation in the table below) for their data files (all files other than the .PRG executable), and the Tester Tool expects this layout.**
@@ -217,33 +217,33 @@ For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) f
 
 ## Picture Format
 
-Pictures in SAS games are either placed at the top in landscape orientation (often multiple pictures at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width. *Amazon* is laid out differently from the others and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 320x160).
+Pictures in SAS games are either placed at the top in landscape orientation (often multiple pictures at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width. *Amazon* is laid out differently from the others and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 160x160).
 
-The Tester Tool permits you to export all pictures to .PNG from the IBM ports of all 8 games. You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of Windows Terminal), and if not in ANSI block characters (though in that case they are likely to be cropped unless you enlarge your console size). Note that the Tester's list of pictures shows files with (usually) no extension that weren't found in the location dir file (other than \<abbrev\>,1,2,A,B,DIR,NEWDATA,SAVED,VOLT), but there may still be false positives. For non-IBM ports, though the tester attempts to list the picture files, the PNG exporter is unavailable, and the preview feature will print out a garbled mess.
+The Tester Tool permits you to export all pictures to .PNG from the IBM and C64 ports of all 8 games (though for now there's corruption in some of the C64 images). You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of Windows Terminal), and if not in ANSI block characters (though in that case they are likely to be cropped unless you enlarge your console size). Note that the Tester's list of pictures shows files with (usually) no extension that weren't found in the location dir file (other than \<abbrev\>,1,2,A,B,DIR,NEWDATA,SAVED,VOLT), but there may still be false positives. For non-IBM ports, though the tester attempts to list the picture files, the PNG exporter is unavailable, and the preview feature will print out a garbled mess.
 
 ### IBM PC/PCjr picture format
 
-For the IBM ports, SAS uses 320x200 medium-resolution CGA, which supports three 4-color palettes and 2 intensity levels; these games (like nearly all CGA games) only use low intensity and the first 2 palettes.
+For the IBM ports, SAS uses 320x200 medium-resolution CGA, which supports three 4-color palettes and 2 intensity levels; these games (like nearly all CGA games) only use low intensity and the first 2 palettes. However, because the same pictures are used for the C64 and Apple II ports with lower resolutions, none of the pictures are greater than 160x192 pixels, so for the PC port they have doubled the width.
 
 #### Header
 
 The first 6 bytes are used as a header with the following layout:
 
 
-| address | use          | description                                                                                                                                                                                                      |
-| --------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 00      | Palette      | For PC CGA,`00`=GRY (Green/Red/Yellow) or `01`=CMW (Cyan/Magenta/White)                                                                                                                                          |
-| 01      | Intensity/Bg | For PC CGA, 1st hex nibble is intensity (`0`=low; `1`=bright), 2nd is background color (0-F) corresponding to PC color codes*                                                                                    |
-| 02      | Unknown      | Lots of variance. Maybe an identifier of some kind? Differs between ports.                                                                                                                                       |
+| address | use          | description                                                                                                                                                                                                        |
+| --------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 00      | Palette      | For PC CGA,`00`=GRY (Green/Red/Yellow) or `01`=CMW (Cyan/Magenta/White)                                                                                                                                            |
+| 01      | Intensity/Bg | For PC CGA, 1st hex nibble is intensity (`0`=low; `1`=bright), 2nd is background color (0-F) corresponding to PC color codes*                                                                                      |
+| 02      | Unknown      | Lots of variance. Maybe an identifier of some kind? Differs between ports.                                                                                                                                         |
 | 03      | Unknown      | Small variance, i.e.`00`-`10`?; Probably buffer size: the game freezes after drawing is complete when values are too large, or the drawing does not complete when values are too small. Same values in PC and C64. |
-| 04      | Height       | For PC and C64, typically either`B0` (176px) = 88% height, or `50` (80px) = 40%-height                                                                                                                           |
-| 05      | Width / 2    | For PC and C64, typically either`A0` (160=>320px) = 100% width, or `48` (72=>144px) = 45%-width; though this field seems to be ignored                                                                           |
+| 04      | Height       | For PC and C64, typically either`B0` (176px) = 88% height, or `50` (80px) = 40%-height                                                                                                                             |
+| 05      | Width        | For PC and C64, typically either`A0` (160px) = 100% width, or `48` (72px) = 45%-width; though this field seems to be informational in terms of drawing. Note the actual width is multiplied by 2 for IBM 320x200.  |
 
-\* = For PC: 0=black, 1=dk.blue, 2=dk.green, 3=dk.cyan, 4=dk.red, 5=dk.magenta, 6=dk.yellow, 7=br.gray, 8=dk.gray, 9=br.blue, 10=br.green, 11=br.cyan, 12=br.red, 13=br.magenta, 14=br.yellow, 15=white
+\* = 0=black, 1=blue, 2=green, 3=cyan, 4=red, 5=magenta, 6=brown, 7=lt.gray, 8=dk.gray, 9=br.blue, A=br.green, B=br.cyan, C=br.red, D=br.magenta, E=yellow, F=white
 
 #### Pixel data
 
-The rest of the file is pixel data. Though I don't have much experience with image formats, it seems a bit odd. It's similar to sixel (which I gather is odd enough), except this is "fourxel" and it's rotated 90 degrees. Four-pixel wide blocks are laid out top to bottom, with each block being from 0-15 pixels high. A set of three bytes represents two of these blocks, with the first byte's color map given by the 1st nibble (hexadecimal digit) of the second byte, and the 2nd nibble of the second byte gives the height of the color map in the third byte, i.e.:
+The rest of the file is pixel data. Though I don't have much experience with image formats, it seems a bit odd. It reminds me of sixel (which I gather is odd enough), except this is "fourxel" and it's rotated 90 degrees. Four-pixel wide blocks are laid out top to bottom, with each block being from 0-15 pixels high (1 nibble RLE, or run-length encoding). A set of three bytes represents two of these blocks, with the first byte's color map given by the 1st nibble (hexadecimal digit) of the second byte, and the 2nd nibble of the second byte gives the height of the color map in the third byte, i.e.:
 
 
 | byte1 (00-FF) | byte2 nibble1 (0-F) | byte2 nibble2 (0-F) | byte3 (00-FF) |
@@ -284,7 +284,7 @@ The color maps are base-4 bitmasks for the color of each of the 4 pixels. See th
 
 #### Decoding the Color Map
 
-It took me an embarrassingly long time to figure out the appropriate bitwise operation to read out a base-4 bitmask, so if I might save you the trouble:
+It took me an embarrassingly long time to figure out the appropriate bitwise operation to read out a base-4 bitmask (this was before AI code became popular), so if I might save you the trouble:
 
 ```
 colorMap[0] = (byteArray >> 6) & 0x3;
@@ -319,7 +319,7 @@ Looking at the header, we see:
 
 - `0100` = palette 1 (KCMW), low-intensity and black background.
 - `C903` = unknown
-- `50A0` = 320x80 (fullscreen width, top 40% of screen)
+- `50A0` = in form hhww, this is equivalent to WxH 160x80; note the width is doubled for the PC, so the image takes up the full screen horizontally and the top 40% of screen vertically, giving plenty of space for text below.
 
 
 | offset | `00 01 02 03 04 05 06 07 08 09 0A 0B 0C 0D 0E 0F` |
@@ -351,12 +351,28 @@ Note that this file doesn't include the feet shown; these are drawn with a small
 
 ![f451-c64-screenshot](images/f451-c64-screenshot.png "Fahrenheit 451 for Commodore 64 screenshot")
 
-The Commodore 64 and Atari ST ports use the same 320x200 resolution, but with 16 colors.
+The Commodore 64 ports use 160x200 "Multicolor" resolution. At this resolution the C64's VIC-II graphics chip was capable of 16 colors at a time, however with some limtations: only 4 colors are allowed per 8x8 pixel block (3 colors plus a global background). That said, I don't think there's ever more than 8 colors total in any of these pictures.
 
-OK, I've just started this analysis, but here's what I've got so far.
+At this point, I've managed to get almost all of the files decoded.
 
-It's clearly a different format from IBM, but the header is similar, and there appeared to be the tantalizing similarity of three byte sequences starting at address 0x65 (after the third reference to [50A0], the resolution). Twiddling bits showed me that I was sort of correct; that there was indeed something similar going on here with a pattern of blocks with colors being placed in the first and third byte, and a size in each of the 2 nibbles of the second byte. However, here it was instead doing color fills. So the colors are also split into nibbles, with each one representing one of 16 colors in the current palette:
+It's a different format from IBM, but the header has similarities, and there are similar sets of three byte sequences. However, here there are 4 different sections:
+* Section 1: Header
+* Section 2: Tertiary Color
+* Section 3: Primary and Secondary Colors
+* Section 4: Bitmasks
 
+The Sections are delimited by the two byte picture dimensions (e.g., `50 80` in the "hosptl" example).
+
+Like the IBM picture data, these are also divided into run-length encoded 3-byte sequences. Section 2 and 3 provide color data for the picture, divided into 4x8 blocks, laid out vertically, with the primary two colors in Section 3 and a tertiary color in Section 2.
+
+Section 3's three-byte sequence specifies two colors in the first and third bytes (each nibble representing a color from the C64 palette*), two run-lengths in the second byte (nibble 1 referencing byte 1's colors and nibble 2 referencing byte 3's colors). Each run-length is over a number of 4x8 blocks.
+
+Section 2 is the same as Section 3, but the low nibble of byte 2 is the third color for some number of 4x8 blocks, and the high nibble is always zero.
+
+Section 4's three-byte sequence, like the IBM version above, specifies a 4x1 bitmask in the first and third bytes, and two run-lengths in the second byte, nibble 1 referencing byte 1's bitmask and nibble 2 referencing byte 3's bitmask.
+
+\* = C64 palette: 0=black, 1=white, 2=red, 3=cyan, 4=purple, 5=green, 6=blue, 7=yellow, 8=orange, 9=brown, A=lt.red, B=dk.gray, C=md.gray, D=lt.green, E=lt.blue, F=lt.gray
+It does seem that `2` (red) is [sometimes?] remapped as `A` (light red) and `6` (blue) is remapped as `E` (light blue).
 
 | 0        | 1        | 2            |   | 3            | 4        | 5        |
 | ---------- | ---------- | -------------- | --- | -------------- | ---------- | ---------- |
@@ -366,26 +382,50 @@ So, returning to *Nine Princes* for our example:
 
 ![amb-c64-screenshot](images/amb-c64-screenshot.png "Nine Princes in Amber for Commodore 64 screenshot")
 
+At address 0x65 (after the third reference to [50A0], the resolution), is an example of Section 3:
 
 | 0x65       | 0x68       | 0x6B       | 0x6E       |
 | ------------ | ------------ | ------------ | ------------ |
 | `F0 71 FC` | `6C 11 60` | `1F 12 10` | `1F 13 0F` |
 
-After experimenting, it looks like the palette is slightly different from the default C64 palette.* So that means there's probably going to be another section of the file that assigns colors. Looking at `F0`, I discover that Color `F` is light gray on both this and the default palette; same for Color `0`: black; but here it looks like black is a no-op because there are no dividing lines in the top-left 4x8 pixel block, nor are there any for the next 6 blocks. And so the `7` in "num blocks A" says to use the same fill colors for seven 4x8 blocks. The next nibble, "num blocks B", is `1`, saying that the third byte's colors are only going to apply to the one block. And this block occurs on both sides of the dividing line between the wall and the floor; the wall being color `F` again, and the floor being color `C`, the medium gray.
+Looking at `F0`, Color `F` (15) is light gray and Color `0` is black. The first color is used as the background color of a number of 4x8-pixel blocks provided by the first nibble of the second byte (here `7`), from top to bottom. The second color is the foreground color for the same set of blocks (which will be used by another part of the file). In other words, at this stage we fill a 4x56 square with light gray, and remember black to be used later. The next nibble of the second byte, "num blocks B", is `1`, saying that the third byte's two colors are going to apply to just one 4x8-pixel block. Looking at the "hosptl" picture, this block contains 3 colors in the division between wall and floor; the wall being color `F` (light gray), the floor being color `C` (medium gray), and the dividing line being color `0` (black). Then looking to the next three bytes, `6` is blue which is used for the bed (though it gets remapped to `A`, light blue), and so it goes.
 
-\* = C64 default palette: 0=black, 1=white, 2=red, 3=cyan, 4=purple, 5=green, 6=blue, 7=yellow, 8=orange, 9=brown, 10=yellow-green, 11=rosa, 12=blue-green, 13=lt.blue, 14=zyklam [purple-blue], 15=lt.green
+The availability of black to be used for the dividing line mentioned above comes from Section 2. So if you check Section 2 above at address 0x0A:
 
-Looking to the next three bytes, `6` is the blue used on the bed. But why is `6` listed before `C`? It appears that the first byte fills from the bottom first, unlike the third byte; so perhaps what happens with the first byte in 0x65 is that the black *isn't* a no-op; it just fills it with black first and then gray goes on top because there's no dividing line here? Could be...
+| 0x0A       | 0x0D       | 0x10       | 0x13       |
+| ------------ | ------------ | ------------ | ------------ |
+| `00 FF 00` | `00 F2 00` | `0C 19 00` | `06 34 00` |
 
-...No, it looks like it doesn't have to have a black border to be a divider, so there's something else that marks division between color boundaries.
-
-In any case, the three-byte pattern looks like it changes again around address 0x1D6, a couple bytes before repeating the resolution (this time including the prior two bytes of the header; the ones I'm unclear on, after giving the signal `1010`). So what's next? ...Or should I return to the top of the file and see if that's where the palette is being set?
+You'll see that in this case `0` is the tertiary color for the first 47 4x8 blocks (`F` + `F` + `F` + `2` = 15 + 15 + 15 + 2), which includes the block in question.
 
 ### Atari ST picture format
 
 ![f451-ast-screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![amb-ast-screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
 
-The Atari ST ports use the same 320x200 resolution. Though the ST had a more flexible color system than the Commodore, based on the screenshots it doesn't look like Telarium really leveraged it very well. It also requries the Atari to be in low resolution mode. In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
+The Atari ST ports use their low resolution 320x200 mode, and like the IBM most pictures are multiplied by 2 across the horizontal to fill the screen. There is at least one exception that I've seen, the Central Park scene at the beginning of Fahrenheit 451 shown above.
+
+Though the ST had a more flexible color system than the Commodore (e.g., it could display 16 colors from 512 possible), based on the screenshots it doesn't look like Telarium really leveraged it very well, and may have just relied on the default system palette.* In any case, I've only done a quick comparison to the C64 format at this point, and it appears to be very different.
+
+\* = Atari ST default palette: 0=white, 1=black, 2=red, 3=green, 4=blue, 5=cyan, 6=yellow, 7=magenta, 8=lt.Gray, 9=dk.gray, A=dk.red, B=dk.green, C=dk.blue, D=dk.cyan, E=Brown, F=dk.magenta
+
+Looking at the header, I note that instead of hh ww, the resolution is in the typical ww hh order, but this time with `00` separators.
+
+Following the resolution, there is a sequence that is common to most files:
+
+`00 0F 00 00 0F 00 0D 0B 0F 0B 09 0B 0F 0D 00 00 0B 0F 0F 0D 08 0F 06 00 09 08 09 0B 0E 0D 00 0F 0F 0F 02 03 01 0E 09 0E 0C 08 0A 0C 03 0E`
+
+This appears to be the palette (I have noticed the TRI palette is slightly different, and AMZ is quite different and even differs between files).
+
+The high nibble is always zero, but the low nibble varies from 0-F rather than 0-7 as I would think it should for 512 possible colors. In any case, after some experimentation, it looks like it's not laid out in order, i.e. 'R0 G0 B0 R1 G1 B1 R2 G2 B2...' but rather it appears to be "ramped", i.e. 'R0 R1 R2... G0 G1 G2... B0 B1 B2...'
+
+So this is the most common palette, after collating the values. The Rgb24 equivalent is found by multiplying by 17 (and `09` becomes `99`):
+
+|hex  |`00 00 00`|`02 00 0D`|`00 0B 0F`|`0F 0F 0F`|`00 0F 02`|`00 0D 03`|`0F 07 00`|`00 0F 0E`|`0D 06 09`|`0B 00 0E`|`0F 09 0C`|`0B 08 08`|`09 09 0A`|`0B 0B 0C`|`0F 0E 03`|`0D 0D 0E`|
+|-----|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|----------|
+|Rgb24|#000000   |#2200DD   |#00BBFF   |#FFFFFF   |#00FF22   |#00DD33   |#FF7700   |#00FFEE   |#DD6699   |#BB00EE   |#FF99CC   |#BB8888   |#9999AA   |#BBBBCC   |#FFEE33   |#DDDDEE   |
+|Name |0=Black   |1=Blue    |2=Dk.Cyan |3=White   |4=Green   |5=Dk.Green|6=Red     |7=Cyan    |8=Dk.Red  |9=Purple  |A=Pink    |B=Brown   |C=Dk.Gray |D=Md.Gray |E=Yellow  |F=Lt.Gray |
+
+The next section begins at address 0x36, and though I've been experimenting, I haven't figured it out yet.
 
 ### Apple II picture format
 
@@ -497,7 +537,7 @@ The next section at 0x1A is the control sequence at the start of a channel, whic
 
 C#4 x1, G#4 x6, rest x1, C#4 x1, G#4 x1, rest x2, C#4 x1, G#4 x16
 
-It sounds like: "Da-doooo, da-do da-dooooooo!"  [Listen to the MIDI conversion here](https://codepen.io/Nutzzz-the-animator/full/wBzMzbP).
+It sounds like: "Da-doooo, da-do da-dooooooo!" [Listen to the MIDI conversion here](https://codepen.io/Nutzzz-the-animator/full/wBzMzbP).
 
 And finally, we get the `80` stop control code.
 
@@ -525,6 +565,6 @@ Note I have also heard at least one instance of the noise channel being used by 
 
 There are an additional two bytes at the beginning of a file that are always `20 41` in the ones that I've looked at so far.
 
-The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform (and ADSR envelope?). Initially I thought the `80` in the sixth byte on PC and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`.  The latter seems to add a duplicate waveform (sawtooth maybe?) with the same pitch on top, though it only seems to work if it is followed by `40` (square wave); as the fourth byte is the waveform type: it seems that `10` is triangle and `20` is sawtooth; I believe `80` is white noise.
+The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform (and ADSR envelope?). Initially I thought the `80` in the sixth byte on PC and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`. The latter seems to add a duplicate waveform (sawtooth maybe?) with the same pitch on top, though it only seems to work if it is followed by `40` (square wave); as the fourth byte is the waveform type: it seems that `10` is triangle and `20` is sawtooth; I believe `80` is white noise.
 
 C64 also has a final byte after the last `80` that varies: I've seen e.g., `00`, `01`, `02`, `81`, and `FF`.
