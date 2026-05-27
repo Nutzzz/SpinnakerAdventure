@@ -353,7 +353,7 @@ Note that this file doesn't include the feet shown; these are drawn with a small
 
 The Commodore 64 ports use 160x200 "Multicolor" resolution. At this resolution the C64's VIC-II graphics chip was capable of 16 colors at a time, however with some limtations: only 4 colors are allowed per 8x8 pixel block (3 colors plus a global background). That said, I don't think there's ever more than 8 colors total in any of these pictures.
 
-At this point, I've managed to get almost all of the files decoded.
+At this point, I've managed to get almost all of the files decoded. There are still a few that are bugged partway through.
 
 It's a different format from IBM, but the header has similarities, and there are similar sets of three byte sequences. However, here there are 4 different sections:
 * Section 1: Header

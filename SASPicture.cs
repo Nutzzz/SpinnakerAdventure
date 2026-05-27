@@ -723,7 +723,7 @@ partial class SASTester
         for (; offset < dataLength - 1; offset++)
         {
             // If the next two bytes are a header (hh ww), this section is done.
-            if (offset + 1 < dataLength && data[offset] == height && data[offset + 1] == width)
+            if (offset + 2 < dataLength && data[offset] == height && data[offset + 1] == width)
             {
                 sectionData.Add([.. section]);
                 sectionNum++;
