@@ -5,54 +5,57 @@ namespace SASTester;
 
 partial class SASTester
 {
-    public const string RscPath = "Resources";
+    public const string RscPath     = "Resources";
 
-    public const string FilePrompt = "Enter a filename, or press Enter to continue:";
-    public const string FilePromptWarn = "[Warning: There may be false positives.]";
-    public const string Divider = "---------------------------------------";
+    public const string FilePrompt  = "Enter a filename, or press Enter to continue:";
+    public const string FileWarn    = "[Warning: There may be false positives in this list.]";
+    public const string Divider     = "---------------------------------------";
 
-    public const string AppleAbb   = "AII";
-    const string AppleName         = "Apple II";
-    public const string AtariAbb   = "AST";
-    const string AtariName         = "Atari ST";
-    public const string CommodoreAbb = "C64";
-    const string CommodoreName      = "Commodore 64";
+    public const string AppleAbb    = "AII";
+    public const string AppleName   = "Apple II";
+    public const string AtariAbb    = "AST";
+    public const string AtariName   = "Atari ST";
+    public const string CommodoreAbb  = "C64";
+    public const string CommodoreName = "Commodore 64";
     public const string IbmAbb      = "IBM";
-    const string IbmName            = "IBM PC";
+    public const string IbmName     = "IBM PC/PCjr";
     public const string MacAbb      = "MAC";
-    const string MacName            = "Macintosh";
+    public const string MacName     = "Macintosh";
     public const string MsxAbb      = "MSX";
-    const string MsxName            = "MSX";
+    public const string MsxName     = "MSX";
 
-    const string MainTitle   = "SPINNAKER ADVENTURE LANGUAGE TESTER";
-    const string TitleDecor  = "**";
-    const string Goodbye     = "Game over.";
+    const string MainTitle          = "SPINNAKER ADVENTURE LANGUAGE TESTER";
+    const string TitleDecor         = "**";
+    const string Goodbye            = "Game over.";
 
-    const string DefTag      = " [default]";
-    const string ExpTag      = " [experimental]";
-    const string SwitchMenu  = "Switch computer type";
-    const string ExtractPdsMenu = "Extract all container files";
-    const string ExportPngMenu = "Export all pictures to PNG";
-    const string ExportMidMenu = "Export all audio to MIDI";
-    const string BackMenu    = "Back to Main Menu";
-    const string QuitMenu    = "Quit";
-    const string Prompt      = "Press number/letter of an option to proceed:";
-    const string KeyPress    = "Press Esc or B for back, Q to quit, or any key when ready for more.";
-    const string ErrorPrefix = "Error: ";
-    const string KeyError    = ErrorPrefix + "Bad entry.";
-    const string FileError   = ErrorPrefix + "File not found:";
-    const string NoPortError = " was not ported to ";
+    const string DefTag             = " [default]";
+    const string ExpTag             = " [experimental]";
+    const string SwitchMenu         = "Switch computer type";
+    const string ExtractPdsMenu     = "Extract all container files";
+    const string ExportPngMenu      = "Export all pictures to PNG";
+    const string ExportMidMenu      = "Export all audio to MIDI";
+    const string BackMenu           = "Back to Main Menu";
+    const string QuitMenu           = "Quit";
+    const string Prompt             = "Press number/letter of an option to proceed:";
+    const string KeyPress           = "Press Esc or B for back, Q to quit, or any key when ready for more.";
+    const string ErrorPrefix        = "Error: ";
+    const string KeyError           = ErrorPrefix + "Bad entry.";
+    const string FileError          = ErrorPrefix + "File not found:";
+    const string NoPortError        = " was not ported to ";
+    const string NonSASError        = " is not a SAS game on ";
 
-    const string PicMenu     = "View pictures";
-    const string SndMenu     = "Play audio";
-    const string StrMenu     = "Strings";
-    const string StrExpMenu  = "Strings (expanded)";
-    const string PdsMenu     = "Examine containers";
+    const string PicMenu            = "View pictures";
+    const string SndMenu            = "Play audio";
+    const string StrMenu            = "Strings";
+    const string StrExpMenu         = "Strings (expanded)";
+    const string PdsMenu            = "Examine containers";
 
     public const string AllGamesAbb = "ALL";
+    public const string PicFiles    = "pictures";
+    public const string SndFiles    = "audio";
 
     // Amazon
-    const string AmazonName         = "Amazon";
+    public const string AmazonName  = "Amazon";
     public const string AmazonAbb   = "AMZ";
     const string AmazonMenu1        = "AMZ Executable";
     const string AmazonMenu2        = "AMZ.V: Vocabulary";
@@ -60,22 +63,23 @@ partial class SASTester
     readonly string amazonTitle     = AmazonName.ToUpperInvariant();
 
     // Dragonworld
-    const string DragonName         = "Dragonworld";
+    public const string DragonName  = "Dragonworld";
     public const string DragonAbb   = "DGW";
     const string DragonMenu1        = "DGW Executable";
     const string DragonMenu2        = "DIR: Location directory";
     readonly string dragonTitle     = DragonName.ToUpperInvariant();
 
     // Fahrenheit 451
-    const string F451Name           = "Fahrenheit 451";
+    public const string F451Name    = "Fahrenheit 451";
     public const string F451Abb     = "F451";
+    public const string F451SndPfx  = "F4";
     const string F451Menu1          = "DIR: Location directory";
     const string F451Menu2          = "F451 Executable";
     const string F451Menu3          = "F451.V: Vocabulary";
     readonly string f451Title       = F451Name.ToUpperInvariant();
 
     // Nine Princes in Amber
-    const string AmberName          = "Nine Princes in Amber";
+    public const string AmberName   = "Nine Princes in Amber";
     public const string AmberAbb    = "AMB";
     const string AmberMenu1         = "AMB.D??: Location directory";
     const string AmberMenu2         = "AMB Executable";
@@ -85,7 +89,7 @@ partial class SASTester
     readonly string amberTitle      = AmberName.ToUpperInvariant();
 
     // Perry Mason: The Case of the Mandarin Murder
-    const string PerryName          = "Perry Mason";
+    public const string PerryName   = "Perry Mason";
     public const string PerryAbb    = "PMN";
     const string PerryMenu1         = "PMN.D??: Location directory";
     const string PerryMenu2         = "PMN Executable";
@@ -94,14 +98,14 @@ partial class SASTester
     readonly string perryTitle      = PerryName.ToUpperInvariant();
 
     // Rendezvous with Rama
-    const string RamaName           = "Rendezvous with Rama";
+    public const string RamaName    = "Rendezvous with Rama";
     public const string RamaAbb     = "RDV";
     const string RamaMenu1          = "DIR: Location directory";
     const string RamaMenu2          = "RDV Executable";
     readonly string ramaTitle       = RamaName.ToUpperInvariant();
 
     // Treasure Island
-    const string IslandName         = "Treasure Island";
+    public const string IslandName  = "Treasure Island";
     public const string IslandAbb   = "TRI";
     const string IslandMenu1        = "DIR: Location directory";
     const string IslandMenu2        = "TRI Executable";
@@ -109,21 +113,38 @@ partial class SASTester
     readonly string islandTitle     = IslandName.ToUpperInvariant();
 
     // The Wizard of Oz
-    const string OzName             = "The Wizard of Oz";
+    public const string OzName      = "The Wizard of Oz";
     public const string OzAbb       = "WOZ";
+    public const string OzSndPfx    = "WM";
     const string OzMenu1            = "DIR: Location directory";
     const string OzMenu2            = "WOZ Executable";
     const string OzMenu3            = "WOZ.T: Functions";
     const string OzMenu4            = "WOZ.V: Vocabulary";
     readonly string ozTitle         = OzName.ToUpperInvariant();
 
-    const byte Delim = 0x00;
+    // current PC type
+    public static string pcType = IbmAbb;
+
+    public const byte Delim = 0x00;
 
     const ConsoleKey key0 = ConsoleKey.D0, key1 = ConsoleKey.D1, key2 = ConsoleKey.D2, key3 = ConsoleKey.D3,
                      key4 = ConsoleKey.D4, key5 = ConsoleKey.D5, key6 = ConsoleKey.D6, key7 = ConsoleKey.D7,
                      key8 = ConsoleKey.D8, key9 = ConsoleKey.D9, keyExtPds = ConsoleKey.X, keyExpPng = ConsoleKey.P,
                      keyExpMid = ConsoleKey.M, keySwitch = ConsoleKey.S, keyBack = ConsoleKey.B,
                      keyQuit = ConsoleKey.Q, keyDefault = ConsoleKey.Enter, keyEsc = ConsoleKey.Escape;
+
+    // Used by MakeMediaFileList() to reduce false positives
+    private readonly List<string> addlStrFiles =
+    [
+        "0",
+        "1",
+        "A",
+        "B",
+        "DIR",
+        "NEWDATA",
+        "SAVED",
+        "VOLT"
+    ];
 
     // These enums are used by LookupPartOfSpeech()
 
@@ -236,8 +257,6 @@ partial class SASTester
         listsep,
         delim
     }
-
-    public static string pcType = IbmAbb;
 
     static void Main()
     {
@@ -389,8 +408,8 @@ partial class SASTester
 
     void ShowStrings(string abbrev, byte start, bool expand = false)
     {
-        var picFiles = GetPicFiles(abbrev);
-        var sndFiles = GetSoundFiles(abbrev);
+        var picFiles = GetMediaFileList(abbrev, false);
+        var sndFiles = GetMediaFileList(abbrev, true);
         foreach (var loc in GetLocs(abbrev))
         {
             var locName = loc.Value.Item2;
@@ -1091,6 +1110,155 @@ partial class SASTester
         return segList;
     }
 
+    public List<string> GetMediaFileList(string abbrev, bool isSnd)
+    {
+        List<string> files = [];
+        List<string> locNames = [];
+        foreach (var loc in GetLocs(abbrev))
+        {
+            locNames.Add(loc.Value.Item2);
+        }
+
+        try
+        {
+            var fileDir = Path.Combine(RscPath, abbrev + pcType);
+            if (Directory.Exists(fileDir))
+            {
+                // Check whether using PDS container (also see Atari below)
+                if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
+                {
+                    var pdsDir = Path.Combine(fileDir, "PDS");
+                    if (!Directory.Exists(pdsDir))
+                        ExaminePdsFiles();
+                    if (Directory.Exists(pdsDir))
+                        fileDir = pdsDir;
+                }
+
+                if (isSnd && pcType == IbmAbb) // can always rely on .IB and .JR extensions
+                {
+                    foreach (var file in Directory.EnumerateFiles(fileDir, "*.IB").ToList())
+                    {
+                        var filename = Path.GetFileName(file);
+                        files.Add(filename);
+                    }
+                    foreach (var file in Directory.EnumerateFiles(fileDir, "*.JR").ToList())
+                    {
+                        var filename = Path.GetFileName(file);
+                        files.Add(filename);
+                    }
+                    return files;
+                }
+                else if (pcType == AtariAbb) // sometimes uses extension + deeper folder structure
+                {
+                    fileDir = Path.Combine(fileDir, abbrev);
+                    var astPdsDir = Path.Combine(fileDir, "PDS");
+                    var fileExt = "*.GST";
+                    if (isSnd)
+                        fileExt = "*.MST";
+
+                    if (Directory.Exists(fileDir))
+                    {
+                        if (abbrev == AmazonAbb || abbrev == AmberAbb)
+                        {
+                            if (!Directory.Exists(astPdsDir))
+                                ExaminePdsFiles();
+                            if (Directory.Exists(astPdsDir))
+                                fileDir = astPdsDir;
+                        }
+
+                        // Try with .GST or .MST first; if none found, then with no file extension
+                        for (var i = 0; i < 2; i++)
+                        {
+                            foreach (var file in Directory.EnumerateFiles(fileDir, fileExt).ToList())
+                            {
+                                var filename = Path.GetFileName(file);
+                                if (fileExt != "*.")
+                                    files.Add(filename);
+                                else if (
+                                    !locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                                    !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                                    !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    if (ScreenMediaFiles(abbrev, filename, isSnd))
+                                        files.Add(filename);
+                                }
+                            }
+                            if (files.Count > 0)
+                                break;
+                            fileExt = "*.";
+                        }
+                    }
+                }
+                else
+                {
+                    var fileExt = "*.";
+                    foreach (var file in Directory.EnumerateFiles(fileDir, fileExt).ToList())
+                    {
+                        var filename = Path.GetFileName(file);
+                        if (!locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                            !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
+                            !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (ScreenMediaFiles(abbrev, filename, isSnd))
+                                files.Add(filename);
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
+        return files;
+    }
+
+    private static bool ScreenMediaFiles(string abbrev, string file, bool isSnd)
+    {
+        var filename = Path.GetFileName(file);
+
+        if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("IO", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("PARAM", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("PARK", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("STARTUP", StringComparison.OrdinalIgnoreCase))
+            return false;
+        if (abbrev == AmberAbb && (
+            filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        if (filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("TRIOPEN", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
+            return isSnd;
+        if (filename.StartsWith(abbrev) && (
+            filename.EndsWith("OPEN", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OPEN1", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OPEN2", StringComparison.OrdinalIgnoreCase)))
+            return isSnd;
+
+        if (abbrev == F451Abb)
+        {
+            if (filename.StartsWith(F451SndPfx, StringComparison.OrdinalIgnoreCase) && filename.Length > 5)
+                return isSnd;
+        }
+        else if (abbrev == OzAbb)
+        {
+            if (filename.StartsWith(OzSndPfx, StringComparison.OrdinalIgnoreCase))
+                return isSnd;
+        }
+        else if (filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase))
+            return isSnd;
+
+        return !isSnd;
+    }
+
     static void DoExit(string error = "")
     {
         if (!string.IsNullOrEmpty(error))
@@ -1129,7 +1297,7 @@ partial class SASTester
             {
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == MacAbb)
                     Console.WriteLine($" X. {ExtractPdsMenu}");
-                if (pcType == CommodoreAbb || pcType == IbmAbb) // (pcType == AtariAbb ||
+                if (pcType == AppleAbb || pcType == CommodoreAbb || pcType == IbmAbb) // pcType == AtariAbb ||
                     Console.WriteLine($" P. {ExportPngMenu}");
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");
@@ -1190,7 +1358,7 @@ partial class SASTester
                     ExportPicFiles();
                     break;
                 case keyExpMid:
-                    ExportSndFiles();
+                    ExportSoundFiles();
                     break;
                 case keyBack:
                 case keyQuit:
@@ -1208,7 +1376,7 @@ partial class SASTester
     {
         if (pcType == AppleAbb)
         {
-            Console.WriteLine(ErrorPrefix + AmazonName + " was not a SAS game for " + AppleName);
+            Console.WriteLine(ErrorPrefix + AmazonName + NonSASError + AppleName);
             return;
         }
         while (true)
@@ -1236,7 +1404,10 @@ partial class SASTester
                     break;
                 */
                 case key3:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == AtariAbb || pcType == MacAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(AmazonAbb);
                     break;
                 case key4:
@@ -1250,7 +1421,6 @@ partial class SASTester
                     ShowStrings(AmazonAbb, 0x03, expand: false);
                     break;
                 case key6:
-                    // TODO: I suspect AMZAII may have PDS files, but I'm unable to extract any files at all (copy protection?)
                     if (pcType == AtariAbb || pcType == MacAbb)
                     {
                         Console.WriteLine(PdsMenu);
@@ -1306,7 +1476,10 @@ partial class SASTester
                     break;
                 */
                 case key2:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == MacAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(DragonAbb);
                     break;
                 case key3:
@@ -1367,7 +1540,10 @@ partial class SASTester
                     break;
                 */
                 case key3:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == AtariAbb || pcType == MacAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(F451Abb);
                     break;
                 case key4:
@@ -1437,7 +1613,10 @@ partial class SASTester
                     ShowVocab(AmberAbb);
                     break;
                 case key5:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == AtariAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(AmberAbb);
                     break;
                 case key6:
@@ -1499,7 +1678,10 @@ partial class SASTester
                     ShowVocab(PerryAbb);
                     break;
                 case key4:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == AtariAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(PerryAbb);
                     break;
                 case key5:
@@ -1618,7 +1800,10 @@ partial class SASTester
                     break;
                 */
                 case key3:
-                    Console.WriteLine(PicMenu);
+                    var opt = PicMenu;
+                    if (pcType == AtariAbb)
+                        opt = $"{PicMenu}{ExpTag}";
+                    Console.WriteLine(opt);
                     ShowPicFiles(IslandAbb);
                     break;
                 case key4:
@@ -1703,7 +1888,7 @@ partial class SASTester
         }
     }
 
-    void DoSwitchMenu()
+    static void DoSwitchMenu()
     {
         while (true)
         {

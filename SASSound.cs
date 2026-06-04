@@ -28,8 +28,8 @@ partial class SASTester
     {
         var fileFound = false;
         if (pcType != IbmAbb)
-            Console.WriteLine(FilePromptWarn);
-        var files = GetSoundFiles(abbrev);
+            Console.WriteLine(FileWarn);
+        var files = GetMediaFileList(abbrev, true);
         if (files.Count == 0)
         {
             Console.WriteLine("No sound files found.");
@@ -78,129 +78,7 @@ partial class SASTester
     }
 
     // IBM PC/PCjr formats are close to complete; AII, AST, and C64 are still works in progress
-    public List<string> GetSoundFiles(string abbrev)
-    {
-        List<string> sndFiles = [];
-        try
-        {
-            var dir = Path.Combine(RscPath, abbrev + pcType);
-            if (Directory.Exists(dir))
-            {
-                if (pcType == IbmAbb) // can rely on extensions
-                {
-                    foreach (var file in Directory.EnumerateFiles(dir, "*.IB").ToList())
-                    {
-                        var filename = Path.GetFileName(file);
-                        sndFiles.Add(filename);
-                    }
-                    foreach (var file in Directory.EnumerateFiles(dir, "*.JR").ToList())
-                    {
-                        var filename = Path.GetFileName(file);
-                        sndFiles.Add(filename);
-                    }
-                    return sndFiles;
-                }
-                else if (pcType == AtariAbb) // doesn't always use extension + deeper folder structure
-                {
-                    var astDir = Path.Combine(dir, abbrev);
-                    if (Directory.Exists(astDir))
-                    {
-                        if (abbrev == AmazonAbb || abbrev == AmberAbb)
-                        {
-                            var astPdsDir = Path.Combine(astDir, "PDS");
-                            if (!Directory.Exists(astPdsDir))
-                                ExaminePdsFiles();
-
-                            if (Directory.Exists(astPdsDir))
-                            {
-                                foreach (var file in Directory.EnumerateFiles(astPdsDir, "*.MST").ToList())
-                                {
-                                    var filename = Path.Combine("PDS", Path.GetFileName(file));
-                                    sndFiles.Add(filename);
-                                }
-                            }
-                        }
-                        foreach (var file in Directory.EnumerateFiles(astDir, "*.MST").ToList())
-                        {
-                            var filename = Path.GetFileName(file);
-                            sndFiles.Add(filename);
-                        }
-                        foreach (var file in Directory.EnumerateFiles(astDir, "*.").ToList())
-                        {
-                            var filename = ScreenSoundFiles(abbrev, file);
-
-                            if (filename is not null)
-                                sndFiles.Add(filename);
-                        }
-                    }
-                }
-                else // if (pcType == Apple2Abb || pcType == CommodoreAbb || pcType == MacAbb)
-                {
-                    if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
-                    {
-                        var pdsDir = Path.Combine(dir, "PDS");
-                        if (!Directory.Exists(pdsDir))
-                            ExaminePdsFiles();
-
-                        if (Directory.Exists(pdsDir))
-                        {
-                            foreach (var file in Directory.EnumerateFiles(pdsDir, "*.").ToList())
-                            {
-                                var filename = ScreenSoundFiles(abbrev, file);
-
-                                if (filename is not null)
-                                    sndFiles.Add(Path.Combine("PDS", filename));
-                            }
-                        }
-                    }
-                    foreach (var file in Directory.EnumerateFiles(dir, "*.").ToList())
-                    {
-                        var filename = ScreenSoundFiles(abbrev, file);
-
-                        if (filename is not null)
-                            sndFiles.Add(filename);
-                    }
-                }
-            }
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e.ToString());
-        }
-
-        return sndFiles;
-    }
-
-    private string? ScreenSoundFiles(string abbrev, string file)
-    {
-        if (abbrev == F451Abb)
-            abbrev = "F4";
-        else if (abbrev == OzAbb)
-            abbrev = "WM";
-
-        var filename = Path.GetFileName(file);
-        if (!filename.StartsWith(abbrev, StringComparison.OrdinalIgnoreCase) &&
-            !filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) &&
-            !filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) &&
-            !filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
-            return null;
-        if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
-            return null;
-        if (abbrev == AmberAbb && (filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("AMBOPEN", StringComparison.OrdinalIgnoreCase)))
-            return null;
-        if (abbrev == "F4" && (filename.Equals("F451", StringComparison.OrdinalIgnoreCase) ||
-            filename.Length < 5))
-            return null;
-        if (abbrev == IslandAbb && filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase))
-            return null;
-
-        return filename;
-    }
-
-    private void ExportSndFiles()
+    public void ExportSoundFiles()
     {
         if (pcType == MsxAbb)
             return;
@@ -208,7 +86,7 @@ partial class SASTester
         foreach (var abbrev in new[] { AmazonAbb, DragonAbb, F451Abb, AmberAbb,
             PerryAbb, RamaAbb, IslandAbb, OzAbb })
         {
-            var sndFiles = GetSoundFiles(abbrev);
+            var sndFiles = GetMediaFileList(abbrev, true);
             foreach (var file in sndFiles)
             {
                 var sub = "";
@@ -220,7 +98,7 @@ partial class SASTester
     }
 
     // This implementation is monophonic only, plays each channel one at a time
-    // It sounds more authentic to PC speaker (Apple II and IBM *.IB), but the timing doesn't work very well yet
+    // It sounds more authentic to PC speaker (Apple II and IBM *.IB) compared to MidiOut(), but the timing doesn't work very well yet
     // TODO: Fix timing
     private static void WaveOut(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes)
     {
@@ -329,7 +207,7 @@ partial class SASTester
     }
 
     // This implementation is monophonic only, plays each channel one at a time
-    private void MidiOut(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes)
+    private static void MidiOut(int beatLen, List<(int Pos, byte B, int Ch, int Note, double Freq, int Length, int Patch)> notes)
     {
         var ch = 0;
         var patch = PatchSquare;
@@ -576,7 +454,7 @@ partial class SASTester
 
     // The IBM PC Speaker was monophonic, but the PCjr was quadraphonic (though the fourth channel only produces white noise)
     // TODO: Pitch changes aren't always right yet; for instance, pitch changes going from below C2 to above it seem to go down rather than up
-    private void PlaySound(string abbrev, string filePath = "", bool toFile = false)
+    private static void PlaySound(string abbrev, string filePath = "", bool toFile = false)
     {
         byte timeOffset = 0x02;
         byte lensOffset = 0x0B;
