@@ -243,7 +243,13 @@ The first 6 bytes are used as a header with the following layout:
 | 04      | Height       | For PC and C64, typically either`B0` (176px) = 88% height, or `50` (80px) = 40%-height                                                                                                                              |
 | 05      | Width        | For PC and C64, typically either`A0` (160px) = 100% width, or `48` (72px) = 45%-width; though this field seems to be informational in terms of drawing. Note the actual width is multiplied by 2 for CGA 320x200.   |
 
+| palette | colors                              |
+|---------|-------------------------------------|
+| `00`    | 0=Black, 1=Green, 2=Red, 3=Yellow   |
+| `01`    | 0=Black, 1=Cyan, 2=Magenta, 3=White |
+
 \* = 0=black, 1=blue, 2=green, 3=cyan, 4=red, 5=magenta, 6=brown, 7=lt.gray, 8=dk.gray, 9=br.blue, A=br.green, B=br.cyan, C=br.red, D=br.magenta, E=yellow, F=white
+(However, it appears that the background color was always 0 for these games.)
 
 #### Pixel data
 
@@ -414,27 +420,34 @@ The Apple II ports use 280x192 "HIRES" resolution, with 6 colors. The Apple II i
 
 I've mostly got this one figured out. There's a couple of files that are skewed, and several from *Nine Princes* are cut off near the end (though in the latter case it could be the PDS extraction is to blame).
 
-Here again for these files are the three-byte sequences, but now instead of four pixels with vertical runlengths as in the IBM CGA files, it's seven pixels. This actually makes sense because of the strange way Apple II graphics are set in memory. The bits in the first and third bytes are split into sequences, little-endian order. Seven bits are read right-to-left and placed horizontally left-to-right onscreen, with 0 being off and 1 being on. The first (leftmost) bit sets the color burst direction, resulting in an odd pixel being either green (`0`) or orange (`1`) when adjoining a black even one, and an even pixel being purple (`0`) or blue (`1`) when next to a black odd.
+The initial header has 7 bytes (one additional compared to PC). I'm currently not sure of the purpose of these other than the width and height at address 0x05 and 0x06.
+
+After this, here again are the three-byte sequences, but now instead of four pixels with vertical runlengths as in the IBM CGA files, it's seven subpixels. This actually makes sense because of the strange way Apple II graphics are set in memory. The bits in the first and third bytes are split into sequences, little-endian order. Seven bits are read right-to-left and placed horizontally left-to-right onscreen, with 0 representing "off" and 1 being "on". The first (leftmost) bit sets the palette (which is actually the color burst orientation). So two "off" subpixels result in a black pixel, and two "on" subpixels result in a white one. When an odd "on" subpixel adjoins an even "off" one, it results in either a green (with `0` palette) or orange (with `1` palette) pixel. Finally, when an odd "on" subpixel adjoins an even "off" one, we get a purple (`0`) or blue (`1`) pixel.
 
 In other words, if the 8 bits of a byte in binary are laid out like this: **PQRSTUVW** then the purpose of each bit is:
 palette = **P**
-pixel layout = **WVUTSRQ**
+subpixel layout (odd) = **WV UT SR Q**
+subpixel layout (even) = **W VU TS RQ**
 
-| palette | `00`  | `01`   | `10`   | `11`  |
-|---------|-------|--------|--------|-------|
-| `0`     | Black | Green  | Purple | White |
-| `1`     | Black | Orange | Blue   | White |
+To determine color, couples of adjoining odd and even bits (in conjunction with the palette) can be examined. Assuming this is an odd column, then for the rightmost subpixel (Q in the pattern above), you can't determine the appropriate color until you've gone down the screen and come back up to the same y-value, 7 subpixels to the right, to then combine it with the leftmost subpixel (W) of that 7-bit pattern. This wouldn't have mattered as much for the Apple II since it was all an artifact of the hardware, but for the purposes of emulating the result that means we have to process the contents in two passes, where the first pass generates a monochrome subpixel map and the second pass examines subpixel couples to produce the final color pixel map.
 
-To determine color, couples of adjoining bits are examined (in conjunction with the palette). For the rightmost pixel (Q in the pattern above), you can't determine the appropriate color until you've gone down the screen and come back up to the same y-value, 7 pixels to the right, to then combine with the leftmost pixel (W) of that 7-bit pattern. This didn't matter for the Apple II since it was an artifact of the hardware, but for the purposes of emulation that means we have to process the contents in two passes, where the first pass generates a monochrome pixel map and the second pass examines every two pixels to produce the final color map.
+Palette Colors:
+
+| palette | `00`    | `01`     | `10`     | `11`    |
+| --------- | --------- | ---------- | ---------- | --------- |
+| `0`     | 0=Black | 1=Green  | 2=Purple | 3=White |
+| `1`     | 4=Black | 5=Orange | 6=Blue   | 7=White |
 
 Example:
-| hex  | binary     | pal | color bits            | color sequence |
-|------|------------|-----|-----------------------|----------------|
-| `67` | `01100111` | `0` | `11` `10` `01` `1`... | <code style="color : White">W W</code> <code style="color : Magenta">P K</code> <code style="color : Green">K G</code> ?         |
 
-So `00` gives two pixels off (black), and `11` gives two pixels on (white), regardless of palette. `10` might give one odd pixel on, and `01` might give one even pixel on, but since these are 7-pixel patterns, every other vertical stripe changes which bit is even and which is odd. What fun it must have been to be an Apple II programmer!
+| hex  | binary     | palette | subpixel bits           | color sequence                                                                                                      |
+| ------ | ------------ | --------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `67` | `01100111` | `0`     | odd:`11` `10` `01` `1`  | <code style="color : White">W</code> <code style="color : Magenta">P</code> <code style="color : Green">G</code> ?? |
+|      |            |         | even:`1` `11` `00` `11` | ?? <code style="color : White">W</code> <code style="color : Gray">K</code> <code style="color : White">W</code>    |
 
-Following the behavior of most modern emulators, I produce a more saturated image by smearing the color to both pixels when converting to PNG rather than trying to duplicate the vertical scanlines and "[fringed](https://www.xtof.info/hires-graphics-apple-ii.html#hires-oddities)" effect that the genuine hardware produced when displaying colors.
+So `00` is black and `11` is white, regardless of palette. `10` (assuming an odd column and palette `0`) is purple, and `01` might be green, but since these are 7-subpixel patterns, every other vertical stripe changes which bit is even and which is odd. Worse, if the palette changes then at the interface where the palettes differ, undesired artifacts occur. There is an automatic half-pixel shift to prevent severe glitches in both vertical and horizontal directions, but the [color fringes](https://www.xtof.info/hires-graphics-apple-ii.html#hires-oddities) that occur either need to be suffered, or the artist/programmer would have needed to carefully design their art to work around the issues. This includes needing to be aware of using the "correct" black or white (ie., 0 vs. 4, or 3 vs. 7, as numbered in the palette map above). What fun that all must have been!
+
+When converting to PNG, I'm not currently trying to produce an image with any real fidelity to Apple II hardware. I could, following the behavior of some modern emulators, at least duplicate the white banding at horizontal palette interfaces. However, this would require doubling the horizontal resolution to accommodate.
 
 ### Atari ST picture format
 
@@ -454,9 +467,9 @@ Following the resolution, there is a sequence that is common to most files:
 
 This appears to be the palette (I have noticed the *Treasure Island* palette is slightly different, and *Amazon* is quite different and even differs between files).
 
-The high nibble is always zero, but the low nibble varies from 0-F rather than 0-7 as I would think it should for 512 possible colors. In any case, after some experimentation, it looks like it's not laid out in order, i.e. 'R0 G0 B0 R1 G1 B1 R2 G2 B2...' but rather it appears to be "ramped", i.e. 'R0 R1 R2... G0 G1 G2... B0 B1 B2...'
+The high nibble is always zero, but the low nibble varies from 0-F rather than 0-7 as I would think it should for 512 possible colors. In any case, after some experimentation, it looks like it's not laid out in RGB order, i.e. 'R0 G0 B0 R1 G1 B1 R2 G2 B2...' but rather it appears to be "ramped", so first occurs each red, then each green, then each blue, i.e. 'R0 R1 R2... G0 G1 G2... B0 B1 B2...' So you'll need to parse the whole thing and collate it.
 
-So this is the most common palette, after collating the values. The Rgb24 equivalent is found by multiplying by 17 (where `09` becomes `99`):
+So the following is the most common palette, after collating the values. The Rgb24 equivalent is found by multiplying by 17 (so e.g., `09` becomes `99`):
 
 
 | hex   | `00 00 00` | `02 00 0D` | `00 0B 0F` | `0F 0F 0F` | `00 0F 02` | `00 0D 03` | `0F 07 00` | `00 0F 0E` | `0D 06 09` | `0B 00 0E` | `0F 09 0C` | `0B 08 08` | `09 09 0A` | `0B 0B 0C` | `0F 0E 03` | `0D 0D 0E` |
