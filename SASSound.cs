@@ -82,10 +82,15 @@ partial class SASTester
     {
         if (pcType == MsxAbb)
             return;
-        Console.WriteLine("Please wait ...");
-        foreach (var abbrev in new[] { AmazonAbb, DragonAbb, F451Abb, AmberAbb,
-            PerryAbb, RamaAbb, IslandAbb, OzAbb })
+        Console.WriteLine(Wait);
+        foreach (var abbrev in allGames)
         {
+            if (pcType == AppleAbb & abbrev == AmazonAbb)
+                continue;
+            if (pcType == AtariAbb && !atariGames.Contains(abbrev))
+                continue;
+            if (pcType == MacAbb && !macGames.Contains(abbrev))
+                continue;
             var sndFiles = GetMediaFileList(abbrev, true);
             foreach (var file in sndFiles)
             {

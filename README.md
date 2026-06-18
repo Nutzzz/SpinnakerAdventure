@@ -106,9 +106,9 @@ The text was in all-caps (ungh!), and the initial ports to Commodore and IBM wer
 
 ### Other non-SAS games
 
-For completeness, I'll mention that Telarium published two other non-SAS games during its short life: [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game)) [[Maher review](https://www.filfre.net/2013/10/shadowkeep/)] (novelized by Alan Dean Foster so they could say it was based on a book) and Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game)).
+For completeness, I'll mention that Telarium published two other non-SAS games during its short life: [*Shadowkeep*](https://en.wikipedia.org/wiki/Shadowkeep_(video_game) [[Maher review](https://www.filfre.net/2013/10/shadowkeep/)] (for Apple II only, and novelized by Alan Dean Foster just so they could say it was also based on a book) and Agatha Christie's [*The Scoop*](https://en.wikipedia.org/wiki/The_Scoop_(video_game) (for Apple II and IBM PC only).
 
-Windham Classics published three others: Zilpha Keatley Snyder's [*Below The Root*](https://en.wikipedia.org/wiki/Below_the_Root_(video_game)), Lewis Carroll's [*Alice in Wonderland*](https://en.wikipedia.org/wiki/Alice_in_Wonderland_(1985_video_game)) (both of which use the same Disharoon engine), and Johann David Wyss's [*The Swiss Family Robinson*](https://en.wikipedia.org/wiki/The_Swiss_Family_Robinson#Other_adaptations).
+Windham Classics published three others (for Apple II and Commodore 64 only): Zilpha Keatley Snyder's [*Below The Root*](https://en.wikipedia.org/wiki/Below_the_Root_(video_game)), Lewis Carroll's [*Alice in Wonderland*](https://en.wikipedia.org/wiki/Alice_in_Wonderland_(1985_video_game)) (both of which use the same Disharoon engine), and Johann David Wyss's [*The Swiss Family Robinson*](https://en.wikipedia.org/wiki/The_Swiss_Family_Robinson#Other_adaptations).
 
 See [this Maher article](https://www.filfre.net/2014/12/bookwares-sunset-2/) for some discussion of *The Scoop* and the two Disharoon games.
 
@@ -219,13 +219,17 @@ For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) f
 
 ---
 
-## Picture Format
+## Graphics Format
 
-Pictures in SAS games are either placed at the top in landscape orientation (often multiple pictures at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width. *Amazon* is laid out differently from the others and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 160x160).
+Graphics in SAS games are either placed at the top in landscape orientation (often multiple small picture files at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width, in each case leaving a good amount of space for text. *Amazon* is laid out differently from the others because of its development history, and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 160x160), which leaves much less room for text.
 
-The Tester Tool permits you to export all pictures to .PNG from the IBM and C64 ports of all 8 games (though for now there's corruption in some of the C64 images). You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of Windows Terminal), and if not in ANSI block characters (though in that case they are likely to be cropped unless you enlarge your console size). Note that the Tester's list of pictures shows files with (usually) no extension that weren't found in the location dir file (other than \<abbrev\>,1,2,A,B,DIR,NEWDATA,SAVED,VOLT), but there may still be false positives. For non-IBM ports, though the tester attempts to list the picture files, the PNG exporter is unavailable, and the preview feature will print out a garbled mess.
+The Tester Tool permits you to export all pictures to .PNG from the Apple II, Commodore 64, and IBM ports of all 8 games. You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of [Windows Terminal](https://apps.microsoft.com/detail/9n0dx20hk701?hl=en-US&gl=US)), and if not, in ANSI block characters (though in that case they are likely to be cropped unless you shrink your font and/or enlarge your console size). Note that the Tester's list of graphics files attempts to remove files that aren't graphics files, but there may still be a few false positives.
 
-### IBM PC/PCjr picture format
+### Animations
+
+Some of the graphic files involve simple animations, some of which that are a series of pictures files, and some that appear to be compiled into a single file. I haven't yet done an analysis of those, but I'd like to convert these to an .APNG file.
+
+### IBM PC/PCjr graphics format
 
 For the IBM ports, SAS uses 320x200 medium-resolution CGA, which supports three 4-color palettes and 2 intensity levels; these games (like nearly all CGA games) only use low intensity and the first 2 palettes. However, because the same pictures are used for the Commodore 64 and Apple II ports with lower resolutions, none of the pictures are greater than 160x192 pixels, so for the IBM port they have doubled the width.
 
@@ -357,15 +361,17 @@ Note that this file doesn't include the feet shown; these are drawn with a small
 | 1B      | `11`=<code style="color : DarkGray">K</code><code style="color : Cyan">C</code><code style="color : DarkGray">K</code><code style="color : Cyan">C</code> | `1`=x1  |   | 1D      | `3`=3x  | `55`=<code style="color : Cyan">C C C C</code>                                                                       |
 | 1E      | `FF`=<code style="color : White">W W W W</code>                                                                                                           | `6`=x6  |   | ...     | `1`=1x  | ...                                                                                                                  |
 
-### Commodore 64 picture format
+### Commodore 64 graphics format
 
 ![f451-c64-screenshot](images/f451-c64-screenshot.png "Fahrenheit 451 for Commodore 64 screenshot")
 
 The Commodore 64 ports use 160x200 "Multicolor" resolution. At this resolution the C64's VIC-II graphics chip was capable of 16 colors at a time, however with some limtations: only 4 colors are allowed per 8x8 pixel block (3 colors plus a global background). That said, I don't think there's ever more than 8 colors total in any of these pictures.
 
+The developers had to use a thin blocky font with the C64 because of the limited horizontal resolution.
+
 At this point, I've managed to get almost all of the files decoded. There are still a few that are bugged partway through.
 
-It's a different format from IBM, but the header has similarities, and there are similar sets of three byte sequences. However, here there are 4 different sections:
+It's a different format from IBM, but the header has similarities, though there are similar sets of three byte sequences. However, here thee file is divided into 4 different sections:
 
 * Section 1: Header
 * Section 2: Tertiary Color
@@ -385,7 +391,6 @@ Section 4's three-byte sequence, like the IBM version above, specifies a 4x1 bit
 \* = C64 palette: 0=black, 1=white, 2=red, 3=cyan, 4=purple, 5=green, 6=blue, 7=yellow, 8=orange, 9=brown, A=lt.red, B=dk.gray, C=md.gray, D=lt.green, E=lt.blue, F=lt.gray
 It does seem that `2` (red) is [sometimes?] remapped as `A` (light red) and `6` (blue) is remapped as `E` (light blue).
 
-
 | 0        | 1        | 2            |   | 3            | 4        | 5        |
 | ---------- | ---------- | -------------- | --- | -------------- | ---------- | ---------- |
 | color A2 | color A1 | num blocks A |   | num blocks B | color B1 | color B2 |
@@ -396,7 +401,6 @@ So, returning to *Nine Princes* for our example:
 
 At address 0x65 (after the third reference to [50A0], the resolution), is an example of Section 3:
 
-
 | 0x65       | 0x68       | 0x6B       | 0x6E       |
 | ------------ | ------------ | ------------ | ------------ |
 | `F0 71 FC` | `6C 11 60` | `1F 12 10` | `1F 13 0F` |
@@ -405,14 +409,13 @@ Looking at `F0`, Color `F` (15) is light gray and Color `0` is black. The first 
 
 The availability of black to be used for the dividing line mentioned above comes from Section 2. So if you check Section 2 above at address 0x0A:
 
-
 | 0x0A       | 0x0D       | 0x10       | 0x13       |
 | ------------ | ------------ | ------------ | ------------ |
 | `00 FF 00` | `00 F2 00` | `0C 19 00` | `06 34 00` |
 
 You'll see that in this case `0` is the tertiary color for the first 47 4x8 blocks (`F` + `F` + `F` + `2` = 15 + 15 + 15 + 2), which includes the block in question.
 
-### Apple II picture format
+### Apple II graphics format
 
 ![f451-aii-screenshot](images/f451-aii-screenshot.png "Fahrenheit 451 for MSX screenshot") ![amb-aii-screenshot](images/amb-aii-screenshot.png "Nine Princes in Amber for MSX screenshot")
 
@@ -440,46 +443,76 @@ Palette Colors:
 
 Example:
 
-| hex  | binary     | palette | subpixel bits           | color sequence                                                                                                      |
+| hex  | binary        | palette | subpixel bits           | color sequence                                                                                                      |
 | ------ | ------------ | --------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `67` | `01100111` | `0`     | odd:`11` `10` `01` `1`  | <code style="color : White">W</code> <code style="color : Magenta">P</code> <code style="color : Green">G</code> ?? |
-|      |            |         | even:`1` `11` `00` `11` | ?? <code style="color : White">W</code> <code style="color : Gray">K</code> <code style="color : White">W</code>    |
+| `67` | `0b0110_0111` | `0`     | odd:`11` `10` `01` `1`  | <code style="color : White">W</code> <code style="color : Magenta">P</code> <code style="color : Green">G</code> ?? |
+|      |               |         | even:`1` `11` `00` `11` | ?? <code style="color : White">W</code> <code style="color : Gray">K</code> <code style="color : White">W</code>    |
 
 So `00` is black and `11` is white, regardless of palette. `10` (assuming an odd column and palette `0`) is purple, and `01` might be green, but since these are 7-subpixel patterns, every other vertical stripe changes which bit is even and which is odd. Worse, if the palette changes then at the interface where the palettes differ, undesired artifacts occur. There is an automatic half-pixel shift to prevent severe glitches in both vertical and horizontal directions, but the [color fringes](https://www.xtof.info/hires-graphics-apple-ii.html#hires-oddities) that occur either need to be suffered, or the artist/programmer would have needed to carefully design their art to work around the issues. This includes needing to be aware of using the "correct" black or white (ie., 0 vs. 4, or 3 vs. 7, as numbered in the palette map above). What fun that all must have been!
 
 When converting to PNG, I'm not currently trying to produce an image with any real fidelity to Apple II hardware. I could, following the behavior of some modern emulators, at least duplicate the white banding at horizontal palette interfaces. However, this would require doubling the horizontal resolution to accommodate.
 
-### Atari ST picture format
+### Atari ST graphics format
 
 ![f451-ast-screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![amb-ast-screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
 
 The Atari ports use their low resolution 320x200 mode, and like IBM most pictures are multiplied by 2 across the horizontal to fill the screen.
 
-Though the ST had a more flexible color system than the Commodore (e.g., it could display 16 colors from 512 possible without any of the 8x8 block limitations), Telarium didn't really leverage it very well, and just stuck to a max of 8 colors. They also relied solely on the default system palette.* In any case, I've only done a quick comparison to the C64 format at this point, and it is very different.
+Though the ST had a more flexible color system than the Commodore (e.g., it could display 16 colors from 512 possible without any of the 8x8 block limitations), Telarium didn't really leverage it very well, and just stuck to a max of 8 colors. They also relied solely on the default system palette.*
 
 \* = Atari ST default palette: 0=white, 1=black, 2=red, 3=green, 4=blue, 5=cyan, 6=yellow, 7=magenta, 8=lt.Gray, 9=dk.gray, A=dk.red, B=dk.green, C=dk.blue, D=dk.cyan, E=Brown, F=dk.magenta
 
-Looking at the header, I note that instead of hh ww, the resolution is in the typical ww hh order, but this time with `00` separators.
+Looking at the header, the first two bytes are the file size. Address 0x03 and 0x05 have the resolution; instead of `hh ww` as all of the other files so far, the resolution here is width first, and with `00` separators (or perhaps the spread was with the idea of supporting higher resolutions).
 
 Following the resolution, there is a sequence that is common to most files:
 
 `00 0F 00 00 0F 00 0D 0B 0F 0B 09 0B 0F 0D 00 00 0B 0F 0F 0D 08 0F 06 00 09 08 09 0B 0E 0D 00 0F 0F 0F 02 03 01 0E 09 0E 0C 08 0A 0C 03 0E`
 
-This appears to be the palette (I have noticed the *Treasure Island* palette is slightly different, and *Amazon* is quite different and even differs between files).
+This is the 16-color palette. The *Treasure Island* palette is slightly different, and *Amazon* is quite different and even differs between files.
 
 The high nibble is always zero, but the low nibble varies from 0-F rather than 0-7 as I would think it should for 512 possible colors. In any case, after some experimentation, it looks like it's not laid out in RGB order, i.e. 'R0 G0 B0 R1 G1 B1 R2 G2 B2...' but rather it appears to be "ramped", so first occurs each red, then each green, then each blue, i.e. 'R0 R1 R2... G0 G1 G2... B0 B1 B2...' So you'll need to parse the whole thing and collate it.
 
 So the following is the most common palette, after collating the values. The Rgb24 equivalent is found by multiplying by 17 (so e.g., `09` becomes `99`):
-
 
 | hex   | `00 00 00` | `02 00 0D` | `00 0B 0F` | `0F 0F 0F` | `00 0F 02` | `00 0D 03` | `0F 07 00` | `00 0F 0E` | `0D 06 09` | `0B 00 0E` | `0F 09 0C` | `0B 08 08` | `09 09 0A` | `0B 0B 0C` | `0F 0E 03` | `0D 0D 0E` |
 | ------- | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ |
 | Rgb24 | #000000    | #2200DD    | #00BBFF    | #FFFFFF    | #00FF22    | #00DD33    | #FF7700    | #00FFEE    | #DD6699    | #BB00EE    | #FF99CC    | #BB8888    | #9999AA    | #BBBBCC    | #FFEE33    | #DDDDEE    |
 | Name  | 0=Black    | 1=Blue     | 2=Dk.Cyan  | 3=White    | 4=Green    | 5=Dk.Green | 6=Red      | 7=Cyan     | 8=Dk.Red   | 9=Purple   | A=Pink     | B=Brown    | C=Dk.Gray  | D=Md.Gray  | E=Yellow   | F=Lt.Gray  |
 
-The next section begins at address 0x36, and though I've been experimenting, I haven't figured it out yet.
+The next section begins at address 0x36, and is split into up to 4 bitplanes. The output is in 4x2 blocks, and unlike the prior formats these are laid out horizontally. 0x00 and 0xFF, though they are also valid values (see below), use the following byte as a run-length.
 
-### Macintosh picture format
+The first nibble is the top 4 pixels, and the second nibble is the bottom 4. The layout is very simply obtained by converting the nibble to binary.
+
+Examples:
+
+| nibble | binary | pixel mockup |
+|--------|--------|--------------|
+| `0x0`  | <code style="color : DarkGray">0 0 0 0</code> | <code style="color : DarkGray">____</code>         |
+| `0x1`  | <code style="color : DarkGray">0 0 0</code><code style="color : White">1</code> | ___<code style="color : White">█</code>         |
+| `0x6`  | <code style="color : DarkGray">0</code><code style="color : White">1 1</code><code style="color : DarkGray">0</code> | <code style="color : DarkGray">_</code><code style="color : White">██</code><code style="color : DarkGray">_</code>         |
+| `0xC`  | <code style="color : White">1 1</code><code style="color : DarkGray">0 0</code> | <code style="color : White">██</code><code style="color : DarkGray">__</code>         |
+| `0xF`  | <code style="color : White">1 1 1 1</code> | <code style="color : White">████</code>         |
+
+So putting the nibbles together, e.g., `0x88` would be two pixels on the left side of the 4x2 block.
+
+Likewise, `0x00` is an empty 4x2 block of pixels, and `0xFF` is a completely filled block, though as mentioned above, these values (only) expect a run-length to follow.
+
+If there are two or more `0x00`s in a row, then each byte couple adds 256 to the next run-length (i.e., `00 00 00 00 00 9B` becomes run-length `0x29B`).
+
+Finally, as to determining colors, the layout of the pixels on each bitplane gives a component of a bitmap for each pixel to derive the palette index. We build a binary number from right to left. So an "on" pixel in bitplane 0 adds `0b0001` (1) to the palette index, an "on" in bitplane 1 adds `0b0010` (2) to the palette index, one in bitplane 2 adds `0b0100` (4) to the palette index, and one in bitplane 3 adds `0b1000` (8) to the palette index. In this way, we can specify each of the 16 colors in the palette.
+
+Palette Index Example:
+
+| bitplane | value |
+|----------|-------|
+| 0        | `0`   |
+| 1        | `1`   |
+| 2        | `0`   |
+| 3        | `1`   |
+
+This results in a bitmap value of `0b_1010` (10) for the corresponding pixel, which, if using the most common of the custom palettes shown above, will be pink.
+
+### Macintosh graphics format
 
 ![f451-mac-screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
 
@@ -489,15 +522,11 @@ Based on the prevalence of the basic stippling patterns in the images, I suspect
 
 The first two bytes are the width in pixels, and the next two are the height. 0xE seems to always be `00`. I'm not sure about anything else; I haven't seen any obvious patterns just looking at the hex contents and doing comparisons, but I do note that in the files I've been looking at, the values `78`-`8F` are very well-represented, as is `EF`-`FF`, values where the second nibble is `2` or `8`, as well as `13`, `2F`, and `77`.
 
-### MSX picture format
+### MSX graphics format
 
 ![f451-msx-screenshot](images/f451-msx-screenshot.png "Fahrenheit 451 for MSX screenshot") ![amb-msx-screenshot](images/amb-msx-screenshot.png "Nine Princes in Amber for MSX screenshot")
 
 These "ports" were released by a different company, and the art was redrawn with a new art style. I'm not clear whether these are actually SAS games, or adaptations in a different engine.
-
-### Animations
-
-Some of the graphic files invoke simple animations (for *Amazon* in particular), but I haven't yet done an analysis of those.
 
 ---
 

@@ -9,6 +9,7 @@ partial class SASTester
 
     public const string FilePrompt  = "Enter a filename, or press Enter to continue:";
     public const string FileWarn    = "[Warning: There may be false positives in this list.]";
+    public const string Wait        = "Please wait ...";
     public const string Divider     = "---------------------------------------";
 
     public const string AppleAbb    = "AII";
@@ -143,7 +144,39 @@ partial class SASTester
         "DIR",
         "NEWDATA",
         "SAVED",
-        "VOLT"
+        "VOLT",
+    ];
+
+    // All games supported by C64, IBM, MSX
+    // Apple II had all 8, but AMZ was non-SAS
+    public readonly List<string> allGames =
+    [
+        AmazonAbb,
+        DragonAbb,
+        F451Abb,
+        AmberAbb,
+        PerryAbb,
+        RamaAbb,
+        IslandAbb,
+        OzAbb,
+    ];
+
+    // Atari ST had all but 3 of the games
+    public readonly List<string> atariGames =
+    [
+        AmazonAbb,
+        F451Abb,
+        AmberAbb,
+        PerryAbb,
+        IslandAbb,
+    ];
+
+    // Macintosh only had 3 of them
+    public readonly List<string> macGames =
+    [
+        AmazonAbb,
+        DragonAbb,
+        F451Abb,
     ];
 
     // These enums are used by LookupPartOfSpeech()
@@ -1172,7 +1205,7 @@ partial class SASTester
                             foreach (var file in Directory.EnumerateFiles(fileDir, fileExt).ToList())
                             {
                                 var filename = Path.GetFileName(file);
-                                if (fileExt != "*.")
+                                if (i == 0)
                                     files.Add(filename);
                                 else if (
                                     !locNames.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
@@ -1297,7 +1330,7 @@ partial class SASTester
             {
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == MacAbb)
                     Console.WriteLine($" X. {ExtractPdsMenu}");
-                if (pcType == AppleAbb || pcType == CommodoreAbb || pcType == IbmAbb) // pcType == AtariAbb ||
+                if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb)
                     Console.WriteLine($" P. {ExportPngMenu}");
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");

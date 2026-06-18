@@ -11,23 +11,26 @@ partial class SASTester
     private const int AII_MAX_WIDTH         = 140;
     private const int AII_MAX_HEIGHT        = 192;
 
-    private const int AII_INTIAL_OFFSET     = 2;    // file size?
-    private const int AII_DECODE_OFFSET     = 7;    // ???
-    private const int AST_INITIAL_OFFSET    = 0;
-    private const int AST_PALETTE_OFFSET    = 6;
-    private const int AST_DECODE_OFFSET     = 54;
-    private const int C64_INITIAL_OFFSET    = 2;   // SAL version?
-    private const int C64_DECODE_OFFSET     = 10;
-    private const int IBM_INITIAL_OFFSET    = 0;
-    private const int IBM_DECODE_OFFSET     = 6;
-    private const int MAC_INITIAL_OFFSET    = 0;   // ???
-    private const int MAC_DECODE_OFFSET     = 6;    // ???
+    private const int AII_INTIAL_OFFSET     = 0x02; // file size?
+    private const int AII_DECODE_OFFSET     = 0x07; // ???
+    private const int AST_INITIAL_OFFSET    = 0x00;
+    private const int AST_PALETTE_OFFSET    = 0x06;
+    private const int AST_DECODE_OFFSET     = 0x36;
+    private const int C64_INITIAL_OFFSET    = 0x02; // SAL version?
+    private const int C64_DECODE_OFFSET     = 0x0A;
+    private const int IBM_INITIAL_OFFSET    = 0x00;
+    private const int IBM_DECODE_OFFSET     = 0x06;
+    private const int MAC_INITIAL_OFFSET    = 0x00; // ???
+    private const int MAC_DECODE_OFFSET     = 0x06; // ???
 
     private const int AII_FAIL_COLOR        = 2; // purple
     private const int AST_FAIL_COLOR        = 9; // purple, usually
     private const int C64_FAIL_COLOR        = 4; // purple
     private const int IBM_FAIL_COLOR        = 3; // red (palette 0) or magenta (palette 1)
     private const int SIXEL_ZOOM            = 3;
+    
+    private const string NotAPic            = ErrorPrefix + "This is not a";  // might need an 'n' for "...not an"
+    private const string OutOfRange         = " image: height or width is out of bounds: ";
 
     public static bool doSixel = Sixel.IsSupported();
 
@@ -183,12 +186,17 @@ partial class SASTester
 
     private void ExportPicFiles()
     {
-        if (pcType != AppleAbb && pcType != CommodoreAbb && pcType != IbmAbb) // && pcType != AtariAbb
+        if (pcType == MacAbb || pcType == MsxAbb)
             return;
-        Console.WriteLine("Please wait ...");
-        foreach (var abbrev in new[] { AmazonAbb, DragonAbb, F451Abb, AmberAbb,
-            PerryAbb, RamaAbb, IslandAbb, OzAbb })
+        Console.WriteLine(Wait);
+        foreach (var abbrev in allGames)
         {
+            if (pcType == AppleAbb & abbrev == AmazonAbb)
+                continue;
+            if (pcType == AtariAbb && !atariGames.Contains(abbrev))
+                continue;
+            if (pcType == MacAbb && !macGames.Contains(abbrev))
+                continue;
             var picFiles = GetMediaFileList(abbrev, false);
             foreach (var file in picFiles)
             {
@@ -488,12 +496,13 @@ partial class SASTester
         return color1;                      // black
     }
 
-    // IBM or C64 only for now:
+    // AII, AST, C64, IBM for now:
+    //   AII uses HIRES 280x192 x 6-color mode (pictures are doubled in width)
+    //   AST uses 320x200 x 16-color (pictures are doubled in width)
     //   C64 uses Multicolor 160x200 x 16-color mode
-    //   IBM uses CGA graphics mode 320x200 x 4-color x 2-palettes in mode 4; pictures are drawn doubled in width
-    // TODO: Figure out format for other ports
-    //   AST uses 320x200 x 16-color; pictures are drawn doubled in width
-    private void DrawPic(string abbrev, string filePath = "", bool toFile = false)
+    //   IBM uses CGA graphics mode 320x200 x 4-color x 2-palettes in mode 4 (pictures are doubled in width)
+    // TODO: Figure out format for other MAC and MSX
+    private static void DrawPic(string abbrev, string filePath = "", bool toFile = false)
     {
         var offset = 6;
         if (pcType == AppleAbb)
@@ -549,15 +558,12 @@ partial class SASTester
                 else if (i == 6)
                     width = b;
             }
-            else if (pcType == IbmAbb)
+            else if (pcType == AtariAbb)
             {
-                if (i == 0)
-                    palette = b;
-                else if (i == 1)
-                {
-                    intensity = (byte)(b >> 4);
-                    bgColor = (byte)(b & 0x0F);
-                }
+                if (i == 3)
+                    width = b;
+                else if (i == 5)
+                    height = b;
             }
             else if (pcType == CommodoreAbb)
             {
@@ -567,6 +573,16 @@ partial class SASTester
                     width = b;
                 else if (i == 6)
                     c64Unknown = b;
+            }
+            else if (pcType == IbmAbb)
+            {
+                if (i == 0)
+                    palette = b;
+                else if (i == 1)
+                {
+                    intensity = (byte)(b >> 4);
+                    bgColor = (byte)(b & 0x0F);
+                }
             }
             if (!toFile)
             {
@@ -581,9 +597,18 @@ partial class SASTester
                             Console.Write("-- ");
                         }
                     }
+                    else if (pcType == AtariAbb)
+                    {
+                        Console.WriteLine($"\n [WxH: {width}x{height}]");
+                        Console.Write("000 | ");
+                        for (ushort j = 0; j < offset; j++)
+                        {
+                            Console.Write("-- ");
+                        }
+                    }
                     else if (pcType == IbmAbb)
                     {
-                        Console.WriteLine($"\n [{pcType} CGA Palette: {(palette == 0 ? "GRY" : (palette == 1 ? "CMW" : palette))}, " +
+                        Console.WriteLine($"\n [Palette: {(palette == 0 ? "GRY" : (palette == 1 ? "CMW" : palette))}, " +
                             $"Intensity: {(intensity == 0 ? "Low" : (intensity == 1 ? "High" : intensity))}, " +
                             $"BgColor: {(bgColor == 0 ? "Black" : bgColor)}, " +
                             $"WxH: {width}x{height}]");
@@ -602,7 +627,7 @@ partial class SASTester
                 if (pcType == AtariAbb && i == AST_DECODE_OFFSET - 1)
                 {
                     offset = i % 16 + 1;
-                    Console.Write($"\nPalette: ");
+                    Console.Write($"\nPalette:");
                     foreach (var c in GetASTPalette(fileArray[AST_PALETTE_OFFSET..AST_DECODE_OFFSET]))
                     {
                         Console.Write($"{c.R:x2}{c.G:x2}{c.B:x2} ");
@@ -618,7 +643,7 @@ partial class SASTester
                     if (section > 0)
                     {
                         if (section == 1)
-                            Console.Write($"\n [{pcType} WxH: {width}x{height}]"); //$", Unknown: {c64Unknown}]");
+                            Console.Write($"\n [WxH: {width}x{height}, Unknown: {c64Unknown}]");
                         offset = i % 16 + 1;
                         Console.WriteLine($"\nSection {section}:");
                         Console.Write($"\n{(i - offset + 1):x3} | ");
@@ -676,7 +701,7 @@ partial class SASTester
         }
     }
 
-    private static ushort Make4ColorMap(byte[] data, int section, ref List<(int, int, int, int)> map)
+    private static ushort MakeC64FourColorMap(byte[] data, int section, ref List<(int, int, int, int)> map)
     {
         ushort rc;
         var dataLength = data.Length;
@@ -693,7 +718,7 @@ partial class SASTester
             b = data[i + 1];
             var run = b >> 4;
 
-            rc = AddRunToColorMap(section, colors, run, ref map, ref blockIdx);
+            rc = AddRunToC64ColorMap(section, colors, run, ref map, ref blockIdx);
             if (rc != 0) return rc;
 
             if (i <= dataLength - 3)
@@ -705,7 +730,7 @@ partial class SASTester
                 b = data[i + 2];
                 colors = (b >> 4, b & 0x0F);
 
-                rc = AddRunToColorMap(section, colors, run, ref map, ref blockIdx);
+                rc = AddRunToC64ColorMap(section, colors, run, ref map, ref blockIdx);
                 if (rc != 0) return rc;
             }
         }
@@ -713,7 +738,7 @@ partial class SASTester
         return 0;
     }
 
-    private static ushort AddRunToColorMap(int section, (int colorA, int colorB) colors, int run, ref List<(int color1, int color2, int color3, int color4)> map, ref int blockIdx)
+    private static ushort AddRunToC64ColorMap(int section, (int colorA, int colorB) colors, int run, ref List<(int color1, int color2, int color3, int color4)> map, ref int blockIdx)
     {
         for (var i = 0; i < run; i++)
         {
@@ -731,6 +756,7 @@ partial class SASTester
         return 0;
     }
 
+    // These colors seem to be automatically switched to brighter variants
     private static int C64PaletteRemap(int color, bool remap = false)
     {
         if (remap)
@@ -762,7 +788,7 @@ partial class SASTester
         if (width < 1 || width > AII_MAX_WIDTH || height < 1 || height > AII_MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not an {AppleName} image: height or width is out of bounds: {width}x{height}.");
+                Console.WriteLine($"\n{NotAPic} {AppleName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
@@ -791,51 +817,29 @@ partial class SASTester
                 run2 = 1;
 
                 b1 = b;
-                /*
-                for (int j = 0; j < 7; j += 2)
-                {
-                */
-                    /*
-                    pixmap.TryAdd(new(mx + j, my), AIItoRGB(cols[0][j]));
-                    y++;
-                    if (y >= height)
-                    {
-                        Console.WriteLine();
-                        my = 0;
-                        mx += 7;
-                    }
-                    */
-                    //-----
-                /*
-                    cols[0][j] = GetAIIColor((b >> (j + 1)) & 0x3, palette, xEven);
-                    if (j < 6)
-                        cols[0][j + 1] = GetAIIColor((b >> (j + 1)) & 0x3, palette, xEven);
-                    Console.Write((b >> (j + 1)) & 0x3);
-                }
-                */
             }
             // the second byte is the run-lengths for the first and third byte, split between nibbles
             else if ((i - 1) % 3 == 1)
             {
                 palette = (b1 & 0x80) != 0; //(b1 & 0x1) != 0;
-                //Console.Write($"{b1:b8}");
+                //if (!toFile) Console.Write($"{b1:b8}");
 
                 // second byte, first nibble = run-length for first byte pattern
                 run1 = (ushort)((b >> 4) & 0xF);
                 for (var run = 0; run < run1; run++)
                 {
-                    //Console.Write($"({mx}, {my}): ");
+                    //if (!toFile) Console.Write($"({mx}, {my}): ");
                     for (var p = 0; p < 7; p++)
                     {
                         var pixel = ((b1 >> p) & 0x1) == 1;
-                        //Console.Write(pixel ? 1 : 0);
+                        //if (!toFile) Console.Write(pixel ? 1 : 0);
                         monomap.Add((mx + p, my), (pixel, palette));
                     }
-                    //Console.WriteLine();
+                    //if (!toFile) Console.WriteLine();
                     my++;
                     if (my >= height)
                     {
-                        //Console.WriteLine();
+                        //if (!toFile) Console.WriteLine();
                         my = 0;
                         mx += 7;
                     }
@@ -843,62 +847,38 @@ partial class SASTester
 
                 // second byte, second nibble = run-length for third byte pattern
                 run2 = (ushort)(b & 0xF);
-                //Console.Write($" x {runs[0]:d2} | {runs[1]:d2} x ");
+                //if (!toFile) Console.Write($" x {runs[0]:d2} | {runs[1]:d2} x ");
             }
             // the third byte is another 7-pixel pattern
             else if ((i - 1) % 3 == 2)
             {
                 palette = (b & 0x80) != 0; //(b & 0x1) != 0;
-                //Console.Write($"{b:b8}");
+                //if (!toFile) Console.Write($"{b:b8}");
 
                 for (var run = 0; run < run2; run++)
                 {
-                    //Console.Write($"({mx}, {my}): ");
+                    //if (!toFile) Console.Write($"({mx}, {my}): ");
                     for (var p = 0; p < 7; p++)
                     {
                         var pixel = ((b >> p) & 0x1) == 1;
-                        //Console.Write(pixel ? 1 : 0);
+                        //if (!toFile) Console.Write(pixel ? 1 : 0);
                         monomap.Add((mx + p, my), (pixel, palette));
                     }
-                    //Console.WriteLine();
+                    //if (!toFile) Console.WriteLine();
                     my++;
                     if (my >= height)
                     {
-                        //Console.WriteLine();
+                        //if (!toFile) Console.WriteLine();
                         my = 0;
                         mx += 7;
                     }
                 }
-                /*
-                for (var p = 0; p < 7; p += 2)
-                {
-                */
-                /*
-                pixmap.TryAdd(new(mx + p, my), rgbs.Item1);
-                pixmap.TryAdd(new(mx + p + 1, my), rgbs.Item2);
-                y++;
-                if (y >= height)
-                {
-                    Console.WriteLine();
-                    my = 0;
-                    mx += 7;
-                }
-                */
-                //-----
-                /*
-                    cols[1][p] = GetAIIColor((b >> (p + 1)) & 0x03, palette, xEven);
-                    if (p < 6)
-                        cols[1][p + 1] = GetAIIColor((b >> (p + 1)) & 0x03, palette, xEven);
-                    Console.Write((b >> (p + 1)) & 0x3);
-                }
-                */
             }
-            //Console.WriteLine();
+            //if (!toFile) Console.WriteLine();
             i++;
         }
 
-        if (!toFile)
-            Console.WriteLine();
+        //if (!toFile) Console.WriteLine();
 
         var img = new Image<Rgb24>(width, height);
         //var img = new Image<Rgb24>(width * 2, height);
@@ -930,27 +910,6 @@ partial class SASTester
         return img;
     }
 
-    private static Image<Rgb24> DecodeASTPic(byte[] fileData, bool toFile)
-    {
-        byte[] headerData = fileData[AST_INITIAL_OFFSET..(AST_PALETTE_OFFSET - 1)];
-        byte[] paletteData = fileData[AST_PALETTE_OFFSET..(AST_DECODE_OFFSET)];
-        byte[] pictureData = fileData[AST_DECODE_OFFSET..];
-
-        int width = fileData[3] * 2;
-        int height = fileData[5];
-
-        if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
-        {
-            if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not an {AtariName} image: height or width is out of bounds: {width}x{height}.");
-            return new(1, 1);
-        }
-
-        Rgb24[] palette = GetASTPalette(paletteData);
-
-        return new(1, 1);
-    }
-
     // "Ramped" color palette where the components are separated (R0, R1, R2... G0, G1, G2... B0, B1, B2...)
     private static Rgb24[] GetASTPalette(byte[] paletteData)
     {
@@ -973,6 +932,213 @@ partial class SASTester
         return RampedPaletteRgb;
     }
 
+    private static Image<Rgb24> DecodeASTPic(byte[] fileData, bool toFile)
+    {
+        // 1. Read Header Dimensions
+        var width = (fileData[2] << 8) | fileData[3];
+        var height = (fileData[4] << 8) | fileData[5];
+        var maxBlockX = width / 4;
+        var maxBlockY = height / 2;
+
+        // 2. Parse Palette
+        var palette = GetASTPalette(fileData[AST_PALETTE_OFFSET..AST_DECODE_OFFSET]);
+
+        // 3. Setup Separate Bitplane Workspaces (Width x Height)
+        var bitplanes = new byte[4][];
+        for (var i = 0; i < 4; i++)
+        {
+            bitplanes[i] = new byte[width * height];
+        }
+
+        int filePtr = AST_DECODE_OFFSET;
+        var blockX = 0;
+        var blockY = 0;
+        var extraBytes = 0;
+
+        if (!toFile) Console.WriteLine($"\n\n{maxBlockX}x{maxBlockY} Blocks");
+
+        // 4. Parse the Sequential Bitplane Streams
+        for (var plane = 0; plane < 4; plane++)
+        {
+            if (blockY > maxBlockY)
+                blockY -= maxBlockY + 1;
+
+            if (!toFile) Console.WriteLine($"\n\n===Bitplane #{plane}=================");
+
+            while (filePtr < fileData.Length - 2)
+            {
+                var b = fileData[filePtr++];
+
+                if (b == 0x00) // empty block takes a run-length
+                {
+                    int skipValue = fileData[filePtr++];
+                    if (skipValue == 0x00) // a double zero adds 256 to the next skip (and can be cumulative)
+                    {
+                        extraBytes++;
+                        if (!toFile) Console.WriteLine($"    00 00 [byte count: {extraBytes}]");
+                        continue;
+                    }
+
+                    if (!toFile) Console.WriteLine($" skip {skipValue:x2} ({skipValue}) {(extraBytes > 0 ? $"[ x {extraBytes} ]" : "")}");
+                    
+                    skipValue += extraBytes * 0x100;
+                    
+                    if (extraBytes > 0)
+                        extraBytes = 0;
+
+                    for (var s = 0; s < skipValue; s++)
+                    {
+                        blockX++;
+                        if (blockX > maxBlockX)
+                        {
+                            blockX -= maxBlockX + 1;
+                            blockY++;
+                            if (blockY > maxBlockY)
+                                break;
+                        }
+                    }
+                    if (blockY > maxBlockY)
+                        break;
+
+                    continue;
+                }
+                if (b == 0xFF) // full block takes a run-length
+                {
+                    int fillValue = fileData[filePtr++];
+                    //if (!toFile) Console.WriteLine($" fill {fillValue:x2} ({fillValue})");
+                    for (var f = 0; f < fillValue; f++)
+                    {
+                        if (!toFile) Console.WriteLine($"    ({blockX:d2}, {blockY:d2}): ff (1111_1111)");
+
+                        var fX = blockX * 4;
+                        var fY = blockY * 2;
+
+                        for (var p = 0; p < 4; p++)
+                        {
+                            var targetX = fX + p;
+
+                            if (targetX < width && (fY + 1) < height)
+                            {
+                                bitplanes[plane][fY * width + targetX] = 1;
+                                bitplanes[plane][(fY + 1) * width + targetX] = 1;
+                            }
+                        }
+
+                        blockX++;
+                        if (blockX > maxBlockX)
+                        {
+                            blockX -= maxBlockX + 1;
+                            blockY++;
+                            if (blockY > maxBlockY)
+                                break;
+                        }
+                    }
+                    if (blockY > maxBlockY)
+                        break;
+
+                    continue;
+                }
+
+                if (blockX >= maxBlockX) // to the right of visible area, shouldn't happen
+                {
+                    if (!toFile) Console.WriteLine($"   *({blockX:d2}, {blockY:d2}): {b:x2} ({b})");
+                }
+                else if (blockY >= maxBlockY) // below visible area, shouldn't happen
+                {
+                    if (!toFile) Console.WriteLine($"  **({blockX:d2}, {blockY:d2}): {b:x2} ({b})");
+                }
+                else
+                {
+                    // Extract high and low nibbles as direct independent row values
+                    var topRowBits = (byte)((b >> 4) & 0x0F);
+                    var bottomRowBits = (byte)(b & 0x0F);
+
+                    if (!toFile) Console.WriteLine($"    ({blockX:d2}, {blockY:d2}): {b:x2} ({topRowBits:b4}_{bottomRowBits:b4})");
+
+                    var x = blockX * 4;
+                    var y = blockY * 2;
+
+                    for (var p = 0; p < 4; p++)
+                    {
+                        var targetX = x + p;
+                        var topBitState = (topRowBits >> (3 - p)) & 0x01;
+                        var bottomBitState = (bottomRowBits >> (3 - p)) & 0x01;
+
+                        if (targetX < width && (y + 1) < height)
+                        {
+                            bitplanes[plane][y * width + targetX] = (byte)topBitState;
+                            bitplanes[plane][(y + 1) * width + targetX] = (byte)bottomBitState;
+                        }
+                    }
+                }
+
+                blockX++;
+                if (blockX > maxBlockX)
+                {
+                    blockX -= maxBlockX + 1;
+                    blockY++;
+                    if (blockY > maxBlockY)
+                        break;
+                }
+            }
+        }
+        if (!toFile) Console.WriteLine($"\nend ({blockX:d2}, {blockY:d2})");
+
+        // 5. Composite the 4 Bitplanes into Finished Hardware Color Indices
+        var finalPixelBuffer = new byte[width * height];
+        for (var i = 0; i < finalPixelBuffer.Length; i++)
+        {
+            var b0 = bitplanes[0][i];
+            var b1 = bitplanes[1][i];
+            var b2 = bitplanes[2][i];
+            var b3 = bitplanes[3][i];
+
+            // Merge the bitplanes to find the palette index
+            finalPixelBuffer[i] = (byte)((b3 << 3) | (b2 << 2) | (b1 << 1) | b0);
+        }
+
+        if (!toFile)
+        {
+            for (var plane = 0; plane < 4; plane++)
+            {
+                // 6. Output to Canvas Image
+                var planeImage = new Image<Rgb24>(width, height);
+                planeImage.ProcessPixelRows(accessor =>
+                {
+                    for (var currY = 0; currY < accessor.Height; currY++)
+                    {
+                        var row = accessor.GetRowSpan(currY);
+                        for (var currX = 0; currX < accessor.Width; currX++)
+                        {
+                            byte colorIndex = bitplanes[plane][currY * width + currX];
+                            row[currX] = palette[colorIndex];
+                        }
+                    }
+                });
+                Console.WriteLine();
+                Console.WriteLine(Sixel.Encode(planeImage.CloneAs<Rgba32>(), new Size(width * 2 * SIXEL_ZOOM, height * SIXEL_ZOOM)).ToArray());
+                //planeImage.SaveAsPng(Path.Combine("ast-test" + plane + ".png"));
+            }
+        }
+
+        // 6. Output to Canvas Image
+        var img = new Image<Rgb24>(width, height);
+        img.ProcessPixelRows(accessor =>
+        {
+            for (var currY = 0; currY < accessor.Height; currY++)
+            {
+                var row = accessor.GetRowSpan(currY);
+                for (var currX = 0; currX < accessor.Width; currX++)
+                {
+                    byte colorIndex = finalPixelBuffer[currY * width + currX];
+                    row[currX] = palette[colorIndex];
+                }
+            }
+        });
+        
+        return img;
+    }
+   
     private static Image<Rgb24> DecodeC64Pic(byte[] data, bool toFile)
     {
         List<byte[]> sectionData = [];
@@ -991,7 +1157,7 @@ partial class SASTester
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not a {CommodoreName} image: height or width is out of range.");
+                Console.WriteLine($"\n{NotAPic} {CommodoreName}{OutOfRange}{width}x{height}");
             return new(1, 1);
         }
 
@@ -1020,11 +1186,11 @@ partial class SASTester
         if (sectionData.Count < 4)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not a {CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
+                Console.WriteLine($"\n{NotAPic} {CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
             return new(1, 1);
         }
 
-        var numBlocks = width / 4 * height / 8;
+        var numBlocks = width / 4 * (height / 8);
 
         // 1. TODO: Find if a background color is specified in header
         var globBgColor = 0;
@@ -1039,13 +1205,13 @@ partial class SASTester
         }
 
         // 2. Parse Sections 1 and 2 into a List of color data, one entry for each 4x8 block
-        ushort rc = Make4ColorMap(sectionData[1], 1, ref colorMap);
+        ushort rc = MakeC64FourColorMap(sectionData[1], 1, ref colorMap);
         if (rc == 0)
-            rc = Make4ColorMap(sectionData[2], 2, ref colorMap);
+            rc = MakeC64FourColorMap(sectionData[2], 2, ref colorMap);
         if (rc != 0)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not a {CommodoreName} image: run-length overflow.");
+                Console.WriteLine($"\n{NotAPic} {CommodoreName} image: run-length overflow.");
             return new(1, 1);
         }
 
@@ -1158,13 +1324,13 @@ partial class SASTester
         if (palette > 1)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not an {IbmName} image: palette is {palette} (should be zero or one).");
+                Console.WriteLine($"\n{NotAPic}n {IbmName} image: palette is {palette} (should be zero or one).");
             return new(1, 1);
         }
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine("\n" + ErrorPrefix + $"This is not an {IbmName} image: height or width is out of bounds: {width}x{height}.");
+                Console.WriteLine($"\n{NotAPic}n {IbmName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
