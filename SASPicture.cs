@@ -20,16 +20,21 @@ partial class SASTester
     private const int C64_DECODE_OFFSET     = 0x0A;
     private const int IBM_INITIAL_OFFSET    = 0x00;
     private const int IBM_DECODE_OFFSET     = 0x06;
-    private const int MAC_INITIAL_OFFSET    = 0x00; // ???
-    private const int MAC_DECODE_OFFSET     = 0x06; // ???
+    private const int MAC_INITIAL_OFFSET    = 0x00;
+    private const int MAC_BITMAP_OFFSET     = 0x06;
+    private const int MAC_DECODE_OFFSET     = 0x16;
 
     private const int AII_FAIL_COLOR        = 2; // purple
     private const int AST_FAIL_COLOR        = 9; // purple, usually
     private const int C64_FAIL_COLOR        = 4; // purple
     private const int IBM_FAIL_COLOR        = 3; // red (palette 0) or magenta (palette 1)
-    private const int SIXEL_ZOOM            = 3;
-    
-    private const string NotAPic            = ErrorPrefix + "This is not a";  // might need an 'n' for "...not an"
+    private const short MAC_FAIL_PATTERN    = 0b1100_1100;
+    private const int SIXEL_ZOOM_WIDTH      = 4;
+    private const int SIXEL_ZOOM_HEIGHT     = 3;
+    private const int SIXEL_ZOOM_WIDTH_MAC  = 2; //1;
+    private const int SIXEL_ZOOM_HEIGHT_MAC = 2; //1;
+
+    private const string NotAPic            = ErrorPrefix + "This is not a(n) ";
     private const string OutOfRange         = " image: height or width is out of bounds: ";
 
     public static bool doSixel = Sixel.IsSupported();
@@ -156,13 +161,16 @@ partial class SASTester
                 else
                     filePath = Path.Combine(RscPath, gameDir, input);
 
-                if ((pcType == AppleAbb || pcType == AtariAbb) && (abbrev == AmberAbb || abbrev == AmazonAbb))
+                if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
                 {
-                    string testFilePath;
-                    if (pcType == AtariAbb)
-                        testFilePath = Path.Combine(RscPath, gameDir, abbrev, "PDS", input);
-                    else
-                        testFilePath = Path.Combine(RscPath, gameDir, "PDS", input);
+                    string testFilePath = Path.Combine(RscPath, gameDir, "PDS", input);
+
+                    if (File.Exists(testFilePath))
+                        filePath = testFilePath;
+                }
+                else if (pcType == AtariAbb && (abbrev == AmberAbb || abbrev == AmazonAbb))
+                {
+                    string testFilePath = Path.Combine(RscPath, gameDir, abbrev, "PDS", input);
 
                     if (File.Exists(testFilePath))
                         filePath = testFilePath;
@@ -186,7 +194,7 @@ partial class SASTester
 
     private void ExportPicFiles()
     {
-        if (pcType == MacAbb || pcType == MsxAbb)
+        if (pcType == MsxAbb)
             return;
         Console.WriteLine(Wait);
         foreach (var abbrev in allGames)
@@ -504,6 +512,14 @@ partial class SASTester
     // TODO: Figure out format for other MAC and MSX
     private static void DrawPic(string abbrev, string filePath = "", bool toFile = false)
     {
+        var sixelZoomW = SIXEL_ZOOM_WIDTH;
+        var sixelZoomH = SIXEL_ZOOM_HEIGHT;
+        if (pcType == MacAbb)
+        {
+            sixelZoomW = SIXEL_ZOOM_WIDTH_MAC;
+            sixelZoomH = SIXEL_ZOOM_HEIGHT_MAC;
+        }
+
         var offset = 6;
         if (pcType == AppleAbb)
             offset = AII_DECODE_OFFSET;  // For AII, the first 7 bytes have height/width and... unknown
@@ -514,8 +530,9 @@ partial class SASTester
         else if (pcType == IbmAbb)
             offset = IBM_DECODE_OFFSET;  // For IBM, the first 6 bytes have palette colors and height/width
         else if (pcType == MacAbb)
-            offset = MAC_DECODE_OFFSET;
-        ushort width = 0, height = 0, palette = 0xFF, intensity = 0xFF, bgColor = 0xFF, c64Unknown = 0xFF;
+            offset = MAC_BITMAP_OFFSET;  // For MAC, 0x06 to 0x15 have a palette of bitmap patterns
+        ushort width = 0, height = 0, ibmPalette = 0xFF, ibmIntensity = 0xFF, ibmBgColor = 0xFF, macRotation = 0xFF, c64Unknown = 0xFF;
+        var macPackBits = abbrev == "F451";
         byte[] fileArray = [];
         var fg = ConsoleColor.Gray;
         if (!toFile && !doSixel)
@@ -577,13 +594,31 @@ partial class SASTester
             else if (pcType == IbmAbb)
             {
                 if (i == 0)
-                    palette = b;
+                    ibmPalette = b;
                 else if (i == 1)
                 {
-                    intensity = (byte)(b >> 4);
-                    bgColor = (byte)(b & 0x0F);
+                    ibmIntensity = (byte)(b >> 4);
+                    ibmBgColor = (byte)(b & 0x0F);
                 }
+                else if (i == 4)
+                    height = b;
+                else if (i == 5)
+                    width = b;
             }
+            else if (pcType == MacAbb)
+            {
+                if (i == 0)
+                    width = b;
+                else if (i == 1)
+                    width = (ushort)(width << 8 | b);
+                else if (i == 2)
+                    height = b;
+                else if (i == 3)
+                    height = (ushort)(height << 8 | b);
+                else if (i == 5)
+                    macRotation = 0;
+            }
+
             if (!toFile)
             {
                 if (i == offset)
@@ -608,11 +643,20 @@ partial class SASTester
                     }
                     else if (pcType == IbmAbb)
                     {
-                        Console.WriteLine($"\n [Palette: {(palette == 0 ? "GRY" : (palette == 1 ? "CMW" : palette))}, " +
-                            $"Intensity: {(intensity == 0 ? "Low" : (intensity == 1 ? "High" : intensity))}, " +
-                            $"BgColor: {(bgColor == 0 ? "Black" : bgColor)}, " +
+                        Console.WriteLine($"\n [Palette: {(ibmPalette == 0 ? "GRY" : (ibmPalette == 1 ? "CMW" : ibmPalette))}, " +
+                            $"Intensity: {(ibmIntensity == 0 ? "Low" : (ibmIntensity == 1 ? "High" : ibmIntensity))}, " +
+                            $"BgColor: {(ibmBgColor == 0 ? "Black" : ibmBgColor)}, " +
                             $"WxH: {width}x{height}]");
                         Console.Write("000 | ");
+                        for (ushort j = 0; j < offset; j++)
+                        {
+                            Console.Write("-- ");
+                        }
+                    }
+                    else if (pcType == MacAbb)
+                    {
+                        Console.WriteLine($"\n [WxH: {width}x{height}, Rotation: {(macRotation == 0 ? "0°" : (macRotation == 1 ? "270°" : macRotation))}, PackBits: {macPackBits}]");
+                        Console.Write("010 | ");
                         for (ushort j = 0; j < offset; j++)
                         {
                             Console.Write("-- ");
@@ -637,6 +681,7 @@ partial class SASTester
                     {
                         Console.Write("-- ");
                     }
+                    // TODO: Section off the bitplanes
                 }
                 else if (pcType == CommodoreAbb && lastB == height && b == width) // Section breaks
                 {
@@ -653,6 +698,20 @@ partial class SASTester
                         }
                     }
                     section++;
+                }
+                else if (pcType == MacAbb && i == MAC_DECODE_OFFSET - 1)
+                {
+                    offset = i % 16 + 1;
+                    Console.Write($"\nBitmaps:");
+                    foreach (var p in GetMacBitmaps(fileArray[MAC_BITMAP_OFFSET..MAC_DECODE_OFFSET]))
+                    {
+                        Console.Write($"{p:b8} ");
+                    }
+                    Console.Write($"\n{(i - offset + 1):x3} | ");
+                    for (ushort j = 0; j < offset; j++)
+                    {
+                        Console.Write("-- ");
+                    }
                 }
             }
             i++;
@@ -676,6 +735,13 @@ partial class SASTester
                 image = DecodeC64Pic(fileArray, toFile);
             else if (pcType == IbmAbb)
                 image = DecodeIBMPic(fileArray, toFile);
+            else if (pcType == MacAbb)
+            {
+                if (macPackBits)
+                    image = DecodeMacPackBits(fileArray, toFile);
+                else
+                    image = DecodeMacPic(fileArray, toFile);
+            }
 
             if (image.Width > 1)
             {
@@ -689,7 +755,7 @@ partial class SASTester
                 else if (doSixel)
                 {
                     Console.WriteLine();
-                    Console.WriteLine(Sixel.Encode(image.CloneAs<Rgba32>(), new Size(width * 2 * SIXEL_ZOOM, height * SIXEL_ZOOM)).ToArray());
+                    Console.WriteLine(Sixel.Encode(image.CloneAs<Rgba32>(), new Size(width * sixelZoomW, height * sixelZoomH)).ToArray());
                     Console.WriteLine();
                 }
                 else // ANSI art
@@ -701,7 +767,7 @@ partial class SASTester
         }
     }
 
-    private static ushort MakeC64FourColorMap(byte[] data, int section, ref List<(int, int, int, int)> map)
+    private static ushort MakeC64ColorMap(byte[] data, int section, ref List<(int, int, int, int)> map)
     {
         ushort rc;
         var dataLength = data.Length;
@@ -788,7 +854,7 @@ partial class SASTester
         if (width < 1 || width > AII_MAX_WIDTH || height < 1 || height > AII_MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic} {AppleName}{OutOfRange}{width}x{height}.");
+                Console.WriteLine($"\n{NotAPic}{AppleName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
@@ -1116,8 +1182,7 @@ partial class SASTester
                     }
                 });
                 Console.WriteLine();
-                Console.WriteLine(Sixel.Encode(planeImage.CloneAs<Rgba32>(), new Size(width * 2 * SIXEL_ZOOM, height * SIXEL_ZOOM)).ToArray());
-                //planeImage.SaveAsPng(Path.Combine("ast-test" + plane + ".png"));
+                Console.WriteLine(Sixel.Encode(planeImage.CloneAs<Rgba32>(), new Size(width, height)).ToArray());
             }
         }
 
@@ -1157,7 +1222,7 @@ partial class SASTester
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic} {CommodoreName}{OutOfRange}{width}x{height}");
+                Console.WriteLine($"\n{NotAPic}{CommodoreName}{OutOfRange}{width}x{height}");
             return new(1, 1);
         }
 
@@ -1186,7 +1251,7 @@ partial class SASTester
         if (sectionData.Count < 4)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic} {CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
+                Console.WriteLine($"\n{NotAPic}{CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
             return new(1, 1);
         }
 
@@ -1205,13 +1270,13 @@ partial class SASTester
         }
 
         // 2. Parse Sections 1 and 2 into a List of color data, one entry for each 4x8 block
-        ushort rc = MakeC64FourColorMap(sectionData[1], 1, ref colorMap);
+        ushort rc = MakeC64ColorMap(sectionData[1], 1, ref colorMap);
         if (rc == 0)
-            rc = MakeC64FourColorMap(sectionData[2], 2, ref colorMap);
+            rc = MakeC64ColorMap(sectionData[2], 2, ref colorMap);
         if (rc != 0)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic} {CommodoreName} image: run-length overflow.");
+                Console.WriteLine($"\n{NotAPic}{CommodoreName} image: run-length overflow.");
             return new(1, 1);
         }
 
@@ -1324,13 +1389,13 @@ partial class SASTester
         if (palette > 1)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}n {IbmName} image: palette is {palette} (should be zero or one).");
+                Console.WriteLine($"\n{NotAPic}{IbmName} image: palette is {palette} (should be zero or one).");
             return new(1, 1);
         }
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}n {IbmName}{OutOfRange}{width}x{height}.");
+                Console.WriteLine($"\n{NotAPic}{IbmName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
@@ -1429,6 +1494,196 @@ partial class SASTester
                         row[x] = color;
                     else
                         row[x] = CGAtoRGB(IBM_FAIL_COLOR, 1);
+                }
+            }
+        });
+
+        return img;
+    }
+
+    public static byte[] ToNibbleArray(byte[] data)
+    {
+        if (data == null)
+            return [];
+
+        byte[] nibbles = new byte[data.Length * 2];
+
+        for (int i = 0; i < data.Length; i++)
+        {
+            nibbles[i * 2] = (byte)(data[i] >> 4);
+            nibbles[i * 2 + 1] = (byte)(data[i] & 0x0F);
+        }
+
+        return nibbles;
+    }
+
+    public static List<byte> GetMacBitmaps(byte[] bitmapData)
+    {
+        List<byte> bitmaps = [];
+
+        // The two bitmap sections are reversed
+        for (var b = 8; b < 16; b++)
+        {
+            bitmaps.Add(bitmapData[b]);
+        }
+        for (var b = 0; b < 8; b++)
+        {
+            bitmaps.Add(bitmapData[b]);
+        }
+
+        return bitmaps;
+    }
+
+    private static Image<Rgb24> DecodeMacPackBits(byte[] fileData, bool toFile)
+    {
+        int width = (fileData[0] << 8) | fileData[1];
+        int height = (fileData[2] << 8) | fileData[3];
+
+        int bytesPerRow = width / 8;
+        int expectedUncompressedSize = bytesPerRow * height;
+
+        byte[] compressedData = fileData[4..];
+        List<byte> uncompressedData = [];
+
+        int i = 0;
+        // Decompress the PackBits data
+        while (i < compressedData.Length && uncompressedData.Count < expectedUncompressedSize)
+        {
+            sbyte header = (sbyte)compressedData[i++];
+
+            if (header >= 0)
+            {
+                // Literal run of (header + 1) bytes
+                int count = header + 1;
+                for (int j = 0; j < count && i < compressedData.Length; j++)
+                {
+                    uncompressedData.Add(compressedData[i++]);
+                }
+            }
+            else if (header != -128)
+            {
+                // Repeated run of (-header + 1) bytes
+                int count = -header + 1;
+                byte b = compressedData[i++];
+                for (int j = 0; j < count; j++)
+                {
+                    uncompressedData.Add(b);
+                }
+            }
+        }
+
+        // Translate 1bpp uncompressed data into an ImageSharp image
+        var img = new Image<Rgb24>(width, height);
+        img.ProcessPixelRows(accessor =>
+        {
+            for (var y = 0; y < accessor.Height; y++)
+            {
+                var rowSpan = accessor.GetRowSpan(y);
+                int rowOffset = y * bytesPerRow;
+
+                for (var x = 0; x < accessor.Width; x++)
+                {
+                    int byteIndex = rowOffset + (x / 8);
+                    if (byteIndex < uncompressedData.Count)
+                    {
+                        byte pixelByte = uncompressedData[byteIndex];
+
+                        // MSB is the left-most pixel in Mac graphics
+                        int bitIndex = 7 - (x % 8);
+                        bool isSet = ((pixelByte >> bitIndex) & 1) == 1;
+
+                        rowSpan[x] = isSet ? Color.Black : Color.White;
+                    }
+                }
+            }
+        });
+
+        return img;
+    }
+
+    public static Image<Rgb24> DecodeMacPic(byte[] fileData, bool toFile)
+    {
+        Dictionary<(int, int), Rgb24> pixmap = [];
+        List<byte> bitmaps = GetMacBitmaps(fileData[MAC_BITMAP_OFFSET..MAC_DECODE_OFFSET]);
+
+        int width = (fileData[0] << 8) | fileData[1];
+        int height = (fileData[2] << 8) | fileData[3];
+        bool rotated = fileData[5] != 0;
+
+        var x = 0;
+        var y = 0;
+
+        //if (!toFile) Console.Write("\n000 | ");
+        if (!doSixel && !toFile) Console.WriteLine();
+
+        var nibbles = ToNibbleArray(fileData[MAC_DECODE_OFFSET..]);
+        var pattern = MAC_FAIL_PATTERN;
+
+        for (var n = 0; n < nibbles.Length - 1; n++)
+        {
+            var runLength = 1;
+            var nib = nibbles[n];
+            pattern = bitmaps[nib];
+
+            if (nib < 8)
+                runLength = nibbles[++n];
+
+            if ((nib == 0 || nib == 8) && n < nibbles.Length - 2)
+            {
+                //if (!toFile) Console.Write($"*{nib} LIT* ");
+                nib = (byte)((nibbles[++n] << 4) | nibbles[++n] & 0x0F);
+                pattern = nib;
+                //if (!toFile) Console.Write($"{nib:x2} {pattern:b8} x{runLength} | ");
+            }
+            //else
+            //    if (!toFile) Console.Write($"{nib:x1} {pattern:b8} x{runLength} | ");
+
+            for (var l = 0; l < runLength; l++)
+            {
+                for (var b = 7; b >= 0; b--)
+                {
+                    bool bit = ((pattern >> b) & 1) == 1;
+                    if (rotated)
+                    {
+                        pixmap[(x, y++)] = bit ? Color.Black : Color.White;
+                        if (y >= height)
+                        {
+                            //if (!toFile) Console.Write($"\n\n{y:d3} | ");
+                            y = 0;
+                            x++;
+                            if (x >= width)
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        pixmap[(x++, y)] = bit ? Color.Black : Color.White;
+                        if (x >= width)
+                        {
+                            //if (!toFile) Console.Write($"\n\n{y:d3} | ");
+                            x = 0;
+                            y++;
+                            if (y >= height)
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        //if (!toFile)
+        //    Console.WriteLine($"\nLast x:{x}/{width}, Last y:{y}/{height}, {(rotated ? "Rotated 270°" : "Rotated 0°")}");
+
+        var img = new Image<Rgb24>(width, height);
+        img.ProcessPixelRows(accessor =>
+        {
+            for (var y = 0; y < accessor.Height; y++)
+            {
+                var row = accessor.GetRowSpan(y);
+                for (var x = 0; x < row.Length; x++)
+                {
+                    if (pixmap.TryGetValue(new(x, y), out var pixel))
+                        row[x] = pixel;
                 }
             }
         });

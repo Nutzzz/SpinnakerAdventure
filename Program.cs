@@ -1330,7 +1330,7 @@ partial class SASTester
             {
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == MacAbb)
                     Console.WriteLine($" X. {ExtractPdsMenu}");
-                if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb)
+                if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" P. {ExportPngMenu}");
                 if (pcType == AppleAbb || pcType == AtariAbb || pcType == CommodoreAbb || pcType == IbmAbb || pcType == MacAbb)
                     Console.WriteLine($" M. {ExportMidMenu}{ExpTag}");
@@ -1438,7 +1438,7 @@ partial class SASTester
                 */
                 case key3:
                     var opt = PicMenu;
-                    if (pcType == AtariAbb || pcType == MacAbb)
+                    if (pcType == MacAbb)
                         opt = $"{PicMenu}{ExpTag}";
                     Console.WriteLine(opt);
                     ShowPicFiles(AmazonAbb);
@@ -1574,7 +1574,7 @@ partial class SASTester
                 */
                 case key3:
                     var opt = PicMenu;
-                    if (pcType == AtariAbb || pcType == MacAbb)
+                    if (pcType == MacAbb)
                         opt = $"{PicMenu}{ExpTag}";
                     Console.WriteLine(opt);
                     ShowPicFiles(F451Abb);
@@ -1647,8 +1647,6 @@ partial class SASTester
                     break;
                 case key5:
                     var opt = PicMenu;
-                    if (pcType == AtariAbb)
-                        opt = $"{PicMenu}{ExpTag}";
                     Console.WriteLine(opt);
                     ShowPicFiles(AmberAbb);
                     break;
@@ -1712,7 +1710,7 @@ partial class SASTester
                     break;
                 case key4:
                     var opt = PicMenu;
-                    if (pcType == AtariAbb)
+                    if (pcType == MacAbb)
                         opt = $"{PicMenu}{ExpTag}";
                     Console.WriteLine(opt);
                     ShowPicFiles(PerryAbb);
@@ -1834,7 +1832,7 @@ partial class SASTester
                 */
                 case key3:
                     var opt = PicMenu;
-                    if (pcType == AtariAbb)
+                    if (pcType == MacAbb)
                         opt = $"{PicMenu}{ExpTag}";
                     Console.WriteLine(opt);
                     ShowPicFiles(IslandAbb);

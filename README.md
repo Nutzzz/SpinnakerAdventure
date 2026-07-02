@@ -144,7 +144,7 @@ The vocabulary files list all of the words the parser understands. Note that nea
 
 ## Tokenization in *Nine Princes*
 
-Presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the Amber location files, then that represents the number of the token word--just subtract `0x80`.
+Presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the *Nine Princes* location files, then that represents the number of the token word--just subtract `0x80`.
 
 The Tester Tool expands strings for *Nine Princes* automatically.
 
@@ -371,7 +371,7 @@ The developers had to use a thin blocky font with the C64 because of the limited
 
 At this point, I've managed to get almost all of the files decoded. There are still a few that are bugged partway through.
 
-It's a different format from IBM, but the header has similarities, though there are similar sets of three byte sequences. However, here thee file is divided into 4 different sections:
+It's a different format from IBM, but the header has similarities, though there are similar sets of three byte sequences. However, here the file is divided into 4 different sections:
 
 * Section 1: Header
 * Section 2: Tertiary Color
@@ -421,7 +421,7 @@ You'll see that in this case `0` is the tertiary color for the first 47 4x8 bloc
 
 The Apple II ports use 280x192 "HIRES" resolution, with 6 colors. The Apple II is an odd duck; it's actually monochrome, but the pixel layout in conjunction with NTSC color burst signals results in the colors being displayed.
 
-I've mostly got this one figured out. There's a couple of files that are skewed, and several from *Nine Princes* are cut off near the end (though in the latter case it could be the PDS extraction is to blame).
+I've mostly got this one figured out. There's a couple of files that are skewed, and many from *Nine Princes* are cut off at the end (though in that case it could be the PDS extraction is to blame).
 
 The initial header has 7 bytes (one additional compared to PC). I'm currently not sure of the purpose of these other than the width and height at address 0x05 and 0x06.
 
@@ -454,7 +454,7 @@ When converting to PNG, I'm not currently trying to produce an image with any re
 
 ### Atari ST graphics format
 
-![f451-ast-screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![amb-ast-screenshot](images/amb-ast-screenshot.png "Nince Princes in Amber for Atari ST screenshot")
+![f451-ast-screenshot](images/f451-ast-screenshot.png "Fahrenheit 451 for Atari ST screenshot") ![amb-ast-screenshot](images/amb-ast-screenshot.png "Nine Princes in Amber for Atari ST screenshot")
 
 The Atari ports use their low resolution 320x200 mode, and like IBM most pictures are multiplied by 2 across the horizontal to fill the screen.
 
@@ -516,11 +516,21 @@ This results in a bitmap value of `0b_1010` (10) for the corresponding pixel, wh
 
 ![f451-mac-screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
 
-The Mac ports use a similar art style to the other ports, but in a higher resolution--though the full screen resolution is 512x342, the game only uses 480x288--and in black-and-white only (not even grayscale), as that's all that the first Macs supported.
+The Mac ports use a similar art style to the other ports, but in a higher resolution--though the full screen resolution is 512x342, the game only uses 480x300--and in black-and-white only (not even grayscale), as that's all that the first Macs supported.
 
-Based on the prevalence of the basic stippling patterns in the images, I suspect the files are lines and pattern fills rather than bitmaps, but that could also just be an artifact of how they were drawn.
+For all three games, the first two bytes are the width in pixels, and the next two are the height.
 
-The first two bytes are the width in pixels, and the next two are the height. 0xE seems to always be `00`. I'm not sure about anything else; I haven't seen any obvious patterns just looking at the hex contents and doing comparisons, but I do note that in the files I've been looking at, the values `78`-`8F` are very well-represented, as is `EF`-`FF`, values where the second nibble is `2` or `8`, as well as `13`, `2F`, and `77`.
+For the *Fahrenheit 451* images, Spinnaker just used a standard Macintosh RLE format called PackBits. The Tester Tool extracts these files too, but there are several implementations available [elsewhere](https://github.com/skirridsystems/packbits).
+
+As for *Amazon* and *Dragonworld*, they use a custom format:
+
+Address 0x04 is always `00`, and address 0x05 is either `00` or `01`; when it is `01`, the picture is rotated by 270&deg; (i.e., 90&deg; counter-clockwise), which I'm guessing is about capitalizing on vertical run-length encoding when horizontal encoding would be less effective.
+
+The range from address 0x06 to 0x15 is a bitmap lookup table. There are two 8-byte sections, but the sections are reversed when referenced, i.e., index 2 at address 0x07 is referenced by `A`, and index 10 at address 0x11 is `2`. You'll find that the unused values at indices 0 and 8 are always `00`.
+
+The picture data begins at address 0x16, and every nibble needs to be considered separately. If a nibble is less than `8` (including `0`), then the following nibble is a run-length. If the nibble is either `0` or `8`, then the next two nibbles (in the case of `0`, the next two *after* the run-length) are used as a literal bitmap. If the nibble was `1`-`7` (followed by a run-length) or `9`-`F` (without a run-length), then that is the index of a byte in the lookup table.
+
+And that's it! You now have a series of bytes where each is an 8-pixel wide stride, laid out horizontally (or vertically if rotated). This being a Mac, `0` is white and `1` is black.
 
 ### MSX graphics format
 
