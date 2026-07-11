@@ -8,7 +8,7 @@
 
 ## Introduction
 
-I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" (SAS) or its \"Spinnaker Adventure Language\" (SAL), used in creating 8 adventure games published by Spinnaker's imprints [Windham Classics](https://en.wikipedia.org/wiki/Windham_Classics) and [Trillium/Telarium](https://en.wikipedia.org/wiki/Telarium) [the name changed to the latter because of a trademark dispute]. This development company is somewhat unique as all of their games are based on books (though Shadowkeep stretched that definition). Besides the *Wikipedia* article linked above, there is some interesting in-depth historical background that can be found at Jimmy Maher's *filfre.net*: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/) about "bookware" generally, with pieces about most of these games specifically, and in some cases the authors and books on which they are based; and a later article that focuses on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/), a central figure in the development of these games (and the co-author of the book on which the *Dragonworld* game was based).
+I wasn't able to find any technical information on the web pertaining to [Spinnaker Software](https://en.wikipedia.org/wiki/Spinnaker_Software)'s \"Spinnaker Adventure System\" (SAS) or its \"Spinnaker Adventure Language\" (SAL), used in creating 8 adventure games published by Spinnaker's imprints [Windham Classics](https://en.wikipedia.org/wiki/Windham_Classics) and [Trillium/Telarium](https://en.wikipedia.org/wiki/Telarium) [the name changed to the latter because of a trademark dispute]. This development company is somewhat unique as all of their games are based on books (though *Shadowkeep* stretched that definition). Besides the *Wikipedia* article linked above, there is some interesting in-depth historical background that can be found at Jimmy Maher's *filfre.net*: a series of articles beginning with [this one](https://www.filfre.net/2013/09/bookware/) about "bookware" generally, with pieces about most of these games specifically, and in some cases the authors and books on which they are based; and a later article that focuses on [Byron Preiss](https://www.filfre.net/2022/09/byron-preisss-games-or-the-perils-of-the-electronic-book/), a central figure in the development of these games (and the co-author of the book on which the *Dragonworld* game was based).
 
 ![f451-ibm-screenshot](images/f451-ibm-screenshot.png "Fahrenheit 451 for IBM PC/PCjr screenshot") ![tri-ibm-screenshot](images/tri-ibm-screenshot.png "Treasure Island for IBM PC/PCjr screenshot")
 
@@ -88,7 +88,7 @@ An Amiga magazine apparently reviewed *Perry Mason* (which is referenced by [the
 
 ### MSX ports
 
-Finally there's the Spanish-only remakes for MSX of all 8 games published by a different company, Idealogic. The art was redrawn (or in some cases recaptured from photos). I'm not sure whether it's a different engine altogether.
+Finally there's the Spanish-only remakes for MSX of all 8 games published by a different company, Idealogic. The art was redrawn (or in some cases captured from photos). I'm not sure whether it's a different engine altogether.
 
 I find it difficult to test these; the parser is hard enough to deal with when you're fluent in the language. Trying to use Google Translate as an intermediary is quite painful!
 
@@ -98,11 +98,11 @@ I find it difficult to test these; the parser is hard enough to deal with when y
 
 *Amazon* was purchased from Michael Crichton as a mostly complete game, though at that point it was based on his book, *Congo*. However, Crichton didn't realize that when he sold the movie rights, he had actually sold all adaptation rights. The *Congo* movie wouldn't actually be released until 1995.
 
-So the game's setting was changed from Africa to South America, and the ape that could use sign language was changed to a talking parrot. There were some oversights, like the inclusion of an incident involving hippopotamuses; hippos are not native to South America (though some escaped into the wilds from the notorious Pablo Escobar's zoo in the '90s)!
+So the game's setting was changed at the last minute from Africa to South America, and the ape that could use sign language was changed to a talking parrot. There were some oversights, like the inclusion of an incident involving hippopotamuses; hippos are not native to South America (though some escaped into the wilds from the notorious Pablo Escobar's zoo in the '90s)!
 
 The game was written in Apple assembly, and was released in its native form, and I'm unable to dump the file contents; presumably the pictures are included in the binary. The other ports were adapted into SAS but from what I've read some features were apparently lost in translation.
 
-The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this on the Atari and Macintosh ports.
+The text was in all-caps (ungh!), and the initial ports to Commodore and IBM were as well. Thankfully, they fixed this for the Atari and Macintosh ports.
 
 ### Other non-SAS games
 
@@ -140,11 +140,11 @@ For some reason, the pictures and music for AMZAST, AMBAST, and AMBAII have been
 
 ## Vocabularies
 
-The vocabulary files list all of the words the parser understands. Note that nearly all words are truncated, but the game can be played this way, e.g. "EXAM CHAL" will examine the chalice. For DGW & RDV, the vocabularies are embedded in the .EXE files.
+The vocabulary files list all of the words the parser understands. Note that nearly all words are truncated, but the game can be played this way, e.g. "EXAM CHAL" will examine the chalice. For *Dragonworld* and *Rama*, the vocabularies are embedded in the .EXE files.
 
 ## Tokenization in *Nine Princes*
 
-Presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which can be created a dictionary with a serialized index. If a char is `0x80` or greater within any of the string lists from the *Nine Princes* location files, then that represents the number of the token word--just subtract `0x80`.
+Presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which a dictionary can be created with a serialized index. If a char is `0x80` or greater within any of the string lists from the *Nine Princes* location files, then that represents the number of the token word--just subtract `0x80`.
 
 The Tester Tool expands strings for *Nine Princes* automatically.
 
@@ -223,11 +223,7 @@ For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) f
 
 Graphics in SAS games are either placed at the top in landscape orientation (often multiple small picture files at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width, in each case leaving a good amount of space for text. *Amazon* is laid out differently from the others because of its development history, and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 160x160), which leaves much less room for text.
 
-The Tester Tool permits you to export all pictures to .PNG from the Apple II, Commodore 64, and IBM ports of all 8 games. You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of [Windows Terminal](https://apps.microsoft.com/detail/9n0dx20hk701?hl=en-US&gl=US)), and if not, in ANSI block characters (though in that case they are likely to be cropped unless you shrink your font and/or enlarge your console size). Note that the Tester's list of graphics files attempts to remove files that aren't graphics files, but there may still be a few false positives.
-
-### Animations
-
-Some of the graphic files involve simple animations, some of which that are a series of pictures files, and some that appear to be compiled into a single file. I haven't yet done an analysis of those, but I'd like to convert these to an .APNG file.
+The Tester Tool permits you to export all pictures from all 8 games to .PNG from each port (except MSX). You can also get a preview of an individual file with Sixel, if your terminal supports it (e.g. recent versions of [Windows Terminal](https://apps.microsoft.com/detail/9n0dx20hk701?hl=en-US&gl=US)), and if not, in ANSI block characters (though in that case they are likely to be cropped unless you shrink your font and/or enlarge your console size). Note that the Tester's list of graphics files attempts to remove any non-graphics files, but there may be false positives.
 
 ### IBM PC/PCjr graphics format
 
