@@ -859,8 +859,10 @@ partial class SASTester
         {
             if (abbrev == AmazonAbb || abbrev == AllGamesAbb)
             {
-                pdsFiles.AddRange([Path.Combine(RscPath, "AMZMAC", "ctxa1.pds"), Path.Combine(RscPath, "AMZMAC", "musa1.pds"),
-                                Path.Combine(RscPath, "AMZMAC", "pixa1.pds"), Path.Combine(RscPath, "AMZMAC", "pixa2.pds")]);
+                pdsFiles.AddRange([Path.Combine(RscPath, "AMZMAC", "ctxa1.pds"), Path.Combine(RscPath, "AMZMAC", "ctxb1.pds"),
+                                Path.Combine(RscPath, "AMZMAC", "musa1.pds"), Path.Combine(RscPath, "AMZMAC", "pixa1.pds"),
+                                Path.Combine(RscPath, "AMZMAC", "pixa2.pds"), Path.Combine(RscPath, "AMZMAC", "pixb1.pds"),
+                                Path.Combine(RscPath, "AMZMAC", "pixb2.pds"), Path.Combine(RscPath, "AMZMAC", "pixb3.pds")]);
             }
             if (abbrev == DragonAbb || abbrev == AllGamesAbb)
             {
