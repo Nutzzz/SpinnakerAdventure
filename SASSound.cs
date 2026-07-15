@@ -50,26 +50,9 @@ partial class SASTester
             input = Console.ReadLine();
             if (!string.IsNullOrEmpty(input))
             {
-                string filePath;
-                var gameDir = abbrev + pcType;
-                if (pcType == AtariAbb)
-                    filePath = Path.Combine(RscPath, gameDir, abbrev, input);
-                else
-                    filePath = Path.Combine(RscPath, gameDir, input);
-                if (!File.Exists(filePath))
-                {
-                    Console.WriteLine($"{FileError} {filePath}");
-                    gameDir = abbrev;
-                    if (pcType == AtariAbb)
-                        filePath = Path.Combine(RscPath, gameDir, abbrev, input);
-                    else
-                        filePath = Path.Combine(RscPath, gameDir, input);
-                    if (!File.Exists(filePath))
-                    {
-                        break;
-                    }
-                }
-                PlaySound(abbrev, filePath);
+                var filePath = GetMediaFilePath(abbrev, input);
+                if (File.Exists(filePath))
+                    PlaySound(abbrev, filePath);
             }
             else
                 Console.WriteLine(Divider);
@@ -92,12 +75,11 @@ partial class SASTester
             if (pcType == MacAbb && !macGames.Contains(abbrev))
                 continue;
             var sndFiles = GetMediaFileList(abbrev, true);
-            foreach (var file in sndFiles)
+            foreach (var sndFile in sndFiles)
             {
-                var sub = "";
-                if (pcType == AtariAbb)
-                    sub = abbrev;
-                PlaySound(abbrev, Path.Combine(RscPath, abbrev + pcType, sub, file), toFile: true);
+                var filePath = GetMediaFilePath(abbrev, sndFile);
+                if (File.Exists(filePath))
+                    PlaySound(abbrev, filePath, toFile: true);
             }
         }
     }

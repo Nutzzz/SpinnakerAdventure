@@ -360,15 +360,9 @@ partial class SASTester
             if (!File.Exists(funcPath))
             {
                 Console.Error.WriteLine($"{FileError} {funcPath}");
-                gameDir = abbrev;
-                if (pcType == AtariAbb)
-                    funcPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".T");
-                else
-                    funcPath = Path.Combine(RscPath, gameDir, abbrev + ".T");
+                funcPath = Path.Combine(RscPath, abbrev, abbrev + ".T");
                 if (!File.Exists(funcPath))
-                {
                     return;
-                }
             }
             var t = File.ReadAllBytes(funcPath);
             if (t.Length < (Offset + 1))
@@ -411,15 +405,9 @@ partial class SASTester
             if (!File.Exists(vocabPath))
             {
                 Console.Error.WriteLine($"{FileError} {vocabPath}");
-                gameDir = abbrev;
-                if (pcType == AtariAbb)
-                    vocabPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".V");
-                else
-                    vocabPath = Path.Combine(RscPath, gameDir, abbrev + ".V");
+                vocabPath = Path.Combine(RscPath, abbrev, abbrev + ".V");
                 if (!File.Exists(vocabPath))
-                {
                     return;
-                }
             }
             var vocab = File.ReadAllBytes(vocabPath);
             foreach (var word in Split(vocab[Offset..], vDelim, range: true))
@@ -455,10 +443,10 @@ partial class SASTester
             {
                 if (!File.Exists(filePath))
                 {
-                    Console.WriteLine($"{FileError} {filePath}");
                     filePath = GetStringDir(abbrev, abbrev, locName);
                     if (!File.Exists(filePath))
                     {
+                        Console.Error.WriteLine($"{FileError} {filePath}");
                         continue;
                     }
                 }
@@ -470,9 +458,9 @@ partial class SASTester
                 foreach (var entry in ProcessStrings(array, tokens))
                 {
                     var found = false;
-                    foreach (var file in picFiles)
+                    foreach (var picFile in picFiles)
                     {
-                        if (entry.Equals(file, StringComparison.OrdinalIgnoreCase))
+                        if (entry.Equals(picFile, StringComparison.OrdinalIgnoreCase))
                         {
                             found = true;
                             Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} [gfx]");
@@ -481,9 +469,9 @@ partial class SASTester
                     }
                     if (!found)
                     {
-                        foreach (var file in sndFiles)
+                        foreach (var sndFile in sndFiles)
                         {
-                            if (entry.Equals(Path.GetFileNameWithoutExtension(file), StringComparison.OrdinalIgnoreCase))
+                            if (entry.Equals(Path.GetFileNameWithoutExtension(sndFile), StringComparison.OrdinalIgnoreCase))
                             {
                                 found = true;
                                 Console.WriteLine($"{i:x3}: {entry.ToUpperInvariant()} [sfx]");
@@ -530,7 +518,12 @@ partial class SASTester
                 filePath = Path.Combine(RscPath, gameDir, abbrev, locName + ".CST");
         }
         else if (pcType == MacAbb)
-            filePath = Path.Combine(RscPath, gameDir, "PDS", locName);
+        {
+            var macPdsDir = Path.Combine(RscPath, gameDir, "PDS");
+            if (!Directory.Exists(macPdsDir))
+                ExaminePdsFiles();
+            filePath = Path.Combine(macPdsDir, locName);
+        }
         else if (abbrev == PerryAbb)
         {
             filePath = Path.Combine(RscPath, gameDir, locName + ".STR");
@@ -567,7 +560,6 @@ partial class SASTester
         {
             if (!File.Exists(exePath))
             {
-                Console.Error.WriteLine($"{FileError} {exePath}");
                 gameDir = abbrev;
                 if (pcType == AtariAbb)
                     exePath = Path.Combine(RscPath, gameDir, abbrev + ".PRG");
@@ -579,6 +571,7 @@ partial class SASTester
                     exePath = Path.Combine(RscPath, gameDir, abbrev);
                 if (!File.Exists(exePath))
                 {
+                    Console.Error.WriteLine($"{FileError} {exePath}");
                     return exeDict;
                 }
             }
@@ -629,10 +622,10 @@ partial class SASTester
         {
             if (!File.Exists(locPath))
             {
-                Console.Error.WriteLine($"{FileError} {locPath}");
                 locPath = GetLocDir(abbrev, abbrev);
                 if (!File.Exists(locPath))
                 {
+                    Console.Error.WriteLine($"{FileError} {locPath}");
                     return locs;
                 }
             }
@@ -699,11 +692,7 @@ partial class SASTester
             if (!File.Exists(tokenPath))
             {
                 Console.Error.WriteLine($"{FileError} {tokenPath}");
-                gameDir = abbrev;
-                if (pcType == AtariAbb)
-                    tokenPath = Path.Combine(RscPath, gameDir, abbrev, abbrev + ".TOK");
-                else
-                    tokenPath = Path.Combine(RscPath, gameDir, abbrev + ".TOK");
+                tokenPath = Path.Combine(RscPath, abbrev, abbrev + ".TOK");
                 if (!File.Exists(tokenPath))
                 {
                     return tokens;
@@ -1294,6 +1283,28 @@ partial class SASTester
         return !isSnd;
     }
 
+    public static string GetMediaFilePath(string abbrev, string fileName)
+    {
+        var pds = false;
+        var sub = false;
+        if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
+            pds = true;
+        else if (pcType == AtariAbb)
+        {
+            sub = true;
+            if (abbrev == AmberAbb || abbrev == AmazonAbb)
+                pds = true;
+        }
+
+        var filePath = Path.Combine(RscPath, abbrev + pcType, sub ? abbrev : "", pds ? "PDS" : "", fileName);
+        if (File.Exists(filePath))
+            return filePath;
+        else
+            Console.Error.WriteLine($"{FileError} {filePath}");
+
+        return Path.Combine(RscPath, abbrev, sub ? abbrev : "", pds ? "PDS" : "", fileName);
+    }
+
     static void DoExit(string error = "")
     {
         if (!string.IsNullOrEmpty(error))
@@ -1411,7 +1422,7 @@ partial class SASTester
     {
         if (pcType == AppleAbb)
         {
-            Console.WriteLine(ErrorPrefix + AmazonName + NonSASError + AppleName);
+            Console.Error.WriteLine(ErrorPrefix + AmazonName + NonSASError + AppleName);
             return;
         }
         while (true)
@@ -1480,7 +1491,7 @@ partial class SASTester
     {
         if (pcType == AtariAbb)
         {
-            Console.WriteLine(ErrorPrefix + DragonName + NoPortError + AtariName);
+            Console.Error.WriteLine(ErrorPrefix + DragonName + NoPortError + AtariName);
             return;
         }
         while (true)
@@ -1616,7 +1627,7 @@ partial class SASTester
     {
         if (pcType == MacAbb)
         {
-            Console.WriteLine(ErrorPrefix + AmberName + NoPortError + MacName);
+            Console.Error.WriteLine(ErrorPrefix + AmberName + NoPortError + MacName);
             return;
         }
         while (true)
@@ -1685,7 +1696,7 @@ partial class SASTester
     {
         if (pcType == MacAbb)
         {
-            Console.WriteLine(ErrorPrefix + PerryName + NoPortError + MacName);
+            Console.Error.WriteLine(ErrorPrefix + PerryName + NoPortError + MacName);
             return;
         }
         while (true)
@@ -1743,12 +1754,12 @@ partial class SASTester
     {
         if (pcType == AtariAbb)
         {
-            Console.WriteLine(ErrorPrefix + RamaName + NoPortError + AtariName);
+            Console.Error.WriteLine(ErrorPrefix + RamaName + NoPortError + AtariName);
             return;
         }
         if (pcType == MacAbb)
         {
-            Console.WriteLine(ErrorPrefix + RamaName + NoPortError + MacName);
+            Console.Error.WriteLine(ErrorPrefix + RamaName + NoPortError + MacName);
             return;
         }
         while (true)
@@ -1805,7 +1816,7 @@ partial class SASTester
     {
         if (pcType == MacAbb)
         {
-            Console.WriteLine(ErrorPrefix + IslandName + NoPortError + MacName);
+            Console.Error.WriteLine(ErrorPrefix + IslandName + NoPortError + MacName);
             return;
         }
         while (true)
@@ -1865,12 +1876,12 @@ partial class SASTester
     {
         if (pcType == AtariAbb)
         {
-            Console.WriteLine(ErrorPrefix + OzName + NoPortError + AtariName);
+            Console.Error.WriteLine(ErrorPrefix + OzName + NoPortError + AtariName);
             return;
         }
         if (pcType == MacAbb)
         {
-            Console.WriteLine(ErrorPrefix + OzName + NoPortError + MacName);
+            Console.Error.WriteLine(ErrorPrefix + OzName + NoPortError + MacName);
             return;
         }
         while (true)

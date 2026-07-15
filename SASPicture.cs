@@ -138,9 +138,9 @@ partial class SASTester
             Console.WriteLine(Divider);
             return;
         }
-        foreach (var file in picFiles)
+        foreach (var picFile in picFiles)
         {
-            Console.WriteLine(file);
+            Console.WriteLine(picFile);
             fileFound = true;
         }
         if (!fileFound)
@@ -153,38 +153,9 @@ partial class SASTester
             input = Console.ReadLine();
             if (!string.IsNullOrEmpty(input))
             {
-                string filePath;
-                var gameDir = abbrev + pcType;
-
-                if (pcType == AtariAbb)
-                    filePath = Path.Combine(RscPath, gameDir, abbrev, input);
-                else
-                    filePath = Path.Combine(RscPath, gameDir, input);
-
-                if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
-                {
-                    string testFilePath = Path.Combine(RscPath, gameDir, "PDS", input);
-
-                    if (File.Exists(testFilePath))
-                        filePath = testFilePath;
-                }
-                else if (pcType == AtariAbb && (abbrev == AmberAbb || abbrev == AmazonAbb))
-                {
-                    string testFilePath = Path.Combine(RscPath, gameDir, abbrev, "PDS", input);
-
-                    if (File.Exists(testFilePath))
-                        filePath = testFilePath;
-                }
-
-                if (!File.Exists(filePath))
-                {
-                    Console.Error.WriteLine($"{FileError} {filePath}");
-                    gameDir = abbrev;
-                    filePath = Path.Combine(RscPath, gameDir, input);
-                    if (!File.Exists(filePath))
-                        break;
-                }
-                DrawPic(abbrev, filePath, toFile: false);
+                var filePath = GetMediaFilePath(abbrev, input);
+                if (File.Exists(filePath))
+                    DrawPic(abbrev, filePath, toFile: false);
             }
             else
                 Console.WriteLine(Divider);
@@ -206,19 +177,11 @@ partial class SASTester
             if (pcType == MacAbb && !macGames.Contains(abbrev))
                 continue;
             var picFiles = GetMediaFileList(abbrev, false);
-            foreach (var file in picFiles)
+            foreach (var picFile in picFiles)
             {
-                var sub = "";
-                if (pcType == MacAbb || (pcType == AppleAbb && abbrev == AmberAbb))
-                    sub = "PDS";
-                else if (pcType == AtariAbb)
-                {
-                    if (abbrev == AmazonAbb || abbrev == AmberAbb)
-                        sub = Path.Combine(abbrev, "PDS");
-                    else
-                        sub = abbrev;
-                }
-                DrawPic(abbrev, Path.Combine(RscPath, abbrev + pcType, sub, file), toFile: true);
+                var filePath = GetMediaFilePath(abbrev, picFile);
+                if (File.Exists(filePath))
+                    DrawPic(abbrev, filePath, toFile: true);
             }
         }
     }
@@ -854,7 +817,7 @@ partial class SASTester
         if (width < 1 || width > AII_MAX_WIDTH || height < 1 || height > AII_MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{AppleName}{OutOfRange}{width}x{height}.");
+                Console.Error.WriteLine($"\n{NotAPic}{AppleName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
@@ -1222,7 +1185,7 @@ partial class SASTester
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{CommodoreName}{OutOfRange}{width}x{height}");
+                Console.Error.WriteLine($"\n{NotAPic}{CommodoreName}{OutOfRange}{width}x{height}");
             return new(1, 1);
         }
 
@@ -1251,7 +1214,7 @@ partial class SASTester
         if (sectionData.Count < 4)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
+                Console.Error.WriteLine($"\n{NotAPic}{CommodoreName} image: 4 sections required, only {sectionData.Count} found.");
             return new(1, 1);
         }
 
@@ -1276,7 +1239,7 @@ partial class SASTester
         if (rc != 0)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{CommodoreName} image: run-length overflow.");
+                Console.Error.WriteLine($"\n{NotAPic}{CommodoreName} image: run-length overflow.");
             return new(1, 1);
         }
 
@@ -1389,13 +1352,13 @@ partial class SASTester
         if (palette > 1)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{IbmName} image: palette is {palette} (should be zero or one).");
+                Console.Error.WriteLine($"\n{NotAPic}{IbmName} image: palette is {palette} (should be zero or one).");
             return new(1, 1);
         }
         if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT)
         {
             if (!toFile)
-                Console.WriteLine($"\n{NotAPic}{IbmName}{OutOfRange}{width}x{height}.");
+                Console.Error.WriteLine($"\n{NotAPic}{IbmName}{OutOfRange}{width}x{height}.");
             return new(1, 1);
         }
         if (!toFile && !doSixel)
