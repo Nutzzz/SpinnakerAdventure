@@ -495,6 +495,7 @@ partial class SASTester
         else if (pcType == MacAbb)
             offset = MAC_BITMAP_OFFSET;  // For MAC, 0x06 to 0x15 have a palette of bitmap patterns
         ushort width = 0, height = 0, ibmPalette = 0xFF, ibmIntensity = 0xFF, ibmBgColor = 0xFF, macRotation = 0xFF, c64Unknown = 0xFF;
+        int c64Version = 0xFFFF;
         var macPackBits = abbrev == "F451";
         byte[] fileArray = [];
         var fg = ConsoleColor.Gray;
@@ -528,7 +529,7 @@ partial class SASTester
             Console.Write    ("----+------------------------------------------------");
         }
         byte lastB = 0;
-        var section = 0;
+        var c64Section = 1;
         foreach (var b in fileArray)
         {
             if (pcType == AppleAbb)
@@ -547,7 +548,11 @@ partial class SASTester
             }
             else if (pcType == CommodoreAbb)
             {
-                if (i == 4 && b < 0xC9)
+                if (i == 0)
+                    c64Version = b;
+                else if (i == 1)
+                    c64Version = c64Version << 8 | b;
+                else if (i == 4 && b < 0xC9)
                     height = b;
                 else if (i == 5 && b < 0xA1)
                     width = b;
@@ -646,21 +651,18 @@ partial class SASTester
                     }
                     // TODO: Section off the bitplanes
                 }
-                else if (pcType == CommodoreAbb && lastB == height && b == width) // Section breaks
+                else if (pcType == CommodoreAbb && i >= C64_DECODE_OFFSET - 1 && lastB == height && b == width) // Section breaks
                 {
-                    if (section > 0)
+                    if (c64Section == 1)
+                        Console.Write($"\n [Version: 0x{c64Version:x4}, WxH: {width}x{height}, Unknown: 0x{c64Unknown:x2}]");
+                    offset = i % 16 + 1;
+                    Console.WriteLine($"\nSection {c64Section}:");
+                    Console.Write($"{(i - offset + 1):x3} | ");
+                    for (ushort j = 0; j < offset; j++)
                     {
-                        if (section == 1)
-                            Console.Write($"\n [WxH: {width}x{height}, Unknown: {c64Unknown}]");
-                        offset = i % 16 + 1;
-                        Console.WriteLine($"\nSection {section}:");
-                        Console.Write($"\n{(i - offset + 1):x3} | ");
-                        for (ushort j = 0; j < offset; j++)
-                        {
-                            Console.Write("-- ");
-                        }
+                        Console.Write("-- ");
                     }
-                    section++;
+                    c64Section++;
                 }
                 else if (pcType == MacAbb && i == MAC_DECODE_OFFSET - 1)
                 {

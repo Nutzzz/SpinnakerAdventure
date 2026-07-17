@@ -1,4 +1,5 @@
 ﻿using System.IO.Compression;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace SASTester;
@@ -443,12 +444,10 @@ partial class SASTester
             {
                 if (!File.Exists(filePath))
                 {
+                    Console.Error.WriteLine($"{FileError} {filePath}");
                     filePath = GetStringDir(abbrev, abbrev, locName);
                     if (!File.Exists(filePath))
-                    {
-                        Console.Error.WriteLine($"{FileError} {filePath}");
                         continue;
-                    }
                 }
                 var i = 0;
                 var array = File.ReadAllBytes(filePath);
@@ -622,14 +621,16 @@ partial class SASTester
         {
             if (!File.Exists(locPath))
             {
+                Console.Error.WriteLine($"{FileError} {locPath}");
                 locPath = GetLocDir(abbrev, abbrev);
                 if (!File.Exists(locPath))
-                {
-                    Console.Error.WriteLine($"{FileError} {locPath}");
                     return locs;
-                }
             }
             var dir = File.ReadAllBytes(locPath);
+            if (pcType == AppleAbb)
+                dir = dir[3..];
+            else if (pcType == CommodoreAbb)
+                dir = dir[2..];
             foreach (var loc in Split(dir, locDelim))
             {
                 if (loc[0].Equals(LocEnd))
@@ -694,9 +695,7 @@ partial class SASTester
                 Console.Error.WriteLine($"{FileError} {tokenPath}");
                 tokenPath = Path.Combine(RscPath, abbrev, abbrev + ".TOK");
                 if (!File.Exists(tokenPath))
-                {
                     return tokens;
-                }
             }
             var tok = File.ReadAllBytes(tokenPath);
             if (tok.Length < (Offset + 1))
@@ -883,6 +882,7 @@ partial class SASTester
                 if (!File.Exists(pdsFile))
                 {
                     Console.Error.WriteLine($"{FileError} {pdsFile}");
+                    continue;
                 }
 
                 List<(string Name, string InName, int InBeginAddress, int InEndAddress)> inFiles = [];
@@ -1247,24 +1247,38 @@ partial class SASTester
         if (filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("IO", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("PARAM", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("PARK", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("STARTUP", StringComparison.OrdinalIgnoreCase))
+            filename.Equals("STARTUP", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("kern_c64", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("stage2", StringComparison.OrdinalIgnoreCase))
             return false;
-        if (abbrev == AmberAbb && (
+        if (filename.Equals("9 princess amber", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("AMBGLOB", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase)))
+            filename.Equals("AMBINIT", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("amazon", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("disk", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("fahrenheit 451", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("perry mason", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("rend.with rama", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("ENGINE_RO", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("LIGHTTXT", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("treasure island", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("wizard of oz", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        if (filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("TRIOPEN", StringComparison.OrdinalIgnoreCase) ||
+        if (filename.Equals("TRILLIUM", StringComparison.OrdinalIgnoreCase) ||
+            filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
             return isSnd;
         if (filename.StartsWith(abbrev) && (
             filename.EndsWith("OPEN", StringComparison.OrdinalIgnoreCase) ||
             filename.EndsWith("OPEN1", StringComparison.OrdinalIgnoreCase) ||
-            filename.EndsWith("OPEN2", StringComparison.OrdinalIgnoreCase)))
+            filename.EndsWith("OPEN2", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OP1", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OP2", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OP3", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OP4", StringComparison.OrdinalIgnoreCase) ||
+            filename.EndsWith("OP5", StringComparison.OrdinalIgnoreCase)))
             return isSnd;
 
         if (abbrev == F451Abb)

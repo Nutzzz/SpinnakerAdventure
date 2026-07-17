@@ -376,6 +376,8 @@ It's a different format from IBM, but the header has similarities, though there 
 
 The Sections are delimited by the two byte picture dimensions (e.g., `50 80` in the "hosptl" example).
 
+The header seems to start with a version number, either `00 10` for the first 4 published games, or `20 41` for the last four published games (*Oz* and the three from 1985).
+
 Like the IBM picture data, these are also divided into run-length encoded 3-byte sequences. Section 2 and 3 provide color data for the picture, divided into 4x8 blocks, laid out vertically, with the primary two colors in Section 3 and a tertiary color in Section 2.
 
 Section 3's three-byte sequence specifies two colors in the first and third bytes (each nibble representing a color from the C64 palette*), two run-lengths in the second byte (nibble 1 referencing byte 1's colors and nibble 2 referencing byte 3's colors). Each run-length is over a number of 4x8 blocks.
@@ -642,8 +644,12 @@ The Commodore 64 files I've analyzed are also very similar to the PCjr ones. The
 
 Note I have also heard at least one instance of the noise channel being used by the C64 in an emulator.
 
-There are an additional two bytes at the beginning of a file that are always `20 41` in the ones that I've looked at so far.
+There are an additional two bytes at the beginning of a file, which are the same as those at the start of the [graphics files](#commodore-64-graphics-format), either `00 10` or `20 41`, which I suspect is a version ID.
 
 The control code at the start of a channel is a bit different. It's still six bytes starting with `50 00`, but the next 4 control the waveform (and ADSR envelope?). Initially I thought the `80` in the sixth byte for IBM and Atari meant that it was both start and stop, but since it varies here it probably doesn't mean start at all. The third byte seems to always be `08` or `0F`. The latter seems to add a duplicate waveform (sawtooth maybe?) with the same pitch on top, though it only seems to work if it is followed by `40` (square wave); as the fourth byte is the waveform type: it seems that `10` is triangle and `20` is sawtooth; I believe `80` is white noise.
 
 C64 also has a final byte after the last `80` that varies: I've seen e.g., `00`, `01`, `02`, `81`, and `FF`.
+
+### Macintosh sound format
+
+The Macintosh files are once again very similar to the PCjr; in fact, all the ones I've examined are identical to the Atari.

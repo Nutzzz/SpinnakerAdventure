@@ -446,7 +446,7 @@ partial class SASTester
         byte timeOffset = 0x02;
         byte lensOffset = 0x0B;
         byte noteOffset = 0x1A;
-        var altSeq = false;
+        var atariAltSeq = false;
         var control = false;
         var keyChg = false;
         var dbl = false;
@@ -470,7 +470,7 @@ partial class SASTester
             noteOffset += 0x3;
         }
         else if (pcType == AtariAbb && (abbrev == "AMB" || abbrev == "PMN"))
-            altSeq = true;
+            atariAltSeq = true;
         else if (pcType == CommodoreAbb)
         {
             timeOffset += 0x2;
@@ -519,7 +519,7 @@ partial class SASTester
                 if (!control && b == 0x50)                  // New channel
                 {
                     newCh = true;
-                    if (altSeq)
+                    if (atariAltSeq)
                         newChAlt = true;
                     keyChg = false;
                     control = true;
@@ -538,7 +538,7 @@ partial class SASTester
                     }
 #endif
                 }
-                else if (altSeq && !control && b == 0x60)   // New channel for AMB & PMN on AST
+                else if (atariAltSeq && !control && b == 0x60)   // New channel for AMB & PMN on AST
                 {
                     newCh = true;
                     newChAlt = true;
