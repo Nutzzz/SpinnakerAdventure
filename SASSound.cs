@@ -254,11 +254,11 @@ partial class SASTester
             return;
         }
 
-        var multiTrack = 1;
+        var multiTrack = true;
         /*
         if (pcType == Apple2Abb ||
             (pcType == IbmAbb && Path.GetExtension(filePath).Equals(".IB", StringComparison.OrdinalIgnoreCase)))
-            multiTrack = 0;
+            multiTrack = false;
         */
         IList<MidiEvent> track = [];
 
@@ -267,14 +267,14 @@ partial class SASTester
         var ch = 0;
         var time = 0L;
 
-        MidiEventCollection events = new(multiTrack, TicksPerQtrNote);
+        MidiEventCollection events = new(multiTrack ? 1 : 0, TicksPerQtrNote);
 
         foreach (var (Pos, B, Ch, Note, Freq, Length, Patch) in notes)
         {
             var note = Note;
             if (Ch != ch)
             {
-                if (multiTrack == 1 && Ch < 17)
+                if (multiTrack && Ch < 17)
                 {
                     if (ch > 0)
                     {

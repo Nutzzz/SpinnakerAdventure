@@ -136,7 +136,7 @@ One file on disk 1 of each of the following games exists, but cannot be read or 
 
 ## PDS container files
 
-For some reason, the pictures and music for AMZAST, AMBAST, and AMBAII have been packed into files called GRAPHPDS and MUSICPDS. Additionally, all three Mac ports have a similarly packed set of files (with a different header format) with .pds extensions. See below for more information about the [PDS container format](#pds-container-format).
+For some reason, the pictures and music for AMZAST, AMBAST, and AMBAII have been packed into files called GRAPHPDS and MUSICPDS. Additionally, all three Mac ports have a similarly packed set of files (with a different header format) with .pds extensions. See below for more information about the [PDS container format](#pds-container-formats).
 
 ## Vocabularies
 
@@ -144,7 +144,7 @@ The vocabulary files list all of the words the parser understands. Note that nea
 
 ## Tokenization in *Nine Princes*
 
-Presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which a dictionary can be created with a serialized index. If a char is `0x80` or greater within any of the string lists from the *Nine Princes* location files, then that represents the number of the token word--just subtract `0x80`.
+For all ports other than MSX, presumably to save disk space, *Nine Princes* (only) uses a tokenizer of its 256 most common words to shrink the text strings a bit. Starting at address 0x102 of AMB.TOK is a list of words, from which a dictionary can be created with a serialized index. If a char is `0x80` or greater within any of the string lists from the *Nine Princes* location files, then that represents the number of the token word--just subtract `0x80`.
 
 The Tester Tool expands strings for *Nine Princes* automatically.
 
@@ -155,49 +155,51 @@ Some observations about the files used by these games follow in the table below.
 Most game strings and other data is found in the appropriate location files, with some general strings found in the executable. Thankfully, strings are ASCII-encoded (though AMB is [partially tokenized](#tokenization-in-nine-princes)).
 
 
-| filename                | games           | platforms              | description                                                                                                                                            |
-| ------------------------- | ----------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| \<abbrev\>              | all             | all                    | Strings and data used globally.                                                                                                                        |
-| **DEFAULTS.CST**        | AMB only        | AST only               | I'm guessing these are strings and data used globally.                                                                                                 |
-| **0** \| **1**          | DGW & RDV       | IBM only               | I'm guessing these are strings and data used globally across a specific disk.                                                                          |
-| **A** \| **B**          | AMB, F451, PMN  | IBM only               | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                 |
-| **A** \| **B** \| **C** | all             | MSX only               | I'm guessing these identify the current disk.                                                                                                          |
-| **AMBGLOB**             | AMB only        | AII,C64,IBM,MSX        | Additional strings and data used globally for AMB.                                                                                                     |
-| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC        | Additional help particular to this game.                                                                                                               |
-| **VOLT**                | all             | AII,C64,IBM,MAC        | Identifies the current disk.                                                                                                                           |
-| **SAVED**               | all             | all                    | Saved game file.                                                                                                                                       |
-| **\*.DIB**              | F451 & RDV only | MSX only               | Maybe[graphics files](#picture-format) for F451 and RDV on MSX?                                                                                        |
-| **DIR**                 | all but AMB,PMN | all                    | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
-| \<abbrev\>**.DAP**      | AMB & PMN only  | AII only               | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on AII.                                                                            |
-| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only               | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on IBM.                                                                            |
-| \<abbrev\>**.DC6**      | AMB & PMN only  | C64 only               | Directory of locations with disk numbers ("a" or "b") for AMB & PMN on C64.                                                                            |
-| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only               | Directory of locations with disk numbers ("a" or "b").                                                                                                 |
-| **\*.GST**              | PMN & TRI only  | AST only               | [Graphics files](#picture-format) for PMN and TRI on Atari ST.                                                                                         |
-| **OUTSIDE**             | AMB only        | AST only               | Additional directory of locations with disk numbers ("a" or "b") for AMB on AST.                                                                       |
-| \<abbrev\>**.EXE**      | all             | IBM only               | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.             |
-| \<abbrev\>**.PRG**      | all             | AST only               | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.        |
-| **AVENTURA.COM**        | all             | MSX only               | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                              |
-| **TRILL**               | all             | AII & C64 only         | Maybe the game executable?                                                                                                                             |
-| **TRILLIUM**            | all             | AII & C64 only         | An intro[sound file](#sound-format)                                                                                                                    |
-| **\*.STR**              | PMN             | AST, C64, & IBM        | Strings for some location files have been separated into a separate file.                                                                              |
-| **\*.STR**              | AMB, AMZ, & PMN | MSX only               | Some game strings that have been separated into separate files on MSX.                                                                                 |
-| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM        | Maybe a list of game functions?                                                                                                                        |
-| \<abbrev\>**.TOK**      | AMB only        | AII,AST,C64,IBM        | [Token file](#tokenization-in-nine-princes).                                                                                                           |
-| \<abbrev\>**.V**        | all but DGW,RDV | all but AST            | [Vocabulary file](#vocabularies).                                                                                                                      |
-| **\*.IB** \| **\*.JR**  | all             | IBM only               | [Sound files](#sound-format) in IBM PC and PCjr formats.                                                                                               |
-| **\*.MST**              | PMN & TRI only  | AST only               | [Sound files](#sound-format) for PMN and TRI on Atari ST.                                                                                              |
-| **\*.FEN**              | AMB only        | all                    | Data specific to the fencing (swordfighting) events for AMB.                                                                                           |
-| **\*.STR**              | PMN only        | all                    | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                 |
-| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only               | Location files.                                                                                                                                        |
-| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only         | [Packed graphics files](#pds-container-format).                                                                                                        |
-| **MUSICPDS**            | AMB & AMZ only  | AII & AST only         | [Packed sound files](#pds-container-format).                                                                                                           |
-| **\*.PDS**              | all             | MAC only               | [Packed graphics, sound, and strings/data files](#pds-container-format).                                                                               |
-| **\*.** (no extension)  | all             | IBM only               | Mostly location or[graphics](#picture-format) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
-| **\*.** (no extension)  | all             | all but IBM & some AST | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                      |
+| filename                | games           | platforms              | description                                                                                                                                              |
+| ------------------------- | ----------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \<abbrev\>              | all             | all                    | Strings and data used globally.                                                                                                                          |
+| **DEFAULTS.CST**        | AMB only        | AST only               | I'm guessing these are strings and data used globally.                                                                                                   |
+| **0** \| **1**          | DGW & RDV       | IBM only               | I'm guessing these are strings and data used globally across a specific disk.                                                                            |
+| **A** \| **B**          | AMB, F451, PMN  | IBM only               | I'm guessing these are strings and data used globally across a specific disk. On some ports, they might be save files.                                   |
+| **A** \| **B** \| **C** | all             | MSX only               | I'm guessing these identify the current disk.                                                                                                            |
+| **AMBGLOB**             | AMB only        | all but AST            | Additional strings and data used globally for AMB.                                                                                                       |
+| **NEWDATA**             | all but TRI     | AII,C64,IBM,MAC        | Additional help particular to this game.                                                                                                                 |
+| **VOLT**                | all             | AII,C64,IBM,MAC        | Identifies the current disk.                                                                                                                             |
+| **SAVED**               | all             | all                    | Saved game file.                                                                                                                                         |
+| **\*.DIB**              | F451 & RDV only | MSX only               | Probably[graphics files for MSX](#msx-graphics-format) for F451 and RDV.                                                                                 |
+| **DIR**                 | all but AMB,PMN | all                    | Directory of locations with disk numbers ("a", "b", "c", "d"). Note MSX only has the disk letters, with the locations in the AVENTURA.COM executable.    |
+| \<abbrev\>**.DAP**      | AMB & PMN only  | AII only               | Directory of locations with disk numbers ("a", "b", "c", "d") for AMB & PMN on AII.                                                                      |
+| \<abbrev\>**.DIB**      | AMB & PMN only  | IBM only               | Directory of locations with disk numbers ("a", "b", "c", "d") for AMB & PMN on IBM.                                                                      |
+| \<abbrev\>**.DC6**      | AMB & PMN only  | C64 only               | Directory of locations with disk numbers ("a", "b", "c", "d") for AMB & PMN on C64.                                                                      |
+| \<abbrev\>**.DST**      | AMB,AMZ,PMN,TRI | AST only               | Directory of locations with disk numbers ("a", "b", "c", "d").                                                                                           |
+| **\*.GST**              | PMN & TRI only  | AST only               | [Graphics files for Atari ST](#atari-st-graphics-format) for PMN and TRI.                                                                                |
+| **OUTSIDE**             | AMB only        | AST only               | Additional directory of locations with disk numbers ("a" or "b") for AMB on AST.                                                                         |
+| \<abbrev\>**.EXE**      | all             | IBM only               | The game executable for IBM. Note a few game strings are found here, though most strings here are applicable to the game engine generally.               |
+| \<abbrev\>**.PRG**      | all             | AST only               | The game executable for Atari ST. Note a few game strings are found here, though most strings here are applicable to the game engine generally.          |
+| **AVENTURA.COM**        | all             | MSX only               | The game executable for MSX. The Directory of locations and Vocabulary are embedded here.                                                                |
+| **TRILL**               | all             | AII & C64 only         | Maybe the game executable?                                                                                                                               |
+| **TRILLIUM**            | all             | AII & C64 only         | An intro[sound file](#sound-formats)                                                                                                                     |
+| **\*.STR**              | PMN             | AST, C64, & IBM        | Strings for some location files have been separated into a separate file.                                                                                |
+| **\*.STR**              | AMB, AMZ, & PMN | MSX only               | Some game strings that have been separated into separate files on MSX.                                                                                   |
+| \<abbrev\>**.T**        | AMB, PMN, & WOZ | AST, C64, & IBM        | Maybe a list of game functions?                                                                                                                          |
+| \<abbrev\>**.TOK**      | AMB only        | all but MSX            | [Token file](#tokenization-in-nine-princes).                                                                                                             |
+| \<abbrev\>**.V**        | all but DGW,RDV | all but AST            | [Vocabulary file](#vocabularies).                                                                                                                        |
+| **\*.IB** \| **\*.JR**  | all             | IBM only               | [Sound files for IBM PC/PCjr](#ibm-pc-pcjr-sound-format).                                                                                                |
+| **\*.MST**              | PMN & TRI only  | AST only               | [Sound files for Atari ST](#atari-st-sound-format) for PMN and TRI.                                                                                      |
+| **\MUS??**              | all but RDV,TRI | MSX only               | [Sound files for MSX](#msx-sound-format) (most games).                                                                                                   |
+| **\CITA?.MUS**          | RDV only        | MSX only               | [Sound files for MSX](#msx-sound-format) for RDV.                                                                                                        |
+| **\*.FEN**              | AMB only        | all                    | Data specific to the fencing (swordfighting) events for AMB.                                                                                             |
+| **\*.STR**              | PMN only        | all                    | Some game strings have been separated into separate files for PMN (especially for cross-examinations?)                                                   |
+| **\*.CST**              | AMB,AMZ,PMN,TRI | AST only               | Location files.                                                                                                                                          |
+| **GRAPHPDS**            | AMB & AMZ only  | AII & AST only         | [Packed graphics files](#pds-container-formats).                                                                                                         |
+| **MUSICPDS**            | AMB & AMZ only  | AII & AST only         | [Packed sound files](#pds-container-formats).                                                                                                            |
+| **\*.PDS**              | all             | MAC only               | [Packed graphics, sound, and strings/data files for Macintosh](#macintosh-container-format).                                                             |
+| **\*.** (no extension)  | all             | IBM only               | Mostly location or[graphics](#graphics-formats) files. Some games use format \<first initial abbrev\> + \<number\> with no extension for graphics files. |
+| **\*.** (no extension)  | all             | all but IBM & some AST | Many games use format\<full abbrev\> + \<description\> for sound files. Most non-IBM ports don't have extensions for sound files.                        |
 
 ---
 
-## PDS Container Format
+## PDS Container Formats
 
 The Tester Tool has a function to unpack the contents of all PDS files of the selected port type in a new "PDS\\" directory under each game's directory. The extraction process runs automatically where necessary (e.g., when listing picture or sound files). A hex dump of the each file within a PDS can also be previewed.
 
@@ -219,7 +221,7 @@ For the pix*.pds (graphics), mus*.pds (sound), and ctx*.pds (strings and data) f
 
 ---
 
-## Graphics Format
+## Graphics Formats
 
 Graphics in SAS games are either placed at the top in landscape orientation (often multiple small picture files at once), in fullscreen width with (typically) 40% of the screen height, or sometimes on one side of the screen in portrait orientation, with 45% of the screen width, in each case leaving a good amount of space for text. *Amazon* is laid out differently from the others because of its development history, and tends to use most of the screen for its pictures (`0xA0` for both height and width, or 160x160), which leaves much less room for text.
 
@@ -248,7 +250,7 @@ The first 6 bytes are used as a header with the following layout:
 | `00`    | 0=Black, 1=Green, 2=Red, 3=Yellow   |
 | `01`    | 0=Black, 1=Cyan, 2=Magenta, 3=White |
 
-\* = 0=black, 1=blue, 2=green, 3=cyan, 4=red, 5=magenta, 6=brown, 7=lt.gray, 8=dk.gray, 9=br.blue, A=br.green, B=br.cyan, C=br.red, D=br.magenta, E=yellow, F=white
+##### \* = 0=black, 1=blue, 2=green, 3=cyan, 4=red, 5=magenta, 6=brown, 7=lt.gray, 8=dk.gray, 9=br.blue, A=br.green, B=br.cyan, C=br.red, D=br.magenta, E=yellow, F=white
 (However, it appears that the background color was always 0 for these games.)
 
 #### Pixel data
@@ -367,7 +369,7 @@ The developers had to use a thin blocky font with the C64 because of the limited
 
 At this point, I've managed to get almost all of the files decoded. There are still a few that are bugged partway through.
 
-It's a different format from IBM, but the header has similarities, though there are similar sets of three byte sequences. However, here the file is divided into 4 different sections:
+It's a different format from IBM, but the header has similarities, and there are similar sets of three byte sequences. However, here the file is divided into 4 different sections:
 
 * Section 1: Header
 * Section 2: Tertiary Color
@@ -382,16 +384,17 @@ Like the IBM picture data, these are also divided into run-length encoded 3-byte
 
 Section 3's three-byte sequence specifies two colors in the first and third bytes (each nibble representing a color from the C64 palette*), two run-lengths in the second byte (nibble 1 referencing byte 1's colors and nibble 2 referencing byte 3's colors). Each run-length is over a number of 4x8 blocks.
 
+| 0        | 1        | 2            |   | 3            | 4        | 5        |
+| ---------- | ---------- | -------------- | --- | -------------- | ---------- | ---------- |
+| color A2 | color A1 | num blocks A |   | num blocks B | color B1 | color B2 |
+
 Section 2 is the same as Section 3, but the low nibble of byte 2 is the third color for some number of 4x8 blocks, and the high nibble is always zero.
 
 Section 4's three-byte sequence, like the IBM version above, specifies a 4x1 bitmask in the first and third bytes, and two run-lengths in the second byte, nibble 1 referencing byte 1's bitmask and nibble 2 referencing byte 3's bitmask.
 
-\* = C64 palette: 0=black, 1=white, 2=red, 3=cyan, 4=purple, 5=green, 6=blue, 7=yellow, 8=orange, 9=brown, A=lt.red, B=dk.gray, C=md.gray, D=lt.green, E=lt.blue, F=lt.gray
-It does seem that `2` (red) is [sometimes?] remapped as `A` (light red) and `6` (blue) is remapped as `E` (light blue).
+##### \* = C64 palette: 0=black, 1=white, 2=red, 3=cyan, 4=purple, 5=green, 6=blue, 7=yellow, 8=orange, 9=brown, A=lt.red, B=dk.gray, C=md.gray, D=lt.green, E=lt.blue, F=lt.gray
 
-| 0        | 1        | 2            |   | 3            | 4        | 5        |
-| ---------- | ---------- | -------------- | --- | -------------- | ---------- | ---------- |
-| color A2 | color A1 | num blocks A |   | num blocks B | color B1 | color B2 |
+It does seem that `2` (red) is [sometimes?] remapped as `A` (light red) and `6` (blue) is remapped as `E` (light blue).
 
 So, returning to *Nine Princes* for our example:
 
@@ -458,7 +461,7 @@ The Atari ports use their low resolution 320x200 mode, and like IBM most picture
 
 Though the ST had a more flexible color system than the Commodore (e.g., it could display 16 colors from 512 possible without any of the 8x8 block limitations), Telarium didn't really leverage it very well, and just stuck to a max of 8 colors. They also relied solely on the default system palette.*
 
-\* = Atari ST default palette: 0=white, 1=black, 2=red, 3=green, 4=blue, 5=cyan, 6=yellow, 7=magenta, 8=lt.Gray, 9=dk.gray, A=dk.red, B=dk.green, C=dk.blue, D=dk.cyan, E=Brown, F=dk.magenta
+##### \* = Atari ST default palette: 0=white, 1=black, 2=red, 3=green, 4=blue, 5=cyan, 6=yellow, 7=magenta, 8=lt.Gray, 9=dk.gray, A=dk.red, B=dk.green, C=dk.blue, D=dk.cyan, E=Brown, F=dk.magenta
 
 Looking at the header, the first two bytes are the file size. Address 0x03 and 0x05 have the resolution; instead of `hh ww` as all of the other files so far, the resolution here is width first, and with `00` separators (or perhaps the spread was with the idea of supporting higher resolutions).
 
@@ -472,10 +475,15 @@ The high nibble is always zero, but the low nibble varies from 0-F rather than 0
 
 So the following is the most common palette, after collating the values. The Rgb24 equivalent is found by multiplying by 17 (so e.g., `09` becomes `99`):
 
-| hex   | `00 00 00` | `02 00 0D` | `00 0B 0F` | `0F 0F 0F` | `00 0F 02` | `00 0D 03` | `0F 07 00` | `00 0F 0E` | `0D 06 09` | `0B 00 0E` | `0F 09 0C` | `0B 08 08` | `09 09 0A` | `0B 0B 0C` | `0F 0E 03` | `0D 0D 0E` |
-| ------- | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ |
-| Rgb24 | #000000    | #2200DD    | #00BBFF    | #FFFFFF    | #00FF22    | #00DD33    | #FF7700    | #00FFEE    | #DD6699    | #BB00EE    | #FF99CC    | #BB8888    | #9999AA    | #BBBBCC    | #FFEE33    | #DDDDEE    |
-| Name  | 0=Black    | 1=Blue     | 2=Dk.Cyan  | 3=White    | 4=Green    | 5=Dk.Green | 6=Red      | 7=Cyan     | 8=Dk.Red   | 9=Purple   | A=Pink     | B=Brown    | C=Dk.Gray  | D=Md.Gray  | E=Yellow   | F=Lt.Gray  |
+| hex   | `00 00 00` | `02 00 0D` | `00 0B 0F` | `0F 0F 0F` | `00 0F 02` | `00 0D 03` | `0F 07 00` | `00 0F 0E` |
+| ------- | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ |
+| Rgb24 | #000000    | #2200DD    | #00BBFF    | #FFFFFF    | #00FF22    | #00DD33    | #FF7700    | #00FFEE    |
+| Name  | 0=Black    | 1=Blue     | 2=Dk.Cyan  | 3=White    | 4=Green    | 5=Dk.Green | 6=Red      | 7=Cyan     |
+
+| hex   | `0D 06 09` | `0B 00 0E` | `0F 09 0C` | `0B 08 08` | `09 09 0A` | `0B 0B 0C` | `0F 0E 03` | `0D 0D 0E` |
+| ------- | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ | ------------ |
+| Rgb24 | #DD6699    | #BB00EE    | #FF99CC    | #BB8888    | #9999AA    | #BBBBCC    | #FFEE33    | #DDDDEE    |
+| Name  | 8=Dk.Red   | 9=Purple   | A=Pink     | B=Brown    | C=Dk.Gray  | D=Md.Gray  | E=Yellow   | F=Lt.Gray  |
 
 The next section begins at address 0x36, and is split into up to 4 bitplanes. The output is in 4x2 blocks, and unlike the prior formats these are laid out horizontally. 0x00 and 0xFF, though they are also valid values (see below), use the following byte as a run-length.
 
@@ -487,17 +495,17 @@ Examples:
 |--------|--------|--------------|
 | `0x0`  | <code style="color : DarkGray">0 0 0 0</code> | <code style="color : DarkGray">____</code>         |
 | `0x1`  | <code style="color : DarkGray">0 0 0</code><code style="color : White">1</code> | ___<code style="color : White">█</code>         |
-| `0x6`  | <code style="color : DarkGray">0</code><code style="color : White">1 1</code><code style="color : DarkGray">0</code> | <code style="color : DarkGray">_</code><code style="color : White">██</code><code style="color : DarkGray">_</code>         |
+| `0x6`  | <code style="color : DarkGray">0</code><code style="color : White">1 1</code><code style="color : DarkGray">0</code> | <code style="color : DarkGray">\_</code><code style="color : White">██</code><code style="color : DarkGray">\_</code>         |
 | `0xC`  | <code style="color : White">1 1</code><code style="color : DarkGray">0 0</code> | <code style="color : White">██</code><code style="color : DarkGray">__</code>         |
 | `0xF`  | <code style="color : White">1 1 1 1</code> | <code style="color : White">████</code>         |
 
 So putting the nibbles together, e.g., `0x88` would be two pixels on the left side of the 4x2 block.
 
-Likewise, `0x00` is an empty 4x2 block of pixels, and `0xFF` is a completely filled block, though as mentioned above, these values (only) expect a run-length to follow.
+Likewise, `0x00` is an empty 4x2 block of pixels, and `0xFF` is a completely filled block, though as mentioned above, these two values expect a run-length to follow.
 
 If there are two or more `0x00`s in a row, then each byte couple adds 256 to the next run-length (i.e., `00 00 00 00 00 9B` becomes run-length `0x29B`).
 
-Finally, as to determining colors, the layout of the pixels on each bitplane gives a component of a bitmap for each pixel to derive the palette index. We build a binary number from right to left. So an "on" pixel in bitplane 0 adds `0b0001` (1) to the palette index, an "on" in bitplane 1 adds `0b0010` (2) to the palette index, one in bitplane 2 adds `0b0100` (4) to the palette index, and one in bitplane 3 adds `0b1000` (8) to the palette index. In this way, we can specify each of the 16 colors in the palette.
+Finally, as to determining the final colors, the layout of the pixels on each bitplane gives a component of a bitmap for each pixel to ultimately derive the palette index. We collate the values from each of the bitplanes to build 4-bit binary numbers for each pixel from right to left. So an "on" pixel in bitplane 0 adds `0b0001` (1) to the palette index, an "on" in bitplane 1 adds `0b0010` (2) to the palette index, one in bitplane 2 adds `0b0100` (4) to the palette index, and one in bitplane 3 adds `0b1000` (8) to the palette index. In this way, we can eventually specify each of the 16 colors in the palette.
 
 Palette Index Example:
 
@@ -508,15 +516,15 @@ Palette Index Example:
 | 2        | `0`   |
 | 3        | `1`   |
 
-This results in a bitmap value of `0b_1010` (10) for the corresponding pixel, which, if using the most common of the custom palettes shown above, will be pink.
+Again, the number is built right to left, so for this example this results in a bitmap value of `0b_1010` (0xA) for the corresponding pixel, which, if using the most common of the custom palettes shown above, would be pink.
 
 ### Macintosh graphics format
 
 ![f451-mac-screenshot](images/f451-mac-screenshot.png "Fahrenheit 451 for Macintosh screenshot")
 
-The Mac ports use a similar art style to the other ports, but in a higher resolution--though the full screen resolution is 512x342, the game only uses 480x300--and in black-and-white only (not even grayscale), as that's all that the first Macs supported.
+The three games that were ported to Mac use a similar art style to the other ports, but in a higher resolution--though the Mac's full screen resolution is 512x342, the game only uses 480x300--and in black-and-white only (not even grayscale), as that's all that the first Macs supported.
 
-For all three games, the first two bytes are the width in pixels, and the next two are the height.
+The first two bytes of the header are the width in pixels, and the next two are the height.
 
 For the *Fahrenheit 451* images, Spinnaker just used a standard Macintosh RLE format called PackBits. The Tester Tool extracts these files too, but there are several implementations available [elsewhere](https://github.com/skirridsystems/packbits).
 
@@ -534,11 +542,11 @@ And that's it! You now have a series of bytes where each is an 8-pixel wide stri
 
 ![f451-msx-screenshot](images/f451-msx-screenshot.png "Fahrenheit 451 for MSX screenshot") ![amb-msx-screenshot](images/amb-msx-screenshot.png "Nine Princes in Amber for MSX screenshot")
 
-These "ports" were released by a different company, and the art was redrawn with a new art style. I'm not clear whether these are actually SAS games, or adaptations in a different engine.
+These "ports" were released by a different company, and the art was redrawn with a new art style, and in some cases appear to have included digitized photographs. I don't believe these are actually SAS games, but rather adaptations to a different engine.
 
 ---
 
-## Sound Format
+## Sound Formats
 
 These games feature some music and sound effects that are... serviceable.
 
@@ -634,7 +642,7 @@ All four models prior to the STe had a [Yamaha YM2149](https://en.wikipedia.org/
 
 Given that, perhaps it should not be surprising that the sound files are very similar to the PCjr versions; some are actually identical.
 
-#### Format for *Nine Princes* and *Perry Mason*
+#### Atari ST sound format differences for *Nine Princes* and *Perry Mason*
 
 For AMB and PMN (the last 2 SAS games to be released), the Atari control code format is a bit different from the other Atari ports (though note AMB has its music files packed into a MUSICPDS file). The first channel uses 8 bytes instead of 6, but later channels only use 2 bytes. The first channel often begins with `50 00 00 00 38 00`. The following two bytes always start with `60`, which is usually followed by `0D`, but is sometimes `0E`, `0F`, or `10`. This seems to be the waveform type: `0D` is a square wave, but I haven't yet figured out the others. The second and third channel codes consist of only 2 bytes, again `60` and one of `0D` through `10`.
 
@@ -653,3 +661,7 @@ C64 also has a final byte after the last `80` that varies: I've seen e.g., `00`,
 ### Macintosh sound format
 
 The Macintosh files are once again very similar to the PCjr; in fact, all the ones I've examined are identical to the Atari.
+
+### MSX sound format
+
+I have not yet begun to investigate these.

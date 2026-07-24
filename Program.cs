@@ -1,5 +1,4 @@
 ﻿using System.IO.Compression;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace SASTester;
@@ -59,6 +58,8 @@ partial class SASTester
     // Amazon
     public const string AmazonName  = "Amazon";
     public const string AmazonAbb   = "AMZ";
+    public const string AmazonGfxPfxMsx = "P";
+    const int AmazonLocStartMsx     = 0x61b1;
     const string AmazonMenu1        = "AMZ Executable";
     const string AmazonMenu2        = "AMZ.V: Vocabulary";
     const string AmazonMenu3        = "DIR: Location directory";
@@ -67,6 +68,9 @@ partial class SASTester
     // Dragonworld
     public const string DragonName  = "Dragonworld";
     public const string DragonAbb   = "DGW";
+    public const string DragonGfxPfxMsx = "D";
+    const int DragonLocStartMsx     = 0x5e0d;
+    const int DragonLocEndDelimMsx  = 0x2a;
     const string DragonMenu1        = "DGW Executable";
     const string DragonMenu2        = "DIR: Location directory";
     readonly string dragonTitle     = DragonName.ToUpperInvariant();
@@ -75,6 +79,8 @@ partial class SASTester
     public const string F451Name    = "Fahrenheit 451";
     public const string F451Abb     = "F451";
     public const string F451SndPfx  = "F4";
+    const int F451LocStartMsx       = 0x5b83;
+    const int F451LocEndDelimMsx    = 0xda;
     const string F451Menu1          = "DIR: Location directory";
     const string F451Menu2          = "F451 Executable";
     const string F451Menu3          = "F451.V: Vocabulary";
@@ -83,6 +89,7 @@ partial class SASTester
     // Nine Princes in Amber
     public const string AmberName   = "Nine Princes in Amber";
     public const string AmberAbb    = "AMB";
+    const int AmberLocStartMsx      = 0x62b9;
     const string AmberMenu1         = "AMB.D??: Location directory";
     const string AmberMenu2         = "AMB Executable";
     const string AmberMenu3         = "AMB.T: Functions";
@@ -93,6 +100,8 @@ partial class SASTester
     // Perry Mason: The Case of the Mandarin Murder
     public const string PerryName   = "Perry Mason";
     public const string PerryAbb    = "PMN";
+    public const string PerryGfxPfxMsx = "PM";
+    const int PerryLocStartMsx      = 0x64c3;
     const string PerryMenu1         = "PMN.D??: Location directory";
     const string PerryMenu2         = "PMN Executable";
     const string PerryMenu3         = "PMN.T: Functions";
@@ -102,6 +111,7 @@ partial class SASTester
     // Rendezvous with Rama
     public const string RamaName    = "Rendezvous with Rama";
     public const string RamaAbb     = "RDV";
+    const int RamaLocStartMsx       = 0x58a3;
     const string RamaMenu1          = "DIR: Location directory";
     const string RamaMenu2          = "RDV Executable";
     readonly string ramaTitle       = RamaName.ToUpperInvariant();
@@ -109,6 +119,8 @@ partial class SASTester
     // Treasure Island
     public const string IslandName  = "Treasure Island";
     public const string IslandAbb   = "TRI";
+    public const string IslandGfxPfxMsx = "T";
+    const int IslandLocStartMsx     = 0x5b9c;
     const string IslandMenu1        = "DIR: Location directory";
     const string IslandMenu2        = "TRI Executable";
     const string IslandMenu3        = "TRI.V: Vocabulary";
@@ -118,6 +130,8 @@ partial class SASTester
     public const string OzName      = "The Wizard of Oz";
     public const string OzAbb       = "WOZ";
     public const string OzSndPfx    = "WM";
+    public const string OzGfxPfxMsx = "D";
+    const int OzLocStartMsx         = 0x61c6;
     const string OzMenu1            = "DIR: Location directory";
     const string OzMenu2            = "WOZ Executable";
     const string OzMenu3            = "WOZ.T: Functions";
@@ -142,9 +156,11 @@ partial class SASTester
         "1",
         "A",
         "B",
+        "C",
         "DIR",
         "NEWDATA",
         "SAVED",
+        "TRILL",
         "VOLT",
     ];
 
@@ -428,32 +444,40 @@ partial class SASTester
         }
     }
 
-    void ShowStrings(string abbrev, byte start, bool expand = false)
+    void ShowStrings(string abbrev, bool expand = false)
     {
         var picFiles = GetMediaFileList(abbrev, false);
         var sndFiles = GetMediaFileList(abbrev, true);
+        HashSet<string> locNames = [];
         foreach (var loc in GetLocs(abbrev))
         {
-            var locName = loc.Value.Item2;
+            locNames.Add(loc.Value.Item2);
+        }
+        foreach (var locName in locNames)
+        {
             Console.WriteLine(Divider);
             Console.WriteLine(locName.ToUpperInvariant());
 
-            var filePath = GetStringDir(abbrev, abbrev + pcType, locName);
+            var filePath = GetStringPath(abbrev, abbrev + pcType, locName);
 
             try
             {
                 if (!File.Exists(filePath))
                 {
                     Console.Error.WriteLine($"{FileError} {filePath}");
-                    filePath = GetStringDir(abbrev, abbrev, locName);
+                    filePath = GetStringPath(abbrev, abbrev, locName);
                     if (!File.Exists(filePath))
                         continue;
                 }
                 var i = 0;
                 var array = File.ReadAllBytes(filePath);
                 Dictionary<byte, string> tokens = [];
+                //var start = 0x03;
                 if (expand)
+                {
+                    //start = 0x02;
                     tokens = GetTokens(abbrev);
+                }
                 foreach (var entry in ProcessStrings(array, tokens))
                 {
                     var found = false;
@@ -501,9 +525,12 @@ partial class SASTester
         }
     }
 
-    static string GetStringDir(string abbrev, string gameDir, string locName)
+    static string GetStringPath(string abbrev, string gameDir, string locName)
     {
         var filePath = "";
+
+        if (pcType != CommodoreAbb && pcType != MacAbb)
+            locName = locName.ToUpperInvariant();
 
         if (pcType == AtariAbb)
         {
@@ -523,13 +550,13 @@ partial class SASTester
                 ExaminePdsFiles();
             filePath = Path.Combine(macPdsDir, locName);
         }
-        else if (abbrev == PerryAbb)
+        else if (pcType == MsxAbb && (abbrev == AmberAbb || abbrev == AmazonAbb || abbrev == PerryAbb))
         {
             filePath = Path.Combine(RscPath, gameDir, locName + ".STR");
             if (!File.Exists(filePath))
                 filePath = Path.Combine(RscPath, gameDir, locName);
         }
-        else if (pcType == MsxAbb && (abbrev == AmberAbb || abbrev == AmazonAbb || abbrev == PerryAbb))
+        else if (abbrev == PerryAbb)
         {
             filePath = Path.Combine(RscPath, gameDir, locName + ".STR");
             if (!File.Exists(filePath))
@@ -612,17 +639,15 @@ partial class SASTester
         Dictionary<ushort, (char, string)> locs = [];
         ushort i = 0;
         if (pcType == MsxAbb)
-        {
-            Console.WriteLine("GetLocs(): AVENTURA.COM parsing not yet implemented for MSX");
-            return locs;
-        }
-        var locPath = GetLocDir(abbrev, abbrev + pcType);
+            return GetLocsMsx(abbrev);
+
+        var locPath = GetLocPath(abbrev, abbrev + pcType);
         try
         {
             if (!File.Exists(locPath))
             {
                 Console.Error.WriteLine($"{FileError} {locPath}");
-                locPath = GetLocDir(abbrev, abbrev);
+                locPath = GetLocPath(abbrev, abbrev);
                 if (!File.Exists(locPath))
                     return locs;
             }
@@ -649,7 +674,78 @@ partial class SASTester
         return locs;
     }
 
-    static string GetLocDir(string abbrev, string gameDir)
+    // Unlike the other ports, the "DIR" file for MSX is only a list of disk numbers,
+    // with the order correlating to the list of locations found in each AVENTURA.COM executable file;
+    // At this point, I've just hardcoded the starting address for the list for each game.
+    // Unlike the other ports, MSX locations repeat, so decompose to a HashSet where appropriate.
+    static Dictionary<ushort, (char, string)> GetLocsMsx(string abbrev)
+    {
+        Dictionary<ushort, (char, string)> locs = [];
+        int locsStart;
+        var locsEndDelim = 0x00;
+        var addPrefix = false;
+        ushort locNum = 0;
+        try
+        {
+            var dir = File.ReadAllBytes(GetLocPath(abbrev, abbrev + pcType));
+
+            if (abbrev == AmazonAbb)
+                locsStart = AmazonLocStartMsx;
+            else if (abbrev == AmberAbb)
+                locsStart = AmberLocStartMsx;
+            else if (abbrev == DragonAbb)
+            {
+                addPrefix = true;
+                locsStart = DragonLocStartMsx;
+                locsEndDelim = DragonLocEndDelimMsx;
+            }
+            else if (abbrev == F451Abb)
+            {
+                addPrefix = true;
+                locsStart = F451LocStartMsx;
+                locsEndDelim = F451LocEndDelimMsx;
+            }
+            else if (abbrev == IslandAbb)
+                locsStart = IslandLocStartMsx;
+            else if (abbrev == PerryAbb)
+                locsStart = PerryLocStartMsx;
+            else if (abbrev == RamaAbb)
+            {
+                addPrefix = true;
+                locsStart = RamaLocStartMsx;
+            }
+            else if (abbrev == OzAbb)
+                locsStart = OzLocStartMsx;
+            else
+                return locs;
+
+            var exe = File.ReadAllBytes(Path.Combine(RscPath, abbrev + pcType, "AVENTURA.COM"));
+            var prev = 0x00;
+            List<byte> loc = [];
+            foreach (var b in exe[locsStart..])
+            {
+                if (b == Delim || b == locsEndDelim)
+                {
+                    if (prev == Delim)
+                        break;
+                    locs.Add(locNum, (Encoding.ASCII.GetString([dir[locNum]])[0], (addPrefix ? "CON" : "") + Encoding.ASCII.GetString([.. loc])));
+                    locNum++;
+                    loc = [];
+                }
+                else
+                    loc.Add(b);
+                prev = b;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.Error.WriteLine(e.ToString());
+        }
+
+        return locs;
+    }
+
+    static string GetLocPath(string abbrev, string gameDir)
     {
         string locPath;
 
@@ -750,73 +846,91 @@ partial class SASTester
         var accent = false;
         MemoryStream stream = new();
         BinaryWriter result = new(stream);
-        ushort i = 0;
-        ushort n = 0;
-        foreach (var b in array)
+        ushort numDelims = 0;
+        foreach (var b in array[First..])
         {
-            if (i >= First)
+            if (b.Equals(Delim))
             {
-                if (b.Equals(Delim))
+                if (numDelims > 1) // third 0x00, where 0x000000 = end of string portion]
+                    break;
+                else if (numDelims < 1)
                 {
-                    if (n > 1) // third 0x00, where 0x000000 = end of string portion]
-                        break;
-                    else if (n < 1)
-                    {
-                        if (stream.Length > 1)
-                            yield return Encoding.ASCII.GetString(stream.ToArray());
-                        stream.Close();
-                        stream = new();
-                        result = new(stream);
-                    }
-                    n++;
-                    continue;
+                    if (stream.Length > 1)
+                        yield return Encoding.Default.GetString(stream.ToArray());
+                    stream.Close();
+                    stream = new();
+                    result = new(stream);
                 }
-                else if (b > Min) // char > 'z'
-                {
-                    n = 0;
-                    if (tokens.TryGetValue(b, out var str))
-                        result.Write(Encoding.ASCII.GetBytes(" " + str));
-                    continue;
-                }
-                else if (b == 0x22) // escape quotation marks
-                {
-                    result.Write(Encoding.ASCII.GetBytes("\\\""));
-                }
-                else if (b == 0x7E) // tilde
-                    accent = true;
-
-                n = 0;
-                var output = b;
-
-                if (accent)
-                {
-                    switch (b)
-                    {
-                        case 0x61: // a
-                            output = 0xE1;
-                            break;
-                        case 0x65: // e
-                            output = 0xE9;
-                            break;
-                        case 0x69: // i
-                            output = 0xED;
-                            break;
-                        case 0x6E: // n
-                            output = 0xF1;
-                            break;
-                        case 0x6F: // o
-                            output = 0xF3;
-                            break;
-                        case 0x75: // u
-                            output = 0xFA;
-                            break;
-                    }
-                    accent = false;
-                }
-                result.Write(output);
+                numDelims++;
+                continue;
             }
+            numDelims = 0;
+
+            if (accent) // just for MSX ports?
+            {
+                switch (b)
+                {
+                    // TODO: Automatically do "" -> «» for MSX ports?
+
+                    case 0x21: // ! -> ¡
+                        result.Write("¡"); // 0xA1
+                        break;
+                    case 0x3F: // ? -> ¿
+                        result.Write("¿"); // 0xBF
+                        break;
+                    case 0x41: // A -> Á
+                        result.Write("Á"); // 0xC1
+                        break;
+                    case 0x45: // E -> É
+                        result.Write("É"); // 0xC9
+                        break;
+                    case 0x49: // I -> Í
+                        result.Write("Í"); // 0xCD
+                        break;
+                    case 0x4E: // N -> Ñ
+                        result.Write("Ñ"); // 0xD1
+                        break;
+                    case 0x4F: // O -> Ó
+                        result.Write("Ó"); // 0xD3
+                        break;
+                    case 0x55: // U -> Ú
+                        result.Write("Ú"); // 0xDA
+                        break;
+                    case 0x61: // a -> á
+                        result.Write("á"); // 0xE1
+                        break;
+                    case 0x65: // e -> é
+                        result.Write("é"); // 0xE9
+                        break;
+                    case 0x69: // i -> í
+                        result.Write("í"); // 0xED
+                        break;
+                    case 0x6E: // n -> ñ
+                        result.Write("ñ"); // 0xF1
+                        break;
+                    case 0x6F: // o -> ó
+                        result.Write("ó"); // 0xF3
+                        break;
+                    case 0x75: // u -> ú
+                        result.Write("ú"); // 0xFA
+                        break;
+                }
+                accent = false;
+                continue;
+            }
+
+            if (b > Min) // char > 'z'
+            {
+                numDelims = 0;
+                if (tokens.TryGetValue(b, out var str))
+                    result.Write(Encoding.ASCII.GetBytes(" " + str));
+            }
+            else if (b == 0x7E) // tilde, escapes accented characters
+                accent = true;
+            else if (b == 0x22) // escape quotation marks
+                result.Write(Encoding.ASCII.GetBytes("\\\"")); // \"
             else
-                i++;
+                result.Write(b);
         }
         stream.Close();
     }
@@ -1007,7 +1121,7 @@ partial class SASTester
                                 inListNum++;
                             }
                         }
-                        else if (b == 0x00 || b == 0x20)
+                        else if (b == Delim || b == 0x20)
                             nameDone = true;
                         else if (!nameDone)
                         {
@@ -1134,10 +1248,10 @@ partial class SASTester
         return segList;
     }
 
-    public List<string> GetMediaFileList(string abbrev, bool isSnd)
+    public List<string> GetMediaFileList(string abbrev, bool getSnd)
     {
         List<string> files = [];
-        List<string> locNames = [];
+        HashSet<string> locNames = [];
         foreach (var loc in GetLocs(abbrev))
         {
             locNames.Add(loc.Value.Item2);
@@ -1158,7 +1272,8 @@ partial class SASTester
                         fileDir = pdsDir;
                 }
 
-                if (isSnd && pcType == IbmAbb) // can always rely on .IB and .JR extensions
+                // can rely on .IB and .JR extensions for IBM sound files
+                if (getSnd && pcType == IbmAbb)
                 {
                     foreach (var file in Directory.EnumerateFiles(fileDir, "*.IB").ToList())
                     {
@@ -1172,12 +1287,67 @@ partial class SASTester
                     }
                     return files;
                 }
-                else if (pcType == AtariAbb) // sometimes uses extension + deeper folder structure
+
+                if (pcType == MsxAbb)
+                {
+                    if (!getSnd)
+                    {
+                        // can rely on .DIB extension for F451MSX and RDVMSX graphics files
+                        if (abbrev == F451Abb || abbrev == RamaAbb)
+                        {
+                            foreach (var file in Directory.EnumerateFiles(fileDir, "*.DIB").ToList())
+                            {
+                                var filename = Path.GetFileName(file);
+                                files.Add(filename);
+                            }
+                            return files;
+                        }
+                        var prefix = "";
+                        if (abbrev == AmazonAbb)
+                            prefix = AmazonGfxPfxMsx;
+                        else if (abbrev == DragonAbb)
+                            prefix = DragonGfxPfxMsx;
+                        else if (abbrev == PerryAbb)
+                            prefix = PerryGfxPfxMsx;
+                        else if (abbrev == IslandAbb)
+                            prefix = IslandGfxPfxMsx;
+                        else if (abbrev == OzAbb)
+                            prefix = OzGfxPfxMsx;
+                        // no prefix
+                        //else if (abbrev == F451Abb || abbrev == AmberAbb || abbrev == RamaAbb)
+
+                        if (prefix != "")
+                        {
+                            foreach (var file in Directory.EnumerateFiles(fileDir, prefix + "*.").ToList())
+                            {
+                                var filename = Path.GetFileName(file);
+                                if (char.IsAsciiDigit(filename[prefix.Length]))
+                                    files.Add(filename);
+                            }
+                            return files;
+                        }
+                    }
+                    else //if (getSnd)
+                    {
+                        // can rely on .MUS extension for RDVMSX sound files
+                        if (abbrev == RamaAbb)
+                        {
+                            foreach (var file in Directory.EnumerateFiles(fileDir, "*.MUS").ToList())
+                            {
+                                var filename = Path.GetFileName(file);
+                                files.Add(filename);
+                            }
+                            return files;
+                        }
+                    }
+                }
+
+                if (pcType == AtariAbb) // sometimes uses extension + deeper folder structure
                 {
                     fileDir = Path.Combine(fileDir, abbrev);
                     var astPdsDir = Path.Combine(fileDir, "PDS");
                     var fileExt = "*.GST";
-                    if (isSnd)
+                    if (getSnd)
                         fileExt = "*.MST";
 
                     if (Directory.Exists(fileDir))
@@ -1203,7 +1373,7 @@ partial class SASTester
                                     !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
                                     !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
                                 {
-                                    if (ScreenMediaFiles(abbrev, filename, isSnd))
+                                    if (ScreenMediaFiles(abbrev, filename, getSnd))
                                         files.Add(filename);
                                 }
                             }
@@ -1223,7 +1393,7 @@ partial class SASTester
                             !addlStrFiles.Contains(filename, StringComparer.OrdinalIgnoreCase) &&
                             !abbrev.Equals(filename, StringComparison.OrdinalIgnoreCase))
                         {
-                            if (ScreenMediaFiles(abbrev, filename, isSnd))
+                            if (ScreenMediaFiles(abbrev, filename, getSnd))
                                 files.Add(filename);
                         }
                     }
@@ -1244,12 +1414,11 @@ partial class SASTester
 
         if (filename.Equals(abbrev, StringComparison.OrdinalIgnoreCase))
             return false;
-        if (filename.Equals("TRILL", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("IO", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("PARAM", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("STARTUP", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("kern_c64", StringComparison.OrdinalIgnoreCase) ||
-            filename.Equals("stage2", StringComparison.OrdinalIgnoreCase))
+        if (filename.Equals("IO", StringComparison.OrdinalIgnoreCase) ||            // AII
+            filename.Equals("kern_c64", StringComparison.OrdinalIgnoreCase) ||      // C64
+            filename.Equals("PARAM", StringComparison.OrdinalIgnoreCase) ||         // AII/MAC
+            filename.Equals("stage2", StringComparison.OrdinalIgnoreCase) ||        // C64
+            filename.Equals("STARTUP", StringComparison.OrdinalIgnoreCase))         // AII
             return false;
         if (filename.Equals("9 princess amber", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("AMBER", StringComparison.OrdinalIgnoreCase) ||
@@ -1270,7 +1439,7 @@ partial class SASTester
             filename.Equals("TELARIUM", StringComparison.OrdinalIgnoreCase) ||
             filename.Equals("WINDHAM", StringComparison.OrdinalIgnoreCase))
             return isSnd;
-        if (filename.StartsWith(abbrev) && (
+        if (filename.StartsWith(abbrev) && (                                        // <abbrev> + OP*
             filename.EndsWith("OPEN", StringComparison.OrdinalIgnoreCase) ||
             filename.EndsWith("OPEN1", StringComparison.OrdinalIgnoreCase) ||
             filename.EndsWith("OPEN2", StringComparison.OrdinalIgnoreCase) ||
@@ -1279,6 +1448,8 @@ partial class SASTester
             filename.EndsWith("OP3", StringComparison.OrdinalIgnoreCase) ||
             filename.EndsWith("OP4", StringComparison.OrdinalIgnoreCase) ||
             filename.EndsWith("OP5", StringComparison.OrdinalIgnoreCase)))
+            return isSnd;
+        if (pcType == MsxAbb && filename.StartsWith("MUS", StringComparison.OrdinalIgnoreCase))
             return isSnd;
 
         if (abbrev == F451Abb)
@@ -1478,7 +1649,7 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     if (pcType == MacAbb)
                         ExaminePdsFiles(AmazonAbb, true);
-                    ShowStrings(AmazonAbb, 0x03, expand: false);
+                    ShowStrings(AmazonAbb);
                     break;
                 case key6:
                     if (pcType == AtariAbb || pcType == MacAbb)
@@ -1550,7 +1721,7 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     if (pcType == MacAbb)
                         ExaminePdsFiles(DragonAbb, true);
-                    ShowStrings(DragonAbb, 0x03, expand: false);
+                    ShowStrings(DragonAbb);
                     break;
                 case key5:
                     if (pcType == MacAbb)
@@ -1614,7 +1785,7 @@ partial class SASTester
                     Console.WriteLine(StrMenu);
                     if (pcType == MacAbb)
                         ExaminePdsFiles(F451Abb, true);
-                    ShowStrings(F451Abb, 0x03, expand: false);
+                    ShowStrings(F451Abb);
                     break;
                 case key6:
                     if (pcType == MacAbb)
@@ -1683,7 +1854,7 @@ partial class SASTester
                     break;
                 case key7:
                     Console.WriteLine(StrExpMenu);
-                    ShowStrings(AmberAbb, 0x02, expand: true);
+                    ShowStrings(AmberAbb, expand: pcType != MsxAbb);
                     break;
                 case key8:
                     if (pcType == AppleAbb || pcType == AtariAbb)
@@ -1748,7 +1919,7 @@ partial class SASTester
                     break;
                 case key6:
                     Console.WriteLine(StrMenu);
-                    ShowStrings(PerryAbb, 0x03, expand: false);
+                    ShowStrings(PerryAbb);
                     break;
                 case keyBack:
                 case keyEsc:
@@ -1810,7 +1981,7 @@ partial class SASTester
                     break;
                 case key4:
                     Console.WriteLine(StrMenu);
-                    ShowStrings(RamaAbb, 0x03, expand: false);
+                    ShowStrings(RamaAbb);
                     break;
                 case keyBack:
                 case keyEsc:
@@ -1870,7 +2041,7 @@ partial class SASTester
                     break;
                 case key5:
                     Console.WriteLine(StrMenu);
-                    ShowStrings(IslandAbb, 0x03, expand: false);
+                    ShowStrings(IslandAbb);
                     break;
                 case keyBack:
                 case keyEsc:
@@ -1930,7 +2101,7 @@ partial class SASTester
                     break;
                 case key6:
                     Console.WriteLine(StrMenu);
-                    ShowStrings(OzAbb, 0x03, expand: false);
+                    ShowStrings(OzAbb);
                     break;
                 case keyBack:
                 case keyEsc:
